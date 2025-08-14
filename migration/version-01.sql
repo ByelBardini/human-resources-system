@@ -91,3 +91,6 @@ ADD UNIQUE INDEX `funcionario_nome_UNIQUE` (`funcionario_nome` ASC) VISIBLE;
 ALTER TABLE `sistema_rh`.`funcionarios` 
 ADD UNIQUE INDEX `funcionario_cpf_UNIQUE` (`funcionario_cpf` ASC) VISIBLE;
 ;
+
+ALTER TABLE `sistema_rh`.`empresas` 
+ADD COLUMN `funcionario_cor` VARCHAR(45) NOT NULL AFTER `empresa_cnpj`;
