@@ -63,3 +63,31 @@ CREATE TABLE `sistema_rh`.`logs` (
     REFERENCES `sistema_rh`.`usuarios` (`usuario_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+
+ALTER TABLE `sistema_rh`.`usuarios` 
+CHANGE COLUMN `usuario_troca_senha` `usuario_troca_senha` TINYINT NOT NULL DEFAULT 1 ,
+CHANGE COLUMN `usuario_ativo` `usuario_ativo` TINYINT NOT NULL DEFAULT 1 ;
+
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_empresa_id` INT NOT NULL AFTER `funcionario_id`; ;
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD CONSTRAINT `funcionario_empresa_id`
+  FOREIGN KEY (`funcionario_empresa_id`)
+  REFERENCES `sistema_rh`.`empresas` (`empresa_id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_nome` VARCHAR(200) NOT NULL AFTER `funcionario_setor_id`;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_ativo` TINYINT NOT NULL DEFAULT 1 AFTER `funcionario_data_desligamento`;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD UNIQUE INDEX `funcionario_nome_UNIQUE` (`funcionario_nome` ASC) VISIBLE;
+;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD UNIQUE INDEX `funcionario_cpf_UNIQUE` (`funcionario_cpf` ASC) VISIBLE;
+;
