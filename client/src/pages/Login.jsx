@@ -52,7 +52,7 @@ function Login() {
                 id="login"
                 name="login"
                 type="text"
-                placeholder="Seu usuário ou e-mail"
+                placeholder="Seu usuário"
                 className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
               />
             </div>
@@ -75,7 +75,7 @@ function Login() {
 
             <button
               type="button"
-              className="w-full rounded-xl bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
+              className="cursor-pointer w-full rounded-xl bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
             >
               Entrar
             </button>
