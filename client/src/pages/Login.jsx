@@ -1,8 +1,72 @@
 /* eslint-disable no-unused-vars */
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { logar } from "../services/auth/authService.js";
 import logoEmpresa from "../assets/logo-empresa.png";
+import ModalAviso from "../components/default/ModalAviso.jsx";
+import Loading from "../components/default/Loading.jsx";
 
 function Login() {
+  const navigate = useNavigate();
+  const [carregando, setCarregando] = useState(false);
+
+  const [aviso, setAviso] = useState(false);
+  const [corAviso, setCorAviso] = useState("");
+  const [textoAviso, setTextoAviso] = useState("");
+
+  const [login, setLogin] = useState("");
+  const [senha, setSenha] = useState("");
+
+  useEffect(() => {
+    document.title = "Login - Sistema RH";
+  }, []);
+
+  async function logarSistema() {
+    setCarregando(true);
+    try {
+      const { usuario_nome, usuario_troca_senha, usuario_role } = await logar(
+        login,
+        senha
+      );
+
+      localStorage.setItem("usuario_nome", usuario_nome);
+      localStorage.setItem("usuario_role", usuario_role);
+      if (usuario_troca_senha != 0) {
+        localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
+      }
+      setCarregando(false);
+      setCorAviso("verde");
+      setTextoAviso("Login realizado com sucesso!");
+      setAviso(true);
+
+      setTimeout(() => {
+        setAviso(false);
+        navigate("/home", { replace: true });
+      }, 500);
+    } catch (err) {
+      if (err.message.includes("obrigatórios")) {
+        setCorAviso("vermelho");
+        setTextoAviso("Você precisa preencher todos os campos.");
+        setAviso(true);
+      } else if (err.message.includes("incorretos")) {
+        setCorAviso("vermelho");
+        setTextoAviso("Usuário ou senha inválidos.");
+        setAviso(true);
+      } else if (err.message.includes("interno")) {
+        setCorAviso("vermelho");
+        setTextoAviso("Ocorreu um erro no servidor. Tente mais tarde.");
+        setAviso(true);
+      } else {
+        setCorAviso("vermelho");
+        setTextoAviso(err.message);
+        setAviso(true);
+      }
+    } finally {
+      setCarregando(false);
+    }
+  }
+
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -33,6 +97,16 @@ function Login() {
           </div>
         </div>
       </div>
+
+      {aviso && (
+        <ModalAviso
+          texto={textoAviso}
+          cor={corAviso}
+          onClick={() => setAviso(false)}
+        />
+      )}
+      {carregando && <Loading />}
+
       <div className="absolute -top-0 -left-0 w-[550px] h-screen flex justify-center items-center p-6">
         <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <h1 className="text-2xl font-semibold text-white mb-1 text-center">
@@ -56,6 +130,7 @@ function Login() {
                 type="text"
                 placeholder="Seu usuário"
                 className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+                onChange={(e) => setLogin(e.target.value)}
               />
             </div>
 
@@ -72,12 +147,14 @@ function Login() {
                 type="password"
                 placeholder="••••••••"
                 className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+                onChange={(e) => setSenha(e.target.value)}
               />
             </div>
 
             <button
               type="button"
               className="cursor-pointer w-full rounded-xl bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
+              onClick={logarSistema}
             >
               Entrar
             </button>
