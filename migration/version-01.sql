@@ -38,3 +38,28 @@ CREATE TABLE `sistema_rh`.`funcionarios` (
     REFERENCES `sistema_rh`.`setores` (`setor_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION);
+
+CREATE TABLE `sistema_rh`.`usuarios` (
+  `usuario_id` INT NOT NULL AUTO_INCREMENT,
+  `usuario_nome` VARCHAR(150) NOT NULL,
+  `usuario_login` VARCHAR(150) NOT NULL,
+  `usuario_senha` VARCHAR(150) NOT NULL,
+  `usuario_role` ENUM('usuario', 'adm') NOT NULL,
+  `usuario_troca_senha` TINYINT NOT NULL,
+  `usuario_ativo` TINYINT NOT NULL,
+  PRIMARY KEY (`usuario_id`));
+
+CREATE TABLE `sistema_rh`.`logs` (
+  `log_id` INT NOT NULL AUTO_INCREMENT,
+  `log_usuario_id` INT NOT NULL,
+  `log_operacao_realizada` VARCHAR(100) NOT NULL,
+  `log_valor_antigo` TEXT NOT NULL,
+  `log_valor_novo` TEXT NOT NULL,
+  `log_data_alteracao` DATE NOT NULL,
+  PRIMARY KEY (`log_id`),
+  INDEX `log_usuario_id_idx` (`log_usuario_id` ASC) VISIBLE,
+  CONSTRAINT `log_usuario_id`
+    FOREIGN KEY (`log_usuario_id`)
+    REFERENCES `sistema_rh`.`usuarios` (`usuario_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION);
