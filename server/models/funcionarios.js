@@ -10,9 +10,18 @@ Funcionario.init({
     autoIncrement: true,
     allowNull: false,
   },
+  funcionario_empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   funcionario_setor_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  funcionario_nome: {
+    type: DataTypes.STRING(200),
+    allowNull: false,
+    unique: true,
   },
   funcionario_cargo: {
     type: DataTypes.STRING(150),
@@ -25,6 +34,7 @@ Funcionario.init({
   funcionario_cpf: {
     type: DataTypes.STRING(100),
     allowNull: false,
+    unique: true,
   },
   funcionario_celular: {
     type: DataTypes.STRING(100),
@@ -50,6 +60,11 @@ Funcionario.init({
     type: DataTypes.DATE,
     allowNull: true,
     defaultValue: null,
+  },
+  funcionario_ativo: {
+    type: DataTypes.TINYINT,
+    defaultValue: 1,
+    allowNull: false,
   },
 }, {
   sequelize,

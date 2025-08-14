@@ -29,10 +29,12 @@ Usuario.init({
   usuario_troca_senha: {
     type: DataTypes.TINYINT,
     allowNull: false,
+    defaultValue: 1,
   },
   usuario_ativo: {
     type: DataTypes.TINYINT,
     allowNull: false,
+    defaultValue: 1,
   },
 }, {
   sequelize,

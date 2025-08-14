@@ -28,6 +28,18 @@ Funcionario.belongsTo(Setor, {
   as: "setor",
 });
 
+//Foreign keys de funcionarios e empresas
+Empresa.hasMany(Funcionario, {
+    foreignKey: "funcionario_empresa_id",
+    sourceKey: "empresa_id",
+    as: "funcionarios",
+});
+Funcionario.belongsTo(Empresa, {
+    foreignKey: "funcionario_empresa_id",
+    targetKey: "empresa_id",
+    as: "empresa",
+});
+
 //Foreign keys de logs e usuarios
 Usuario.hasMany(Log, {
   foreignKey: "log_usuario_id",
