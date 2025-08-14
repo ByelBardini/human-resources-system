@@ -10,7 +10,9 @@ function Login() {
         <div className="absolute -top-0 -right-[550px] w-full h-screen bg-gradient-to-r from-blue-950 to-blue-700" />
         <div className="absolute top-0 right-0 w-[800px] h-full flex justify-center items-center p-6">
           <div className="relative w-[550px] h-[550px] flex justify-center items-center">
-            <div className="absolute inset-0 rounded-full bg-blue-500 blur-3xl animate-pulse"></div>
+            <div className="absolute left-10 bottom-10 w-80 h-80 rounded-full bg-red-500 blur-3xl animate-pulse"></div>
+            <div className="absolute right-10 bottom-10 w-50 h-80 rounded-full bg-orange-500 blur-3xl animate-pulse"></div>
+            <div className="absolute top-25 w-120 h-30 rounded-full bg-blue-100 blur-3xl animate-pulse"></div>
             <motion.img
               src={logoEmpresa}
               alt="Logo da Empresa"
@@ -24,7 +26,7 @@ function Login() {
                 times: [0, 0.25, 0.5, 0.75, 1],
                 ease: "easeInOut",
                 repeat: Infinity,
-                repeatType: "mirror", 
+                repeatType: "mirror",
               }}
               className="relative z-10 transform-gpu"
             />

@@ -2,7 +2,7 @@
   "name": "human_resources_system",
   "version": "1.0.0",
   "description": "",
-  "type": "commonjs",
+  "type": "module",
   "homepage": "https://github.com/ByelBardini/human_resources_system#readme",
   "bugs": {
     "url": "https://github.com/ByelBardini/human_resources_system/issues"
@@ -15,6 +15,7 @@
   "author": "",
   "main": "index.js",
   "scripts": {
+    "start": "node --watch server/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -25,6 +26,7 @@
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.3",
     "sequelize": "^6.37.7",
     "uuid": "^11.1.0"
   }
