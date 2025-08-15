@@ -1,12 +1,19 @@
-function HeaderProjecao() {
+import FiltroCargos from "./FiltroCargos.jsx";
+
+function HeaderProjecao({cargos}) {
   return (
     <thead className="text-white/90">
       <tr className="sticky top-0 z-10">
         <th
           rowSpan={2}
-          className="bg-gradient-to-b from-white/15 to-white/5 text-left px-4 py-3 font-semibold tracking-wide border-b border-white/10"
+          className=" bg-gradient-to-b from-white/15 to-white/5 text-left px-4 py-3 font-semibold tracking-wide border-b border-white/10"
         >
-          Cargo
+          <div className="flex place-content-between items-center">
+            Cargo
+            <FiltroCargos
+              cargos={cargos}
+            />
+          </div>
         </th>
 
         <th
