@@ -18,6 +18,10 @@ Funcionario.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  funcionario_nivel_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   funcionario_nome: {
     type: DataTypes.STRING(200),
     allowNull: false,
@@ -50,10 +54,6 @@ Funcionario.init({
   },
   funcionario_data_admissao: {
     type: DataTypes.DATE,
-    allowNull: false,
-  },
-  funcionario_salario: {
-    type: DataTypes.DOUBLE,
     allowNull: false,
   },
   funcionario_data_desligamento: {

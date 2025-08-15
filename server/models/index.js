@@ -3,6 +3,8 @@ import Funcionario from "./funcionarios.js";
 import Setor from "./setores.js";
 import Usuario from "./usuarios.js";
 import Log from "./logs.js";
+import Nivel from "./niveis.js";
+import Cargo from "./cargos.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -30,14 +32,26 @@ Funcionario.belongsTo(Setor, {
 
 //Foreign keys de funcionarios e empresas
 Empresa.hasMany(Funcionario, {
-    foreignKey: "funcionario_empresa_id",
-    sourceKey: "empresa_id",
-    as: "funcionarios",
+  foreignKey: "funcionario_empresa_id",
+  sourceKey: "empresa_id",
+  as: "funcionarios",
 });
 Funcionario.belongsTo(Empresa, {
-    foreignKey: "funcionario_empresa_id",
-    targetKey: "empresa_id",
-    as: "empresa",
+  foreignKey: "funcionario_empresa_id",
+  targetKey: "empresa_id",
+  as: "empresa",
+});
+
+//Foreign keys de usuarios e niveis
+Nivel.hasMany(Funcionario, {
+  foreignKey: "funcionario_nivel_id",
+  sourceKey: "nivel_id",
+  as: "funcionarios",
+});
+Funcionario.belongsTo(Nivel, {
+  foreignKey: "funcionario_nivel_id",
+  targetKey: "nivel_id",
+  as: "nivel",
 });
 
 //Foreign keys de logs e usuarios
@@ -52,4 +66,29 @@ Log.belongsTo(Usuario, {
   as: "usuario",
 });
 
-export { Empresa, Funcionario, Setor, Usuario, Log };
+//Foreign keys de cargos e empresas
+Empresa.hasMany(Cargo, {
+  foreignKey: "cargo_empresa_id",
+  sourceKey: "empresa_id",
+  as: "cargos",
+});
+Cargo.belongsTo(Empresa, {
+  foreignKey: "cargo_empresa_id",
+  targetKey: "empresa_id",
+  as: "empresa",
+});
+
+//Foreign keys de niveis e cargos
+Cargo.hasMany(Nivel, {
+  foreignKey: "nivel_cargo_id",
+  sourceKey: "cargo_id",
+  as: "niveis",
+});
+Nivel.belongsTo(Cargo, {
+  foreignKey: "nivel_cargo_id",
+  targetKey: "cargo_id",
+  as: "cargo",
+  onDelete: "CASCADE",
+});
+
+export { Empresa, Funcionario, Setor, Usuario, Log, Nivel, Cargo };

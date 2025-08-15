@@ -1,4 +1,5 @@
 import { Funcionario } from "../models/index.js";
+import { UniqueConstraintError, ValidationError } from "sequelize";
 
 export async function getFuncionariosPorSetor(req, res) {
   const { usuario_id } = req.session.user;
