@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 export default function Loading() {
   return (
     <motion.div
-      className="fixed inset-0 z-[600] grid place-items-center"
+      className="fixed inset-0 grid place-items-center z-999"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

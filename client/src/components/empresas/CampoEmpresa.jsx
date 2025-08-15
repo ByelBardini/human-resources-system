@@ -3,7 +3,9 @@ import { motion } from "framer-motion";
 
 export default function CampoEmpresa({ empresas = [], navigate }) {
   async function escolherEmpresa(empresa) {
-    localStorage.setItem("empresa_id", empresa);
+    localStorage.setItem("empresa_id", empresa.empresa_id);
+    localStorage.setItem("empresa_nome", empresa.empresa_nome);
+    localStorage.setItem("empresa_cor", empresa.empresa_cor);
     navigate("/empresa", { replace: true });
   }
 
@@ -15,7 +17,7 @@ export default function CampoEmpresa({ empresas = [], navigate }) {
             key={empresa.empresa_id}
             layout
             whileHover={{ scale: 1.015, y: -1 }}
-            onClick={() => escolherEmpresa(empresa.empresa_id)}
+            onClick={() => escolherEmpresa(empresa)}
             className={[
               "cursor-pointer group relative w-full overflow-hidden rounded-2xl px-5 py-4 my-3",
               "bg-white/5 border border-white/10 backdrop-blur",
