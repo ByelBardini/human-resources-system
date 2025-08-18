@@ -14,6 +14,7 @@ function MenuTela({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
+  setAumentoGeral,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -36,6 +37,7 @@ function MenuTela({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          setAumentoGeral={setAumentoGeral}
         />
       )}
       {opcaoSelecionada == "manualFuncoes" && <ManualFuncoes />}

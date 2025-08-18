@@ -1,15 +1,37 @@
-import HeaderProjecao from "../cargos/HeaderProjecao.jsx";
-import CampoSalario from "../cargos/CampoSalario.jsx";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useState } from "react";
+import HeaderProjecao from "./HeaderProjecao.jsx";
+import CampoSalario from "./CampoSalario.jsx";
 import IconeBotao from "../default/IconeBotao.jsx";
-import CampoTextoDinamico from "../cargos/CampoTextoDinamico.jsx";
+import CampoTextoDinamico from "./CampoTextoDinamico.jsx";
 
-function TabelaCargos({ cargos, selecionado, selecionaCampo, clicaDeleta }) {
+function TabelaCargos({
+  cargos,
+  selecionado,
+  selecionaCampo,
+  clicaDeleta,
+  cargosFiltro,
+}) {
+  const [cargosAtualizado, setCargosAtualizado] = useState([{ niveis: [] }]);
+
+  function puxaDadosPesquisa() {
+    if (cargosFiltro.length < 1) {
+      setCargosAtualizado(cargos);
+    } else {
+      setCargosAtualizado(cargosFiltro);
+    }
+  }
+
+  useEffect(() => {
+    puxaDadosPesquisa();
+  }, [cargos, cargosFiltro]);
+
   return (
     <table className="min-w-[1100px] w-full text-sm">
       <HeaderProjecao cargos={cargos} />
 
       <tbody className="divide-y divide-white/10 text-white/90">
-        {cargos.map((cargo) => (
+        {cargosAtualizado.map((cargo) => (
           <tr
             key={cargo.cargo_id}
             className={

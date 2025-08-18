@@ -1,6 +1,4 @@
-import FiltroCargos from "./FiltroCargos.jsx";
-
-function HeaderProjecao({cargos}) {
+function HeaderProjecao() {
   return (
     <thead className="text-white/90">
       <tr className="sticky top-0 z-10">
@@ -10,9 +8,6 @@ function HeaderProjecao({cargos}) {
         >
           <div className="flex place-content-between items-center">
             Cargo
-            <FiltroCargos
-              cargos={cargos}
-            />
           </div>
         </th>
 

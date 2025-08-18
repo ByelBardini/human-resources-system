@@ -45,11 +45,11 @@ export async function postCargo(req, res) {
         { transaction: t }
       );
       const salInicial = duasCasas(salario_inicial);
-      const saljuniorI = duasCasas(salInicial * 1.05);
-      const saljuniorII = duasCasas(saljuniorI * 1.05);
-      const saljuniorIII = duasCasas(saljuniorII * 1.05);
+      const salJuniorI = duasCasas(salInicial * 1.05);
+      const salJuniorII = duasCasas(salJuniorI * 1.05);
+      const salJuniorIII = duasCasas(salJuniorII * 1.05);
 
-      const salPlenoI = duasCasas(saljuniorIII * 1.065);
+      const salPlenoI = duasCasas(salJuniorIII * 1.065);
       const salPlenoII = duasCasas(salPlenoI * 1.065);
       const salPlenoIII = duasCasas(salPlenoII * 1.065);
 
@@ -67,17 +67,17 @@ export async function postCargo(req, res) {
           {
             nivel_cargo_id: cargo.cargo_id,
             nivel_nome: "Júnior I",
-            nivel_salario: saljuniorI,
+            nivel_salario: salJuniorI,
           },
           {
             nivel_cargo_id: cargo.cargo_id,
             nivel_nome: "Júnior II",
-            nivel_salario: saljuniorII,
+            nivel_salario: salJuniorII,
           },
           {
             nivel_cargo_id: cargo.cargo_id,
             nivel_nome: "Júnior III",
-            nivel_salario: saljuniorIII,
+            nivel_salario: salJuniorIII,
           },
           {
             nivel_cargo_id: cargo.cargo_id,
@@ -129,6 +129,107 @@ export async function postCargo(req, res) {
     }
     return res.status(500).json({
       error: "Erro ao criar cargo, fale com um administrador do sistema",
+    });
+  }
+}
+
+export async function aumentoGeral(req, res) {
+  const { cargo_empresa_id, porcentagem } = req.body;
+  if (!porcentagem || !cargo_empresa_id) {
+    return res.status(400).json({ error: "Todos os dados são necessários" });
+  }
+
+  const { usuario_id } = req.session.user;
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  console.log("body: ", cargo_empresa_id, porcentagem);
+
+  try {
+    await sequelize.transaction(async (t) => {
+      const cargos = await Cargo.findAll({
+        where: { cargo_empresa_id },
+        transaction: t,
+      });
+
+      const transformaEmNumero = (valor) => {
+        if (valor === null || valor === undefined) return NaN;
+        if (typeof valor === "number") return valor;
+        if (typeof valor === "bigint") return Number(valor);
+        const s = String(valor)
+          .replace(/\s/g, "")
+          .replace(/%/g, "")
+          .replace(/[R$\u00A0]/g, "")
+          .replace(/\./g, "")
+          .replace(",", ".");
+        const n = Number(s);
+        return Number.isFinite(n) ? n : NaN;
+      };
+
+      const duasCasas = (x) =>
+        Math.round((transformaEmNumero(x) + Number.EPSILON) * 100) / 100;
+
+      for (const cargo of cargos) {
+        const nivelInicial = await Nivel.findOne({
+          where: {
+            nivel_cargo_id: cargo.cargo_id,
+            nivel_nome: "Inicial",
+          },
+          transaction: t,
+        });
+
+        const salarioBase =
+          (1 + transformaEmNumero(porcentagem) / 100) *
+          nivelInicial.nivel_salario;
+
+        console.log(salarioBase);
+
+        console.log("salario base: ", salarioBase);
+        const salInicial = duasCasas(salarioBase);
+        const salJuniorI = duasCasas(salInicial * 1.05);
+        const salJuniorII = duasCasas(salJuniorI * 1.05);
+        const salJuniorIII = duasCasas(salJuniorII * 1.05);
+
+        const salPlenoI = duasCasas(salJuniorIII * 1.065);
+        const salPlenoII = duasCasas(salPlenoI * 1.065);
+        const salPlenoIII = duasCasas(salPlenoII * 1.065);
+
+        const salSeniorI = duasCasas(salPlenoIII * 1.07);
+        const salSeniorII = duasCasas(salSeniorI * 1.07);
+        const salSeniorIII = duasCasas(salSeniorII * 1.07);
+
+        const updates = [
+          ["Inicial", salInicial],
+          ["Júnior I", salJuniorI],
+          ["Júnior II", salJuniorII],
+          ["Júnior III", salJuniorIII],
+          ["Pleno I", salPlenoI],
+          ["Pleno II", salPlenoII],
+          ["Pleno III", salPlenoIII],
+          ["Sênior I", salSeniorI],
+          ["Sênior II", salSeniorII],
+          ["Sênior III", salSeniorIII],
+        ];
+
+        for (const [nome, salario] of updates) {
+          await Nivel.update(
+            { nivel_salario: salario },
+            {
+              where: { nivel_cargo_id: cargo.cargo_id, nivel_nome: nome },
+              transaction: t,
+            }
+          );
+        }
+      }
+    });
+    return res.status(200).json({ message: "Aumento aplicado com sucesso." });
+  } catch (err) {
+    console.error("Erro ao aplicar aumento:", err);
+    return res.status(500).json({
+      error: "Erro ao aplicar aumento, fale com um administrador do sistema",
     });
   }
 }

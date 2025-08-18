@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Check } from "lucide-react";
 
-function FiltroCargos({ cargos }) {
+function FiltroCargos({ cargos, setCargosFiltro, cargosFiltro }) {
   const [open, setOpen] = useState(false);
   const btnRef = useRef(null);
   const popRef = useRef(null);
+
+  function clica(opcao) {
+    setCargosFiltro((prev) => {
+      const exists = prev.some((c) => c.cargo_id === opcao.cargo_id);
+      return exists
+        ? prev.filter((c) => c.cargo_id !== opcao.cargo_id)
+        : [...prev, { ...opcao, filtrado: true }];
+    });
+  }
 
   useEffect(() => {
     const handleDown = (e) => {
@@ -49,24 +58,38 @@ function FiltroCargos({ cargos }) {
             <span className="absolute -top-1 left-3 w-2 h-2 rotate-45 bg-blue-950 border-l border-t border-black/30" />
             <div
               role="menu"
-              className="w-64 max-h-100 overflow-y-auto overflow-x-hidden
+              className=" w-64 max-h-100 overflow-y-auto overflow-x-hidden
              rounded-xl border border-white/20 bg-slate-900
              backdrop-blur-md shadow-2xl p-2 overscroll-contain"
             >
               <ul className="space-y-1">
-                {cargos.map((cargo) => (
-                  <li key={cargo.cargo_id}>
-                    <button
-                      type="button"
-                      className="w-full px-3 py-2 rounded-lg text-left
-                     text-white/95 bg-slate-800/90 border border-white/10
-                     hover:bg-slate-700/90 hover:border-white/20
-                     focus:outline-none focus:ring-2 focus:ring-white/20 transition"
-                    >
-                      <span className="block truncate">{cargo.cargo_nome}</span>
-                    </button>
-                  </li>
-                ))}
+                {cargos.map((cargo) => {
+                  const selecionado = cargosFiltro.some(
+                    (c) => c.cargo_id === cargo.cargo_id
+                  );
+                  return (
+                    <li key={cargo.cargo_id}>
+                      <button
+                        type="button"
+                        onClick={() => clica(cargo)}
+                        className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition
+                          ${
+                            selecionado
+                              ? "bg-slate-700/90 border-white/20 text-white"
+                              : "bg-slate-800/90 border-white/10 text-white/90 hover:bg-slate-700/90 hover:border-white/20"
+                          } 
+                          border focus:outline-none focus:ring-2 focus:ring-white/20`}
+                      >
+                        {selecionado && (
+                          <Check size={16} className="shrink-0" />
+                        )}
+                        <span className="block truncate">
+                          {cargo.cargo_nome}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
