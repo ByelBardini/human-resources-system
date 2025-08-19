@@ -23,7 +23,7 @@ Notificacao.init({
     allowNull: false,
   },
   notificacao_descricao: {
-    type: DataTypes.TExt,
+    type: DataTypes.TEXT,
     allowNull: true,
   },
 }, {
