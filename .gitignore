@@ -24,5 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+uploads
 logo-empresa.png
 favicon.ico
