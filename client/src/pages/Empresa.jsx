@@ -9,6 +9,7 @@ import MenuTela from "../components/menu/MenuTela.jsx";
 import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
 import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
 import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
+import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
 
 function Empresa() {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ function Empresa() {
   const [aumentoGeral, setAumentoGeral] = useState(false);
 
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
+
+  const [modificaDesc, setModificaDesc] = useState(false);
+  const [desc, setDesc] = useState();
 
   const [carregando, setCarregando] = useState(false);
 
@@ -43,6 +47,21 @@ function Empresa() {
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
+
+      {modificaDesc && (
+        <ModificaDescricaoModal
+          setModificaDesc={setModificaDesc}
+          descricao={desc}
+          setAviso={setAviso}
+          setCorAviso={setCorAviso}
+          setTextoAviso={setTextoAviso}
+          setCarregando={setCarregando}
+          setConfirmacao={setConfirmacao}
+          setTextoConfirmacao={setTextoConfirmacao}
+          setOnSimConfirmacao={setOnSimConfirmacao}
+        />
+      )}
+
       <ModaisCargos
         adicionando={adicionandoCargo}
         aumentoGeral={aumentoGeral}
@@ -112,6 +131,8 @@ function Empresa() {
             setOnSimConfirmacao={setOnSimConfirmacao}
             setAumentoGeral={setAumentoGeral}
             setAdicionandoFunc={setAdicionandoFunc}
+            setDesc={setDesc}
+            setModificaDesc={setModificaDesc}
           />
         </div>
       </div>

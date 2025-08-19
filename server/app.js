@@ -9,16 +9,19 @@ import empresaRoutes from "./routes/empresaRoutes.js";
 import setorRoutes from "./routes/setorRoutes.js";
 import funcionarioRoutes from "./routes/funcionarioRoutes.js";
 import cargoRoutes from "./routes/cargoRoutes.js";
+import descricaoRoutes from "./routes/descricaoRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(
   session({
@@ -41,5 +44,6 @@ app.use("/", empresaRoutes);
 app.use("/", setorRoutes);
 app.use("/", funcionarioRoutes);
 app.use("/", cargoRoutes);
+app.use("/", descricaoRoutes);
 
 export default app;

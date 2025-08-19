@@ -114,7 +114,7 @@ Funcionario.hasMany(Notificacao, {
 Notificacao.belongsTo(Funcionario, {
   foreignKey: "notificacao_funcionario_id",
   targetKey: "funcionario_id",
-  as: "notificacoes",
+  as: "funcionario",
   onDelete: "CASCADE",
 });
 
@@ -122,12 +122,47 @@ Notificacao.belongsTo(Funcionario, {
 Cargo.hasMany(Descricao, {
   foreignKey: "descricao_cargo_id",
   sourceKey: "cargo_id",
-  as: "cargos",
+  as: "descricoes",
 });
 Descricao.belongsTo(Cargo, {
   foreignKey: "descricao_cargo_id",
   targetKey: "cargo_id",
-  as: "cargos",
+  as: "cargo",
+  onDelete: "CASCADE",
 });
 
-export { Empresa, Funcionario, Setor, Usuario, Log, Nivel, Cargo, Descricao, Notificacao };
+//Foreign keys de Descrições e empresas
+Empresa.hasMany(Descricao, {
+  foreignKey: "descricao_empresa_id",
+  sourceKey: "empresa_id",
+  as: "descricoes",
+});
+Descricao.belongsTo(Empresa, {
+  foreignKey: "descricao_empresa_id",
+  targetKey: "empresa_id",
+  as: "empresa",
+});
+
+//Foreign keys de Descrições e setores
+Setor.hasMany(Descricao, {
+  foreignKey: "descricao_setor_id",
+  sourceKey: "setor_id",
+  as: "descricoes",
+});
+Descricao.belongsTo(Setor, {
+  foreignKey: "descricao_setor_id",
+  targetKey: "setor_id",
+  as: "setor",
+});
+
+export {
+  Empresa,
+  Funcionario,
+  Setor,
+  Usuario,
+  Log,
+  Nivel,
+  Cargo,
+  Descricao,
+  Notificacao,
+};

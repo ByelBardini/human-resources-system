@@ -10,6 +10,10 @@ Descricao.init({
     autoIncrement: true,
     allowNull: false,
   },
+  descricao_empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   descricao_cargo_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -19,6 +23,10 @@ Descricao.init({
     allowNull: true,
   },
   descricao_treinamento: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  descricao_escolaridade: {
     type: DataTypes.TEXT,
     allowNull: true,
   },

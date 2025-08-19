@@ -16,6 +16,8 @@ function MenuTela({
   setOnSimConfirmacao,
   setAumentoGeral,
   setAdicionandoFunc,
+  setDesc,
+  setModificaDesc,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -49,7 +51,9 @@ function MenuTela({
           setCarregando={setCarregando}
         />
       )}
-      {opcaoSelecionada == "manualFuncoes" && <ManualFuncoes />}
+      {opcaoSelecionada == "manualFuncoes" && (
+        <ManualFuncoes setDesc={setDesc} setModificaDesc={setModificaDesc} />
+      )}
     </div>
   );
 }

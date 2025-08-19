@@ -37,3 +37,25 @@ CREATE TABLE `sistema_rh`.`descricao_cargo` (
 
 ALTER TABLE `sistema_rh`.`cargos` 
 DROP COLUMN `cargo_descricao`;
+
+ALTER TABLE `sistema_rh`.`descricao_cargo` 
+ADD COLUMN `descricao_empresa_id` INT NOT NULL AFTER `descricao_id`,
+ADD INDEX `descricao_empresa_id_idx` (`descricao_empresa_id` ASC) VISIBLE;
+;
+ALTER TABLE `sistema_rh`.`descricao_cargo` 
+ADD CONSTRAINT `descricao_empresa_id`
+  FOREIGN KEY (`descricao_empresa_id`)
+  REFERENCES `sistema_rh`.`empresas` (`empresa_id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `sistema_rh`.`descricao_cargo` 
+ADD COLUMN `descricao_escolaridade` TEXT NULL AFTER `descricao_treinamento`;
+
+ALTER TABLE `sistema_rh`.`descricao_cargo` 
+DROP FOREIGN KEY `descricao_cargo_id`;
+ALTER TABLE `sistema_rh`.`descricao_cargo` 
+ADD CONSTRAINT `descricao_cargo_id`
+  FOREIGN KEY (`descricao_cargo_id`)
+  REFERENCES `sistema_rh`.`cargos` (`cargo_id`)
+  ON DELETE CASCADE;

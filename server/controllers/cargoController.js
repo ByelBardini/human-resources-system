@@ -114,7 +114,10 @@ export async function postCargo(req, res) {
       );
 
       await Descricao.create(
-        { descricao_cargo_id: cargo.cargo_id },
+        {
+          descricao_cargo_id: cargo.cargo_id,
+          descricao_empresa_id: cargo_empresa_id,
+        },
         { transaction: t }
       );
 
