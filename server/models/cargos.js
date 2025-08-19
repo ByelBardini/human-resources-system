@@ -19,10 +19,6 @@ Cargo.init({
     allowNull: false,
     unique: true,
   },
-  cargo_descricao: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
   cargo_ativo: {
     type: DataTypes.TINYINT,
     allowNull: false,

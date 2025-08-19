@@ -1,5 +1,5 @@
-import { Cargo, Nivel } from "../models/index.js";
-import { UniqueConstraintError, ValidationError } from "sequelize";
+import { Cargo, Nivel, Descricao } from "../models/index.js";
+import { UniqueConstraintError } from "sequelize";
 import sequelize from "../config/database.js";
 
 export async function postCargo(req, res) {
@@ -110,6 +110,11 @@ export async function postCargo(req, res) {
             nivel_salario: salSeniorIII,
           },
         ],
+        { transaction: t }
+      );
+
+      await Descricao.create(
+        { descricao_cargo_id: cargo.cargo_id },
         { transaction: t }
       );
 
