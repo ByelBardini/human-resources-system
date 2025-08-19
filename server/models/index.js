@@ -5,6 +5,7 @@ import Usuario from "./usuarios.js";
 import Log from "./logs.js";
 import Nivel from "./niveis.js";
 import Cargo from "./cargos.js";
+import Notificacao from "./notificacoes.js"
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -100,6 +101,19 @@ Nivel.belongsTo(Cargo, {
   foreignKey: "nivel_cargo_id",
   targetKey: "cargo_id",
   as: "cargo",
+  onDelete: "CASCADE",
+});
+
+//Foreign keys de Notificações e funcionários
+Funcionario.hasMany(Notificacao, {
+  foreignKey: "notificacao_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "notificacoes",
+});
+Notificacao.belongsTo(Funcionario, {
+  foreignKey: "notificacao_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "notificacoes",
   onDelete: "CASCADE",
 });
 
