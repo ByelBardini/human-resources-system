@@ -1,5 +1,5 @@
 import HomeMenu from "../telas/HomeMenu.jsx";
-import DistribuicaoSalarial from "../telas/DistribuicaoSalarial.jsx";
+import Funcionarios from "../telas/Funcionarios.jsx";
 import ManualFuncoes from "../telas/ManualFuncoes.jsx";
 import ProjecaoSalarial from "../telas/ProjecaoSalarial.jsx";
 
@@ -15,6 +15,7 @@ function MenuTela({
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setAumentoGeral,
+  setAdicionandoFunc,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -26,7 +27,14 @@ function MenuTela({
           setTextoAviso={setTextoAviso}
         />
       )}
-      {opcaoSelecionada == "distribuicaoSalarial" && <DistribuicaoSalarial />}
+      {opcaoSelecionada == "funcionarios" && (
+        <Funcionarios
+          setAdicionandoFunc={setAdicionandoFunc}
+          setAviso={setAviso}
+          setCorAviso={setCorAviso}
+          setTextoAviso={setTextoAviso}
+        />
+      )}
       {opcaoSelecionada == "projecaoSalarial" && (
         <ProjecaoSalarial
           setAdicionando={setAdicionando}
@@ -38,6 +46,7 @@ function MenuTela({
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setAumentoGeral={setAumentoGeral}
+          setCarregando={setCarregando}
         />
       )}
       {opcaoSelecionada == "manualFuncoes" && <ManualFuncoes />}

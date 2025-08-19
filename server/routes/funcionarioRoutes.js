@@ -1,5 +1,4 @@
 import {
-  getFuncionariosPorSetor,
   getFuncionarios,
   putFuncionario,
   postFuncionario,
@@ -7,17 +6,13 @@ import {
 } from "./../controllers/funcionarioController.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
+import upload from "../middlewares/upload.js";
 
 const router = express.Router();
 
-router.get(
-  "/funcionario/:id/:setor_id",
-  verificaToken,
-  getFuncionariosPorSetor
-);
-router.get("/funcionario/:id/", verificaToken, getFuncionarios);
+router.get("/funcionario/:id", getFuncionarios);
 router.put("/funcionario/:id", verificaToken, putFuncionario);
-router.post("/funcionario", verificaToken, postFuncionario);
+router.post("/funcionario", upload.single("foto"),  verificaToken, postFuncionario);
 router.put("/funcionario/inativa/:id", verificaToken, inativaFuncionario);
 
 export default router;

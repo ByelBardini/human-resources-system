@@ -7,7 +7,7 @@ function CampoSalario({
   return (
     <td className="px-2 py-2">
       <input
-        value={`R$ ${cargoNiveis?.nivel_salario.toFixed(2) || ""}`}
+        value={`R$ ${cargoNiveis?.nivel_salario.toLocaleString('pt-br', {minimumFractionDigits: 2}) || ""}`}
         readOnly
         className={
           campoSelecionado == cargoNiveis?.nivel_id

@@ -7,13 +7,16 @@ import ModalAviso from "../components/default/ModalAviso.jsx";
 import MenuOpcoes from "../components/menu/MenuOpcoes.jsx";
 import MenuTela from "../components/menu/MenuTela.jsx";
 import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
+import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
 import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
 
 function Empresa() {
   const navigate = useNavigate();
 
-  const [adicionando, setAdicionando] = useState(false);
+  const [adicionandoCargo, setAdicionandoCargo] = useState(false);
   const [aumentoGeral, setAumentoGeral] = useState(false);
+
+  const [adicionandoFunc, setAdicionandoFunc] = useState(false);
 
   const [carregando, setCarregando] = useState(false);
 
@@ -41,9 +44,9 @@ function Empresa() {
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
       <ModaisCargos
-        adicionando={adicionando}
+        adicionando={adicionandoCargo}
         aumentoGeral={aumentoGeral}
-        setAdicionando={setAdicionando}
+        setAdicionando={setAdicionandoCargo}
         setAviso={setAviso}
         setCorAviso={setCorAviso}
         setTextoAviso={setTextoAviso}
@@ -52,6 +55,15 @@ function Empresa() {
         setTextoConfirmacao={setTextoConfirmacao}
         setOnSimConfirmacao={setOnSimConfirmacao}
         setAumentoGeral={setAumentoGeral}
+      />
+
+      <ModaisFuncionarios
+        adicionandoFunc={adicionandoFunc}
+        setAdicionandoFunc={setAdicionandoFunc}
+        setAviso={setAviso}
+        setCorAviso={setCorAviso}
+        setTextoAviso={setTextoAviso}
+        setCarregando={setCarregando}
       />
 
       {confirmacao && (
@@ -94,11 +106,12 @@ function Empresa() {
             setAviso={setAviso}
             setCorAviso={setCorAviso}
             setTextoAviso={setTextoAviso}
-            setAdicionando={setAdicionando}
+            setAdicionando={setAdicionandoCargo}
             setConfirmacao={setConfirmacao}
             setTextoConfirmacao={setTextoConfirmacao}
             setOnSimConfirmacao={setOnSimConfirmacao}
             setAumentoGeral={setAumentoGeral}
+            setAdicionandoFunc={setAdicionandoFunc}
           />
         </div>
       </div>

@@ -42,7 +42,7 @@ Funcionario.belongsTo(Empresa, {
   as: "empresa",
 });
 
-//Foreign keys de usuarios e niveis
+//Foreign keys de funcionarios e niveis
 Nivel.hasMany(Funcionario, {
   foreignKey: "funcionario_nivel_id",
   sourceKey: "nivel_id",
@@ -52,6 +52,18 @@ Funcionario.belongsTo(Nivel, {
   foreignKey: "funcionario_nivel_id",
   targetKey: "nivel_id",
   as: "nivel",
+});
+
+//Foreign keys de funcionarios e cargos
+Cargo.hasMany(Funcionario, {
+  foreignKey: "funcionario_cargo_id",
+  sourceKey: "cargo_id",
+  as: "funcionarios",
+});
+Funcionario.belongsTo(Cargo, {
+  foreignKey: "funcionario_cargo_id",
+  targetKey: "cargo_id",
+  as: "cargo",
 });
 
 //Foreign keys de logs e usuarios

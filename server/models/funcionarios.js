@@ -18,6 +18,10 @@ Funcionario.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  funcionario_cargo_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   funcionario_nivel_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -26,14 +30,6 @@ Funcionario.init({
     type: DataTypes.STRING(200),
     allowNull: false,
     unique: true,
-  },
-  funcionario_cargo: {
-    type: DataTypes.STRING(150),
-    allowNull: false,
-  },
-  funcionario_nivel: {
-    type: DataTypes.STRING(150),
-    allowNull: false,
   },
   funcionario_cpf: {
     type: DataTypes.STRING(100),
@@ -47,6 +43,10 @@ Funcionario.init({
   funcionario_sexo: {
     type: DataTypes.ENUM("masculino", "feminino"),
     allowNull: false,
+  },
+  funcionario_imagem_caminho: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
   },
   funcionario_data_nascimento: {
     type: DataTypes.DATE,

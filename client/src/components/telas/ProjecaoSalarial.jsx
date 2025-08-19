@@ -12,6 +12,7 @@ export default function ProjecaoSalarial({
   setTextoAviso,
   setAviso,
   setAumentoGeral,
+  setCarregando,
 }) {
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [cargosFiltro, setCargosFiltro] = useState([]);
@@ -27,8 +28,10 @@ export default function ProjecaoSalarial({
   }
 
   async function deletaCargo(id) {
+    setCarregando(true);
     try {
       await deleteCargo(id);
+      setCarregando(false);
       setConfirmacao(false);
       setCorAviso("verde");
       setTextoAviso("Cargo excluído com sucesso!");
@@ -39,6 +42,7 @@ export default function ProjecaoSalarial({
         window.location.reload();
       }, 500);
     } catch (err) {
+      setCarregando(false);
       setConfirmacao(false);
       console.error("Erro ao deletar cargo:", err);
       setCorAviso("vermelho");
@@ -48,11 +52,10 @@ export default function ProjecaoSalarial({
   }
 
   function selecionaCampo(cargoId, campoId) {
-    setSelecionado(
-      (prev) =>
-        prev.linha === cargoId && prev.campo === campoId
-          ? { linha: null, campo: null } // desmarca
-          : { linha: cargoId, campo: campoId } // marca
+    setSelecionado((prev) =>
+      prev.linha === cargoId && prev.campo === campoId
+        ? { linha: null, campo: null }
+        : { linha: cargoId, campo: campoId }
     );
   }
 

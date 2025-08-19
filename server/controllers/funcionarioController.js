@@ -1,62 +1,42 @@
-import { Funcionario } from "../models/index.js";
-import { UniqueConstraintError, ValidationError } from "sequelize";
-
-export async function getFuncionariosPorSetor(req, res) {
-  const { usuario_id } = req.session.user;
-  if (!usuario_id) {
-    return res
-      .status(401)
-      .json({ error: "Necessário estar logado para realizar operações." });
-  }
-
-  const { id, setor_id } = req.params;
-  if (!id || !setor_id) {
-    return res
-      .status(400)
-      .json({ error: "Necessário id da empresa e do setor a serem buscados" });
-  }
-
-  try {
-    const funcionarios = await Funcionario.findAll({
-      where: { funcionario_empresa_id: id, funcionario_setor_id: setor_id },
-    });
-
-    return res.status(200).json(funcionarios);
-  } catch (err) {
-    console.error("Erro ao buscar funcionários:", err);
-    return res.status(500).json({
-      error:
-        "Erro ao buscar funcionários, fale com um administrador do sistema",
-    });
-  }
-}
+import { Funcionario, Setor, Cargo, Nivel } from "../models/index.js";
+import { UniqueConstraintError } from "sequelize";
 
 export async function getFuncionarios(req, res) {
+  const { id } = req.params;
+
   const { usuario_id } = req.session.user;
+
   if (!usuario_id) {
     return res
       .status(401)
       .json({ error: "Necessário estar logado para realizar operações." });
-  }
-  const { id } = req.params;
-  if (!id) {
-    return res
-      .status(400)
-      .json({ error: "Necessário id da empresa a ser buscada" });
   }
 
   try {
     const funcionarios = await Funcionario.findAll({
       where: { funcionario_empresa_id: id },
+      attributes: [
+        "funcionario_id",
+        "funcionario_nome",
+        "funcionario_sexo",
+        "funcionario_data_nascimento",
+        "funcionario_data_admissao",
+      ],
+      include: [
+        { model: Setor, as: "setor", attributes: ["setor_nome"] },
+        {
+          model: Nivel,
+          as: "nivel",
+          attributes: ["nivel_nome", "nivel_salario"],
+        },
+        { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+      ],
     });
 
     return res.status(200).json(funcionarios);
   } catch (err) {
     console.error("Erro ao buscar funcionários:", err);
-    return res.status(500).json({
-      error:
-        "Erro ao buscar funcionários, fale com um administrador do sistema",
-    });
+    return res.status(500).json({ error: "Erro ao buscar funcionários" });
   }
 }
 
@@ -119,17 +99,17 @@ export async function postFuncionario(req, res) {
   const {
     funcionario_empresa_id,
     funcionario_setor_id,
-    funcionario_nome,
-    funcionario_cargo,
+    funcionario_cargo_id,
     funcionario_nivel,
+    funcionario_nome,
     funcionario_cpf,
     funcionario_celular,
     funcionario_sexo,
     funcionario_data_nascimento,
     funcionario_data_admissao,
-    funcionario_salario,
   } = req.body;
   const { usuario_id } = req.session.user;
+  const fotoPath = req.file ? `/uploads/fotos/${req.file.filename}` : null;
 
   if (!usuario_id) {
     return res
@@ -138,34 +118,40 @@ export async function postFuncionario(req, res) {
   }
 
   if (
-    !funcionario_nome ||
-    !funcionario_cargo ||
+    !funcionario_empresa_id ||
     !funcionario_setor_id ||
+    !funcionario_cargo_id ||
     !funcionario_nivel ||
+    !funcionario_nome ||
     !funcionario_cpf ||
     !funcionario_sexo ||
-    !funcionario_salario ||
-    !funcionario_empresa_id ||
-    !funcionario_celular ||
     !funcionario_data_nascimento ||
     !funcionario_data_admissao
   ) {
     return res.status(400).json({ error: "Todos os dados são obrigatórios." });
   }
+  console.log(req.body);
 
   try {
+    const nivel = await Nivel.findOne({
+      where: {
+        nivel_cargo_id: funcionario_cargo_id,
+        nivel_nome: funcionario_nivel,
+      },
+    });
+
     const novoFuncionario = await Funcionario.create({
       funcionario_empresa_id,
       funcionario_setor_id,
+      funcionario_cargo_id,
+      funcionario_nivel_id: nivel.nivel_id,
       funcionario_nome,
-      funcionario_cargo,
-      funcionario_nivel,
       funcionario_cpf,
       funcionario_celular,
       funcionario_sexo,
       funcionario_data_nascimento,
       funcionario_data_admissao,
-      funcionario_salario,
+      funcionario_imagem_caminho: fotoPath,
     });
 
     return res.status(201).json(novoFuncionario);
@@ -181,29 +167,31 @@ export async function postFuncionario(req, res) {
   }
 }
 
-export async function inativaFuncionario(req, res){
-    const { id } = req.params;
-    const { usuario_id } = req.session.user;
-    
-    if (!usuario_id) {
-        return res
-        .status(401)
-        .json({ error: "Necessário estar logado para realizar operações." });
+export async function inativaFuncionario(req, res) {
+  const { id } = req.params;
+  const { usuario_id } = req.session.user;
+
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  try {
+    const funcionario = await Funcionario.findByPk(id);
+
+    if (!funcionario) {
+      return res.status(404).json({ error: "Funcionário não encontrado." });
     }
-    
-    try {
-        const funcionario = await Funcionario.findByPk(id);
-    
-        if (!funcionario) {
-        return res.status(404).json({ error: "Funcionário não encontrado." });
-        }
-    
-        funcionario.funcionario_ativo = 0;
-        await funcionario.save();
-    
-        return res.status(200).json({ message: "Funcionário inativado com sucesso." });
-    } catch (err) {
-        console.error("Erro ao inativar funcionário:", err);
-        return res.status(500).json({ error: "Erro ao inativar funcionário" });
-    }
+
+    funcionario.funcionario_ativo = 0;
+    await funcionario.save();
+
+    return res
+      .status(200)
+      .json({ message: "Funcionário inativado com sucesso." });
+  } catch (err) {
+    console.error("Erro ao inativar funcionário:", err);
+    return res.status(500).json({ error: "Erro ao inativar funcionário" });
+  }
 }

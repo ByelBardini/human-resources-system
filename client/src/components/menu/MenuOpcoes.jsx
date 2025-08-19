@@ -1,7 +1,7 @@
 function MenuOpcoes({ setOpcaoSelecionada, opcaoSelecionada }) {
   const botoes = [
     { id: "home", label: "Home" },
-    { id: "distribuicaoSalarial", label: "Distribuição Salarial" },
+    { id: "funcionarios", label: "Funcionários" },
     { id: "projecaoSalarial", label: "Projeção Salarial" },
     { id: "manualFuncoes", label: "Manual Descritivo de Funções" },
   ];
