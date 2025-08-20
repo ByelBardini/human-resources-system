@@ -16,7 +16,34 @@ function TabelaCargos({
 
   function puxaDadosPesquisa() {
     if (cargosFiltro.length < 1) {
-      setCargosAtualizado(cargos);
+      if (cargos.length < 1) {
+        const nomesNiveis = [
+          "Inicial",
+          "Júnior I",
+          "Júnior II",
+          "Júnior III",
+          "Pleno I",
+          "Pleno II",
+          "Pleno III",
+          "Sênior I",
+          "Sênior II",
+          "Sênior III",
+        ];
+
+        setCargosAtualizado([
+          {
+            cargo_id: 0,
+            cargo_nome: "",
+            niveis: nomesNiveis.map((nivel_nome) => ({
+              nivel_id: 0,
+              nivel_nome,
+              nivel_salario: 0,
+            })),
+          },
+        ]);
+      } else {
+        setCargosAtualizado(cargos);
+      }
     } else {
       setCargosAtualizado(cargosFiltro);
     }
