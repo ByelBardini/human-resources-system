@@ -59,7 +59,7 @@ export async function login(req, res) {
         sameSite: "lax",
         secure: false,
         path: "/",
-        maxAge: 8 * 60 * 60 * 1000, // 8 horas
+        maxAge: 8 * 60 * 60 * 1000, 
       })
       .status(200)
       .json(resposta);

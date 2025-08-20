@@ -1,4 +1,24 @@
-function TabelaDescricao({ descricoes, setDesc, setModificaDesc }) {
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect } from "react";
+import { useState } from "react";
+
+function TabelaDescricao({
+  descricoes,
+  setDesc,
+  setModificaDesc,
+  descricoesFiltradas,
+}) {
+  const [clicado, setClicado] = useState("");
+  const [listaDescricoes, setListaDescricoes] = useState([]);
+
+  function selecionaCampo(id) {
+    if (clicado == id) {
+      setClicado(0);
+    } else {
+      setClicado(id);
+    }
+  }
+
   function abreModificacao(descricao) {
     const formatada = {
       ...descricao,
@@ -13,6 +33,18 @@ function TabelaDescricao({ descricoes, setDesc, setModificaDesc }) {
     setDesc(formatada);
     setModificaDesc(true);
   }
+
+  function setarFiltro() {
+    if (descricoesFiltradas.length < 1) {
+      setListaDescricoes(descricoes);
+    } else {
+      setListaDescricoes(descricoesFiltradas);
+    }
+  }
+
+  useEffect(() => {
+    setarFiltro();
+  }, [descricoes, descricoesFiltradas]);
 
   return (
     <div className="mt-5 relative w-full overflow-auto overflow-x-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
@@ -37,9 +69,15 @@ function TabelaDescricao({ descricoes, setDesc, setModificaDesc }) {
         </thead>
 
         <tbody className="divide-y divide-white/10">
-          {descricoes.map((descricao) => (
+          {listaDescricoes.map((descricao) => (
             <tr
-              className="hover:bg-white/5 transition-colors align-top"
+              key={descricao.descricao_id}
+              className={
+                clicado == descricao.descricao_id
+                  ? "bg-white/8 hover:bg-white/12 transition-colors"
+                  : "hover:bg-white/3 transition-colors"
+              }
+              onClick={() => selecionaCampo(descricao.descricao_id)}
               onDoubleClick={() => abreModificacao(descricao)}
             >
               <td className="px-4 py-3">
