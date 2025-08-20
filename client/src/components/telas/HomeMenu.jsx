@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
   const [imagem, setImagem] = useState(null);
-  const [cor, setCor] = useState("blue");
+  const [cor, setCor] = useState("black");
 
   async function buscarImagemEmpresa() {
     setCarregando(true);
@@ -31,11 +31,13 @@ function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
   }, []);
 
   return (
+    
     <div>
       <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Menu Principal</h1>
       <div className="relative flex justify-center items-center">
         <div
-          className={`absolute top-18 w-75 h-75 rounded-full bg-${cor}-500 blur-3xl animate-pulse`}
+          className={`absolute top-18 w-75 h-75 rounded-full blur-3xl animate-pulse`}
+          style={{ backgroundColor: cor }}
         ></div>
         <motion.img
           src={imagem}

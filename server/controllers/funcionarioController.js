@@ -1,6 +1,34 @@
 import { Funcionario, Setor, Cargo, Nivel } from "../models/index.js";
 import { UniqueConstraintError } from "sequelize";
 
+export async function getCargoSetor(req, res) {
+  const { id } = req.params;
+  const { usuario_id } = req.session.user;
+
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  try {
+    const cargo = await Cargo.findAll({
+      where: { cargo_empresa_id: id },
+      attributes: ["cargo_id", "cargo_nome"],
+      order: [["cargo_nome", "ASC"]],
+    });
+    const setor = await Setor.findAll({
+      where: { setor_empresa_id: id },
+      attributes: ["setor_id", "setor_nome"],
+      order: [["setor_nome", "ASC"]],
+    });
+    return res.status(200).json({ cargo, setor });
+  } catch (err) {
+    console.error("Erro ao buscar cargos e setores:", err);
+    return res.status(500).json({ error: "Erro ao buscar cargos e setores" });
+  }
+}
+
 export async function getFuncionarios(req, res) {
   const { id } = req.params;
 

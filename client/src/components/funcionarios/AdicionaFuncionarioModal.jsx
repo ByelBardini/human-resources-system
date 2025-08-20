@@ -1,6 +1,9 @@
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { postFuncionario } from "../../services/api/funcionarioService.js";
+import {
+  postFuncionario,
+  getCargoSetor,
+} from "../../services/api/funcionarioService.js";
 
 function AdicionaFuncionarioModal({
   setAdicionandoFunc,
@@ -9,6 +12,9 @@ function AdicionaFuncionarioModal({
   setTextoAviso,
   setCarregando,
 }) {
+  const [setores, setSetores] = useState([]);
+  const [cargos, setCargos] = useState([]);
+
   const [nome, setNome] = useState("");
   const [setor, setSetor] = useState("");
   const [cargo, setCargo] = useState("");
@@ -22,6 +28,21 @@ function AdicionaFuncionarioModal({
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
   const inputRef = useRef(null);
+
+  async function getCargosSetores() {
+    const id = localStorage.getItem("empresa_id");
+    try {
+      const response = await getCargoSetor(id);
+        setSetores(response.setor);
+        setCargos(response.cargo);
+    } catch (error) {
+      console.error("Erro ao buscar cargos e setores:", error);
+    }
+  }
+
+  useEffect(() => {
+    getCargosSetores();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -194,19 +215,16 @@ function AdicionaFuncionarioModal({
                 <select
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                   onChange={(e) => setSetor(e.target.value)}
+                  value={setor}
                 >
                   <option className="bg-slate-900" hidden>
                     Selecione…
                   </option>
-                  <option value={4} className="bg-slate-900">
-                    Financeiro
-                  </option>
-                  <option value={2} className="bg-slate-900">
-                    Comercial
-                  </option>
-                  <option value={6} className="bg-slate-900">
-                    RH
-                  </option>
+                  {setores.map((s) => (
+                    <option key={s.setor_id} value={s.setor_id} className="bg-slate-900">
+                      {s.setor_nome}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -217,19 +235,16 @@ function AdicionaFuncionarioModal({
                 <select
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                   onChange={(e) => setCargo(e.target.value)}
+                  value={cargo}
                 >
                   <option className="bg-slate-900" hidden>
                     Selecione…
                   </option>
-                  <option value={19} className="bg-slate-900">
-                    Analista
-                  </option>
-                  <option value={20} className="bg-slate-900">
-                    Coordenador
-                  </option>
-                  <option value={22} className="bg-slate-900">
-                    Gerente
-                  </option>
+                  {cargos.map((c) => (
+                    <option key={c.cargo_id} value={c.cargo_id} className ="bg-slate-900">
+                      {c.cargo_nome}
+                    </option>
+                  ))}
                 </select>
               </div>
 
