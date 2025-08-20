@@ -7,9 +7,24 @@ function TabelaDescricao({
   setDesc,
   setModificaDesc,
   descricoesFiltradas,
+  setorFiltro,
+  cargoFiltro,
 }) {
   const [clicado, setClicado] = useState("");
   const [listaDescricoes, setListaDescricoes] = useState([]);
+
+  const descricaoVazia = {
+    descricao_id: "",
+    descricao_setor_id: "",
+    cargo: { cargo_nome: "" },
+    setor: { setor_id: "", setor_nome: "" },
+    descricao_escolaridade: "",
+    descricao_treinamento: "",
+    descricao_comportamentos: "",
+    descricao_tecnicas: "",
+    descricao_experiencia: "",
+    descricao_responsabilidades: "",
+  };
 
   function selecionaCampo(id) {
     if (clicado == id) {
@@ -35,11 +50,16 @@ function TabelaDescricao({
   }
 
   function setarFiltro() {
-    if (descricoesFiltradas.length < 1) {
-      setListaDescricoes(descricoes);
-    } else {
+    if (descricoesFiltradas.length > 0) {
       setListaDescricoes(descricoesFiltradas);
+      return;
     }
+    if (setorFiltro.length > 0 || cargoFiltro.length > 0) {
+      setListaDescricoes([descricaoVazia]);
+      return;
+    }
+
+    setListaDescricoes(descricoes);
   }
 
   useEffect(() => {

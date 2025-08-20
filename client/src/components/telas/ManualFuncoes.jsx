@@ -41,6 +41,8 @@ function ManualFuncoes({ setDesc, setModificaDesc }) {
         setDesc={setDesc}
         setModificaDesc={setModificaDesc}
         descricoesFiltradas={descricoesFiltradas}
+        setorFiltro={setorFiltro}
+        cargoFiltro={cargoFiltro}
       />
 
       <div className="mt-5 flex justify-center gap-6"></div>
