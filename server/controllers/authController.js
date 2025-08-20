@@ -56,9 +56,10 @@ export async function login(req, res) {
     return res
       .cookie("token", token, {
         httpOnly: true,
-        sameSite: "Lax",
+        sameSite: "lax",
         secure: false,
         path: "/",
+        maxAge: 8 * 60 * 60 * 1000, // 8 horas
       })
       .status(200)
       .json(resposta);
