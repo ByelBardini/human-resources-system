@@ -25,3 +25,13 @@ export async function postFuncionario(payload, fotoFile) {
   });
   return data;
 }
+
+export async function getCargoSetor(id) {
+  try {
+    const response = await api.get(`/funcionario/cargo/${id}`);
+    return response.data;
+  } catch (err) {
+    console.error("Erro ao buscar cargos e setores:", err);
+    throw err;
+  }
+}
