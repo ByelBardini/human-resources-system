@@ -1,7 +1,5 @@
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/style.css";
 import { formatToCPFOrCNPJ, isCPF, formatToPhone } from "brazilian-values";
 import {
   postFuncionario,
