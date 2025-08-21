@@ -1,5 +1,8 @@
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+import { formatToCPFOrCNPJ, isCPF, formatToPhone } from "brazilian-values";
 import {
   postFuncionario,
   getCargoSetor,
@@ -14,6 +17,9 @@ function AdicionaFuncionarioModal({
 }) {
   const [setores, setSetores] = useState([]);
   const [cargos, setCargos] = useState([]);
+  const [cpfValido, setCpfValido] = useState(null);
+  const [nascimentoValido, setNascimentoValido] = useState(null);
+  const [admissaoValido, setAdmissaoValido] = useState(null);
 
   const [nome, setNome] = useState("");
   const [setor, setSetor] = useState("");
@@ -22,7 +28,7 @@ function AdicionaFuncionarioModal({
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
   const [sexo, setSexo] = useState("");
-  const [nascimento, setNascimento] = useState("");
+  const [nascimento, setNascimento] = useState(null);
   const [admissao, setAdmissao] = useState("");
 
   const [fotoFile, setFotoFile] = useState(null);
@@ -33,8 +39,8 @@ function AdicionaFuncionarioModal({
     const id = localStorage.getItem("empresa_id");
     try {
       const response = await getCargoSetor(id);
-        setSetores(response.setor);
-        setCargos(response.cargo);
+      setSetores(response.setor);
+      setCargos(response.cargo);
     } catch (error) {
       console.error("Erro ao buscar cargos e setores:", error);
     }
@@ -66,6 +72,54 @@ function AdicionaFuncionarioModal({
     setFotoPreview(url);
   }
 
+  function validaFormataCPF(e) {
+    const cpf = e.target.value;
+    setCpf(formatToCPFOrCNPJ(cpf));
+    if (cpf.length === 14 ? isCPF(cpf) : null) {
+      setCpfValido(true);
+    } else {
+      setCpfValido(false);
+    }
+    console.log("CPF válido:", cpfValido);
+  }
+
+  function formatarTelefone(e) {
+    const telefone = e.target.value;
+    setTelefone(formatToPhone(telefone));
+  }
+
+  function dataNascimento(e) {
+    const dateNascimento = e;
+    const dataAtual = new Date();
+    const dataFormatada = dataAtual.toLocaleDateString("en-CA");
+    if (dateNascimento > dataFormatada) {
+      setCorAviso("vermelho");
+      setTextoAviso("Data de nascimento inválida!");
+      setAviso(true);
+      setNascimento("");
+      setNascimentoValido(false);
+    } else {
+      setNascimentoValido(true);
+      setNascimento(e);
+    }
+  }
+
+  function dataAdmissao(e) {
+    const dataAdmissao = e;
+    const dataAtual = new Date();
+    const dataFormatada = dataAtual.toLocaleDateString("en-CA");
+    if (dataAdmissao > dataFormatada) {
+      setCorAviso("vermelho");
+      setTextoAviso("Data de admissão inválida!");
+      setAviso(true);
+      setAdmissao("");
+      setAdmissaoValido(false);
+    } else {
+      setAdmissaoValido(true);
+      setAdmissao(e);
+    }
+  }
+
   async function cadastraFuncionario() {
     const id = localStorage.getItem("empresa_id");
     if (
@@ -81,6 +135,24 @@ function AdicionaFuncionarioModal({
     ) {
       setCorAviso("vermelho");
       setTextoAviso("Todos os dados são necessários!");
+      setAviso(true);
+      return;
+    }
+    if (cpfValido === false) {
+      setCorAviso("vermelho");
+      setTextoAviso("CPF inválido!");
+      setAviso(true);
+      return;
+    }
+    if (nascimentoValido === false) {
+      setCorAviso("vermelho");
+      setTextoAviso("Data de nascimento inválida!");
+      setAviso(true);
+      return;
+    }
+    if (admissaoValido === false) {
+      setCorAviso("vermelho");
+      setTextoAviso("Data de nascimento inválida!");
       setAviso(true);
       return;
     }
@@ -221,7 +293,11 @@ function AdicionaFuncionarioModal({
                     Selecione…
                   </option>
                   {setores.map((s) => (
-                    <option key={s.setor_id} value={s.setor_id} className="bg-slate-900">
+                    <option
+                      key={s.setor_id}
+                      value={s.setor_id}
+                      className="bg-slate-900"
+                    >
                       {s.setor_nome}
                     </option>
                   ))}
@@ -241,7 +317,11 @@ function AdicionaFuncionarioModal({
                     Selecione…
                   </option>
                   {cargos.map((c) => (
-                    <option key={c.cargo_id} value={c.cargo_id} className ="bg-slate-900">
+                    <option
+                      key={c.cargo_id}
+                      value={c.cargo_id}
+                      className="bg-slate-900"
+                    >
                       {c.cargo_nome}
                     </option>
                   ))}
@@ -265,7 +345,7 @@ function AdicionaFuncionarioModal({
                   <option value={"Júnior I"} className="bg-slate-900">
                     Júnior I
                   </option>
-                  <option value={"Júnior II"} lassName="bg-slate-900">
+                  <option value={"Júnior II"} className="bg-slate-900">
                     Júnior II
                   </option>
                   <option value={"Júnior III"} className="bg-slate-900">
@@ -277,7 +357,7 @@ function AdicionaFuncionarioModal({
                   <option value={"Pleno II"} className="bg-slate-900">
                     Pleno II
                   </option>
-                  <option value={"Pleno III"} lassName="bg-slate-900">
+                  <option value={"Pleno III"} className="bg-slate-900">
                     Pleno III
                   </option>
                   <option value={"Sênior I"} className="bg-slate-900">
@@ -286,7 +366,7 @@ function AdicionaFuncionarioModal({
                   <option value={"Sênior II"} className="bg-slate-900">
                     Sênior II
                   </option>
-                  <option value={"Sênior III"} lassName="bg-slate-900">
+                  <option value={"Sênior III"} className="bg-slate-900">
                     Sênior III
                   </option>
                 </select>
@@ -297,9 +377,14 @@ function AdicionaFuncionarioModal({
                 <label className="block text-sm text-white/70 mb-1">CPF</label>
                 <input
                   type="text"
-                  onChange={(e) => setCpf(e.target.value)}
+                  autoComplete="off"
+                  maxLength={14}
+                  value={cpf}
+                  onChange={validaFormataCPF}
                   placeholder="000.000.000-00"
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 outline-none focus:bg-white/15"
+                  className={`w-full px-3 py-2 rounded-xl bg-white/10 border ${
+                    cpfValido === false ? "border-red-500" : "border-white/10"
+                  } text-white placeholder-white/40 outline-none focus:bg-white/15`}
                 />
               </div>
 
@@ -310,7 +395,10 @@ function AdicionaFuncionarioModal({
                 </label>
                 <input
                   type="text"
-                  onChange={(e) => setTelefone(e.target.value)}
+                  autoComplete="off"
+                  maxLength={15}
+                  value={telefone}
+                  onChange={formatarTelefone}
                   placeholder="(00) 00000-0000"
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 outline-none focus:bg-white/15"
                 />
@@ -342,7 +430,12 @@ function AdicionaFuncionarioModal({
                 </label>
                 <input
                   type="date"
-                  onChange={(e) => setNascimento(e.target.value)}
+                  value={nascimento}
+                  min={"1900-01-01"}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    dataNascimento(e.target.value);
+                  }}
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                 />
               </div>
@@ -353,7 +446,10 @@ function AdicionaFuncionarioModal({
                 </label>
                 <input
                   type="date"
-                  onChange={(e) => setAdmissao(e.target.value)}
+                  value={admissao}
+                  min={"1900-01-01"}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => dataAdmissao(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                 />
               </div>
