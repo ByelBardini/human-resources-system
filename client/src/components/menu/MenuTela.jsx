@@ -4,6 +4,7 @@ import ManualFuncoes from "../telas/ManualFuncoes.jsx";
 import ProjecaoSalarial from "../telas/ProjecaoSalarial.jsx";
 
 function MenuTela({
+  setCardFuncionario,
   opcaoSelecionada,
   setCarregando,
   setAviso,
@@ -35,6 +36,7 @@ function MenuTela({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          setCardFuncionario={setCardFuncionario}
         />
       )}
       {opcaoSelecionada == "projecaoSalarial" && (

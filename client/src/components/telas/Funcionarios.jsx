@@ -1,7 +1,7 @@
 import { useState } from "react";
 import TabelaFuncionarios from "../funcionarios/TabelaFuncionarios.jsx";
 
-function Funcionarios({ setAdicionandoFunc }) {
+function Funcionarios({ setAdicionandoFunc, setCardFuncionario }) {
   const [funcionarios, setFuncionarios] = useState([]);
 
   const [totalSalario, setTotalSalario] = useState(0);
@@ -35,6 +35,7 @@ function Funcionarios({ setAdicionandoFunc }) {
       </div>
       <div className="mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
         <TabelaFuncionarios
+          setCardFuncionario={setCardFuncionario}
           funcionarios={funcionarios}
           setFuncionarios={setFuncionarios}
           totalSalario={totalSalario}

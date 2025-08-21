@@ -1,4 +1,5 @@
 import cors from "cors";
+import path from "path";
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -38,6 +39,7 @@ app.use(
   })
 );
 
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 app.use("/", authRoutes);
 app.use("/", usuarioRoutes);
 app.use("/", empresaRoutes);

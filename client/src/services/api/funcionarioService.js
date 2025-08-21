@@ -11,6 +11,17 @@ export async function getFuncionarios(id) {
   }
 }
 
+export async function getFuncionarioFull(id) {
+  try {
+    const response = await api.get(`/funcionario/full/${id}`);
+    console.log(response);
+    return response.data;
+  } catch (err) {
+    console.error("Erro ao buscar funcionario:", err);
+    throw err;
+  }
+}
+
 export async function postFuncionario(payload, fotoFile) {
   const fd = new FormData();
   Object.entries(payload).forEach(([k, v]) => fd.append(k, v ?? ""));

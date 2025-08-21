@@ -1,5 +1,6 @@
 import {
   getFuncionarios,
+  getFuncionarioFull,
   putFuncionario,
   postFuncionario,
   inativaFuncionario,
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.get("/funcionario/cargo/:id", verificaToken, getCargoSetor);
 router.get("/funcionario/:id", verificaToken, getFuncionarios);
+router.get("/funcionario/full/:id", verificaToken, getFuncionarioFull);
 router.put("/funcionario/:id", verificaToken, putFuncionario);
 router.post(
   "/funcionario",

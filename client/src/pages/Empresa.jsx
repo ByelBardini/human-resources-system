@@ -18,6 +18,7 @@ function Empresa() {
   const [aumentoGeral, setAumentoGeral] = useState(false);
 
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
+  const [cardFuncionario, setCardFuncionario] = useState(false);
 
   const [modificaDesc, setModificaDesc] = useState(false);
   const [desc, setDesc] = useState();
@@ -77,6 +78,8 @@ function Empresa() {
       />
 
       <ModaisFuncionarios
+        setCard={setCardFuncionario}
+        card={cardFuncionario}
         adicionandoFunc={adicionandoFunc}
         setAdicionandoFunc={setAdicionandoFunc}
         setAviso={setAviso}
@@ -120,6 +123,7 @@ function Empresa() {
         </div>
         <div className="overflow-y-auto min-w-300 min-h-140 max-h-140 w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <MenuTela
+            setCardFuncionario={setCardFuncionario}
             opcaoSelecionada={opcaoSelecionada}
             setCarregando={setCarregando}
             setAviso={setAviso}

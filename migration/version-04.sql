@@ -59,3 +59,6 @@ ADD CONSTRAINT `descricao_cargo_id`
   FOREIGN KEY (`descricao_cargo_id`)
   REFERENCES `sistema_rh`.`cargos` (`cargo_id`)
   ON DELETE CASCADE;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_observacao` TEXT NULL AFTER `funcionario_data_admissao`;

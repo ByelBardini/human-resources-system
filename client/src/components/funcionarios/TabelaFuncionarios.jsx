@@ -4,8 +4,17 @@ import { getFuncionarios } from "../../services/api/funcionarioService.js";
 import { Mars, Venus, ExternalLink } from "lucide-react";
 import { useEffect } from "react";
 
-function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
+function TabelaFuncionarios({
+  setCardFuncionario,
+  setFuncionarios,
+  funcionarios,
+}) {
   const [clicado, setClicado] = useState("");
+
+  function abreCard(id) {
+    localStorage.setItem("funcionario_id", id);
+    setCardFuncionario(true);
+  }
 
   function selecionaCampo(id) {
     if (clicado == id) {
@@ -79,7 +88,7 @@ function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
       <tbody className="min-w-[1100px] w-full divide-y divide-white/10">
         {funcionarios.map((funcionario) => (
           <tr
-            onDoubleClick={() => alert()}
+            onDoubleClick={() => abreCard(funcionario.funcionario_id)}
             key={funcionario.funcionario_id}
             onClick={() => selecionaCampo(funcionario.funcionario_id)}
             className={

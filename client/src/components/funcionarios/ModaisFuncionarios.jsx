@@ -1,6 +1,9 @@
 import AdicionaFuncionarioModal from "./AdicionaFuncionarioModal";
+import CardFuncionario from ".//CardFuncionario.jsx";
 
 function ModaisFuncionarios({
+  setCard,
+  card,
   adicionandoFunc,
   setAdicionandoFunc,
   setAviso,
@@ -19,6 +22,7 @@ function ModaisFuncionarios({
           setCarregando={setCarregando}
         />
       )}
+      {card && <CardFuncionario setCard={setCard} />}
     </div>
   );
 }

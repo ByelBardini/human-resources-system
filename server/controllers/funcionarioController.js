@@ -68,6 +68,49 @@ export async function getFuncionarios(req, res) {
   }
 }
 
+export async function getFuncionarioFull(req, res) {
+  const { id } = req.params;
+
+  const { usuario_id } = req.session.user;
+
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  try {
+    const funcionario = await Funcionario.findOne({
+      where: { funcionario_id: id },
+      attributes: [
+        "funcionario_id",
+        "funcionario_nome",
+        "funcionario_cpf",
+        "funcionario_celular",
+        "funcionario_sexo",
+        "funcionario_imagem_caminho",
+        "funcionario_data_nascimento",
+        "funcionario_data_admissao",
+        "funcionario_observacao",
+      ],
+      include: [
+        { model: Setor, as: "setor", attributes: ["setor_nome"] },
+        {
+          model: Nivel,
+          as: "nivel",
+          attributes: ["nivel_nome", "nivel_salario"],
+        },
+        { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+      ],
+    });
+
+    return res.status(200).json(funcionario);
+  } catch (err) {
+    console.error("Erro ao buscar funcionário:", err);
+    return res.status(500).json({ error: "Erro ao buscar funcionário" });
+  }
+}
+
 export async function putFuncionario(req, res) {
   const { id } = req.params;
   const {
