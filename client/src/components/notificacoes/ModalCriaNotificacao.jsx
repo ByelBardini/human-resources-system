@@ -65,7 +65,7 @@ function ModalCriaNotificacao({
       setCarregando(false);
 
       setCorAviso("verde");
-      setTextoAviso("Funcionário inserido com sucesso!");
+      setTextoAviso("Notificação criada com sucesso!");
       setAviso(true);
       console.log(resposta);
       setTimeout(() => {
@@ -76,7 +76,7 @@ function ModalCriaNotificacao({
     } catch (err) {
       setCarregando(false);
       setCorAviso("vermelho");
-      setTextoAviso("Erro ao inserir notificação:", err.message);
+      setTextoAviso("Erro ao criar notificação:", err.message);
       setAviso(true);
     }
   }

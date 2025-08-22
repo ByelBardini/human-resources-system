@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, UsersRound } from "lucide-react";
 import { logout } from "../services/auth/authService.js";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
@@ -10,6 +10,8 @@ import Background from "../components/default/Background.jsx";
 
 function Home() {
   const navigate = useNavigate();
+
+  const role = localStorage.getItem("usuario_role");
 
   const [carregando, setCarregando] = useState(false);
 
@@ -56,6 +58,16 @@ function Home() {
       >
         <LogOut size={20} />
       </button>
+
+      {role == "adm" && (
+        <button
+          className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+          title="Sair"
+          onClick={() => navigate("/usuario", { replace: true })}
+        >
+          <UsersRound size={20} />
+        </button>
+      )}
 
       {aviso && (
         <ModalAviso
