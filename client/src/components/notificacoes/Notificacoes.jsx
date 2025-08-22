@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Filter, Plus, EyeOff } from "lucide-react";
+import { Filter, Plus, EyeOff, SearchX } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampoNotificacao from "./CampoNotificacao.jsx";
 
@@ -124,10 +124,9 @@ function Notificacoes({
             ))
           ) : (
             <div className="mt-3 w-full flex justify-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur px-3 py-1.5 text-sm text-white/90 shadow">
-                <span className="uppercase tracking-wide text-white/70">
-                  Nenhuma notificação encontrada!
-                </span>
+              <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
+                <SearchX size={16} className="opacity-80" />
+                Nenhuma notificação encontrada
               </div>
             </div>
           )}

@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { SearchX } from "lucide-react";
 import { useEffect } from "react";
 import { useState } from "react";
 
@@ -10,21 +11,9 @@ function TabelaDescricao({
   setorFiltro,
   cargoFiltro,
 }) {
+  const [tabelaVazia, setTabelaVazia] = useState(false);
   const [clicado, setClicado] = useState("");
   const [listaDescricoes, setListaDescricoes] = useState([]);
-
-  const descricaoVazia = {
-    descricao_id: "",
-    descricao_setor_id: "",
-    cargo: { cargo_nome: "" },
-    setor: { setor_id: "", setor_nome: "" },
-    descricao_escolaridade: "",
-    descricao_treinamento: "",
-    descricao_comportamentos: "",
-    descricao_tecnicas: "",
-    descricao_experiencia: "",
-    descricao_responsabilidades: "",
-  };
 
   function selecionaCampo(id) {
     if (clicado == id) {
@@ -52,14 +41,16 @@ function TabelaDescricao({
   function setarFiltro() {
     if (descricoesFiltradas.length > 0) {
       setListaDescricoes(descricoesFiltradas);
+      setTabelaVazia(false);
       return;
     }
     if (setorFiltro.length > 0 || cargoFiltro.length > 0) {
-      setListaDescricoes([descricaoVazia]);
+      setListaDescricoes([descricoesFiltradas]);
+      setTabelaVazia(true);
       return;
     }
-
     setListaDescricoes(descricoes);
+    setTabelaVazia(false);
   }
 
   useEffect(() => {
@@ -87,44 +78,58 @@ function TabelaDescricao({
             </th>
           </tr>
         </thead>
-
-        <tbody className="divide-y divide-white/10">
-          {listaDescricoes.map((descricao) => (
-            <tr
-              key={descricao.descricao_id}
-              className={
-                clicado == descricao.descricao_id
-                  ? "bg-white/8 hover:bg-white/12 transition-colors"
-                  : "hover:bg-white/3 transition-colors"
-              }
-              onClick={() => selecionaCampo(descricao.descricao_id)}
-              onDoubleClick={() => abreModificacao(descricao)}
-            >
-              <td className="px-4 py-3">
-                {descricao.setor != null ? descricao.setor.setor_nome : "-"}
-              </td>
-              <td className="px-4 py-3">{descricao.cargo.cargo_nome || "-"}</td>
-              <td className="px-4 py-3">
-                {descricao.descricao_escolaridade || "-"}
-              </td>
-              <td className="px-4 py-3">
-                {descricao.descricao_treinamento || "-"}
-              </td>
-              <td className="px-4 py-3 whitespace-pre-wrap break-words">
-                {descricao.descricao_comportamentos || "-"}
-              </td>
-              <td className="px-4 py-3 whitespace-pre-wrap break-words">
-                {descricao.descricao_tecnicas || "-"}
-              </td>
-              <td className="px-4 py-3">
-                {descricao.descricao_experiencia || "-"}
-              </td>
-              <td className="px-4 py-3 whitespace-pre-wrap break-words">
-                {descricao.descricao_responsabilidades || "-"}
+        {!tabelaVazia ? (
+          <tbody className="divide-y divide-white/10">
+            {listaDescricoes.map((descricao) => (
+              <tr
+                key={descricao.descricao_id}
+                className={
+                  clicado == descricao.descricao_id
+                    ? "bg-white/8 hover:bg-white/12 transition-colors"
+                    : "hover:bg-white/3 transition-colors"
+                }
+                onClick={() => selecionaCampo(descricao.descricao_id)}
+                onDoubleClick={() => abreModificacao(descricao)}
+              >
+                <td className="px-4 py-3">
+                  {descricao.setor != null ? descricao.setor.setor_nome : "-"}
+                </td>
+                <td className="px-4 py-3">
+                  {descricao.cargo.cargo_nome || "-"}
+                </td>
+                <td className="px-4 py-3">
+                  {descricao.descricao_escolaridade || "-"}
+                </td>
+                <td className="px-4 py-3">
+                  {descricao.descricao_treinamento || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-pre-wrap break-words">
+                  {descricao.descricao_comportamentos || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-pre-wrap break-words">
+                  {descricao.descricao_tecnicas || "-"}
+                </td>
+                <td className="px-4 py-3">
+                  {descricao.descricao_experiencia || "-"}
+                </td>
+                <td className="px-4 py-3 whitespace-pre-wrap break-words">
+                  {descricao.descricao_responsabilidades || "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        ) : (
+          <tbody>
+            <tr>
+              <td colSpan={8} className="px-6 py-10 text-center">
+                <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
+                  <SearchX size={16} className="opacity-80" />
+                  Nenhum cargo encontrado
+                </div>
               </td>
             </tr>
-          ))}
-        </tbody>
+          </tbody>
+        )}
       </table>
     </div>
   );
