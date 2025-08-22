@@ -1,7 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Filter, Plus, EyeOff, SearchX } from "lucide-react";
+import { Plus, EyeOff, SearchX } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampoNotificacao from "./CampoNotificacao.jsx";
+import FiltroNotificacoes from "./FiltroNotificacoes.jsx";
 
 function Notificacoes({
   setOpenSec,
@@ -18,26 +19,39 @@ function Notificacoes({
   const [falta, setFalta] = useState(false);
   const [temFim, setTemFim] = useState(false);
 
+  const [dataInicial, setDataInicial] = useState("");
+  const [dataFinal, setDataFinal] = useState("");
+  const [filtradas, setFiltradas] = useState("");
+  const [filtroAtivo, setFiltroAtivo] = useState(false);
+
   function setaNotificacoes() {
     switch (openSec) {
       case "faltas":
         localStorage.setItem("notificacao_tipo", "falta");
-        setNotificacaoSelecionada(notificacoes.faltas);
+        filtroAtivo
+          ? setNotificacaoSelecionada(filtradas.faltas)
+          : setNotificacaoSelecionada(notificacoes.faltas);
         setFalta(true);
         break;
       case "atestados":
         localStorage.setItem("notificacao_tipo", "atestado");
-        setNotificacaoSelecionada(notificacoes.atestados);
+        filtroAtivo
+          ? setNotificacaoSelecionada(filtradas.atestados)
+          : setNotificacaoSelecionada(notificacoes.atestados);
         setFalta(false);
         break;
       case "advertencias":
         localStorage.setItem("notificacao_tipo", "advertencia");
-        setNotificacaoSelecionada(notificacoes.advertencias);
+        filtroAtivo
+          ? setNotificacaoSelecionada(filtradas.advertencias)
+          : setNotificacaoSelecionada(notificacoes.advertencias);
         setFalta(false);
         break;
       case "suspensoes":
         localStorage.setItem("notificacao_tipo", "suspensao");
-        setNotificacaoSelecionada(notificacoes.suspensoes);
+        filtroAtivo
+          ? setNotificacaoSelecionada(filtradas.suspensoes)
+          : setNotificacaoSelecionada(notificacoes.suspensoes);
         setFalta(false);
         break;
     }
@@ -50,7 +64,7 @@ function Notificacoes({
     } else {
       setTemFim(false);
     }
-  }, [notificacoes, openSec]);
+  }, [notificacoes, openSec, filtradas]);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
@@ -59,10 +73,17 @@ function Notificacoes({
           {sections.find((s) => s.key === openSec)?.label}
         </span>
         <div className="w-full flex justify-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur px-3 py-1.5 text-sm text-white/90 shadow">
-            <span className="uppercase tracking-wide text-white/70">Total</span>
-            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-white/15 border border-white/20 px-2 font-semibold">
-              {notificacaoSelecionada.length}
+          <div className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-white/10 to-white/5 border border-white/15 backdrop-blur px-4 py-2 shadow">
+            <span className="uppercase tracking-wide text-xs font-semibold text-white/80 px-3 py-1 rounded-full bg-white/10 border border-white/20">
+              {filtroAtivo ? (
+                <>{`${formatarData(dataInicial)} até ${formatarData(dataFinal)}`}</>
+              ) : (
+                "Mês Atual"
+              )}
+            </span>
+
+            <span className="uppercase tracking-wide text-xs font-semibold text-white/80 px-3 py-1 rounded-full bg-white/10 border border-white/20">
+              Total: {notificacaoSelecionada.length}
             </span>
           </div>
         </div>
@@ -73,9 +94,17 @@ function Notificacoes({
           >
             <Plus size={16} /> Novo
           </button>
-          <button className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20">
-            <Filter size={16} /> Filtro
-          </button>
+          <FiltroNotificacoes
+            dataInicial={dataInicial}
+            dataFinal={dataFinal}
+            setDataInicial={setDataInicial}
+            setDataFinal={setDataFinal}
+            setFiltradas={setFiltradas}
+            setFiltroAtivo={setFiltroAtivo}
+            setAviso={setAviso}
+            setCorAviso={setCorAviso}
+            setTextoAviso={setTextoAviso}
+          />
           <button
             onClick={() => setOpenSec(null)}
             className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20"

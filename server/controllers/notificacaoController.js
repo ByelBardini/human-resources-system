@@ -35,9 +35,7 @@ export async function getNotificacoes(req, res) {
 
   const id = req.params.id;
   if (!id) {
-    return res
-      .status(400)
-      .json({ error: "Necessário id da empresa a ser buscada" });
+    return res.status(400).json({ error: "Necessário id do usuário" });
   }
   const mesAtual = new Date();
   const comecoDoMes = new Date(
@@ -103,6 +101,84 @@ export async function getNotificacoes(req, res) {
           notificacao_data: {
             [Op.gte]: formatar(comecoDoMes),
             [Op.lt]: formatar(comecoProximoMes),
+          },
+        },
+        order: [["notificacao_data", "DESC"]],
+      }),
+    ]);
+
+    res.status(200).json({ faltas, atestados, advertencias, suspensoes });
+  } catch (err) {
+    console.error("Erro ao buscar notificações:", err);
+    return res.status(500).json({
+      error:
+        "Erro ao buscar notificações, fale com um administrador do sistema",
+    });
+  }
+}
+
+export async function getNotificacoesPorMes(req, res) {
+  const { usuario_id } = req.session.user;
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  const id = req.params.id;
+  if (!id) {
+    return res.status(400).json({ error: "Necessário id do usuário" });
+  }
+
+  const { data_inicial, data_final } = req.query;
+  if (!data_final || !data_inicial) {
+    return res
+      .status(400)
+      .json({ error: "necessário data inicial e final da pesquisa" });
+  }
+
+  try {
+    const [faltas, atestados, advertencias, suspensoes] = await Promise.all([
+      Notificacao.findAll({
+        where: {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: { [Op.in]: ["falta", "meia-falta"] },
+          notificacao_data: {
+            [Op.gte]: data_inicial,
+            [Op.lt]: data_final,
+          },
+        },
+        order: [["notificacao_data", "DESC"]],
+      }),
+      Notificacao.findAll({
+        where: {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: { [Op.in]: ["atestado"] },
+          notificacao_data: {
+            [Op.gte]: data_inicial,
+            [Op.lt]: data_final,
+          },
+        },
+        order: [["notificacao_data", "DESC"]],
+      }),
+      Notificacao.findAll({
+        where: {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: { [Op.in]: ["advertencia"] },
+          notificacao_data: {
+            [Op.gte]: data_inicial,
+            [Op.lt]: data_final,
+          },
+        },
+        order: [["notificacao_data", "DESC"]],
+      }),
+      Notificacao.findAll({
+        where: {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: { [Op.in]: ["suspensao"] },
+          notificacao_data: {
+            [Op.gte]: data_inicial,
+            [Op.lt]: data_final,
           },
         },
         order: [["notificacao_data", "DESC"]],
