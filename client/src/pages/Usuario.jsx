@@ -16,7 +16,7 @@ function Usuario() {
 
   const [visualiza, setVisualiza] = useState(false);
   const [cria, setCria] = useState(false);
-  const [cadastrado, setCadastrado] = useState(false);
+  const [atualizado, setAtualizado] = useState(false);
 
   const [carregando, setCarregando] = useState(false);
   const [aviso, setAviso] = useState(false);
@@ -27,7 +27,7 @@ function Usuario() {
     try {
       const usuarios = await getUsuario();
       setUsuarios(usuarios);
-      setCadastrado(false);
+      setAtualizado(false);
     } catch (err) {
       setAviso(true);
       setCorAviso("vermelho");
@@ -39,7 +39,7 @@ function Usuario() {
   useEffect(() => {
     buscaUsuarios();
     document.title = "Usuários - Sistema RH";
-  }, [cadastrado]);
+  }, [atualizado]);
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
@@ -59,14 +59,19 @@ function Usuario() {
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
-          setCadastrado={setCadastrado}
-          cadastrado={cadastrado}
+          setCadastrado={setAtualizado}
+          cadastrado={atualizado}
         />
       )}
       {visualiza && (
         <ModalUsuario
           setVisualiza={setVisualiza}
           usuarioSelecionado={usuarioSelecionado}
+          setAviso={setAviso}
+          setCorAviso={setCorAviso}
+          setTextoAviso={setTextoAviso}
+          setCarregando={setCarregando}
+          modificou={setAtualizado}
         />
       )}
 

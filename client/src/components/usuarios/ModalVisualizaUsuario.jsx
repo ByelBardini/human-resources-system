@@ -1,6 +1,77 @@
 import { X, Save, Power, RotateCcw } from "lucide-react";
+import {
+  inativaUsuario,
+  resetaSenha,
+} from "../../services/api/usuariosServices.js";
 
-function ModalUsuario({ usuarioSelecionado, setVisualiza }) {
+function ModalUsuario({
+  usuarioSelecionado,
+  setVisualiza,
+  setCarregando,
+  setTextoAviso,
+  setCorAviso,
+  setAviso,
+  modificou,
+}) {
+  async function inativarUsuario() {
+    const id = localStorage.getItem("usuario_id");
+    if (id == usuarioSelecionado.usuario_id) {
+      setTextoAviso("Você não pode inativar seu própio usuário!");
+      setCorAviso("vermelho");
+      setAviso(true);
+      return;
+    }
+    setCarregando(true);
+    try {
+      await inativaUsuario(usuarioSelecionado.usuario_id);
+
+      setTextoAviso(
+        usuarioSelecionado.usuario_ativo == 1
+          ? "Usuário inativado com sucesso!"
+          : "Usuário ativo com sucesso!"
+      );
+      setCorAviso("verde");
+      modificou(true);
+      setAviso(true);
+      setVisualiza(false);
+    } catch (err) {
+      setCorAviso("vermelho");
+      setTextoAviso(
+        `Erro ao inativar usuário: ${
+          err?.response?.data?.error || err?.message || "tente novamente"
+        }`
+      );
+      setAviso(true);
+      console.error(err);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  async function resetarSenha() {
+    setCarregando(true);
+    try {
+      await resetaSenha(usuarioSelecionado.usuario_id);
+
+      setTextoAviso("Senha resetada com sucesso! \nSenha Padrão: 12345");
+      setCorAviso("verde");
+      modificou(true);
+      setAviso(true);
+      setVisualiza(false);
+    } catch (err) {
+      setCorAviso("vermelho");
+      setTextoAviso(
+        `Erro ao resetar senha: ${
+          err?.response?.data?.error || err?.message || "tente novamente"
+        }`
+      );
+      setAviso(true);
+      console.error(err);
+    } finally {
+      setCarregando(false);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -71,6 +142,7 @@ function ModalUsuario({ usuarioSelecionado, setVisualiza }) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <div className="flex justify-center gap-2">
             <button
+              onClick={inativarUsuario}
               className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition
                 ${
                   usuarioSelecionado.usuario_ativo == 1
@@ -78,16 +150,21 @@ function ModalUsuario({ usuarioSelecionado, setVisualiza }) {
                     : "bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25"
                 }`}
               title={
-                usuarioSelecionado.usuario_ativo == 1 ? "Inativar usuário" : "Ativar usuário"
+                usuarioSelecionado.usuario_ativo == 1
+                  ? "Inativar usuário"
+                  : "Ativar usuário"
               }
             >
               <Power size={16} />
-              {usuarioSelecionado.usuario_ativo == 1 ? "Inativar usuário" : "Ativar usuário"}
+              {usuarioSelecionado.usuario_ativo == 1
+                ? "Inativar usuário"
+                : "Ativar usuário"}
             </button>
 
             <button
               className="inline-flex items-center gap-2 rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 text-sm hover:bg-white/20 transition"
               title="Resetar senha"
+              onClick={resetarSenha}
             >
               <RotateCcw size={16} />
               Resetar senha

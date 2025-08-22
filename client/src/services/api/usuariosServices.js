@@ -29,3 +29,25 @@ export async function postUsuario(
     throw err;
   }
 }
+
+export async function inativaUsuario(id) {
+  try {
+    const response = await api.put(`/usuario/inativa/${id}`);
+    console.log(response);
+    return response.data;
+  } catch (err) {
+    console.error("Erro ao inativar/ativar usuário:", err);
+    throw err;
+  }
+}
+
+export async function resetaSenha(id) {
+  try {
+    const response = await api.put(`/usuario/resetasenha/${id}`);
+    console.log(response);
+    return response.data;
+  } catch (err) {
+    console.error("Erro ao resetar senha do usuário:", err);
+    throw err;
+  }
+}
