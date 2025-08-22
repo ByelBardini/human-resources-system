@@ -9,8 +9,9 @@ function Funcionarios({ setAdicionandoFunc }) {
   const [cargoFiltro, setCargoFiltro] = useState([]);
   const [setorFiltro, setSetorFiltro] = useState([]);
   const [nivelFiltro, setNivelFitro] = useState([]);
-  const [mesAniversarioFiltro, setMesAniversatioFiltro] = useState([]);
+  const [mesAniversarioFiltro, setMesAniversarioFiltro] = useState([]);
   const [totalSalario, setTotalSalario] = useState(0);
+  const [filtroAtivo, setFiltroAtivo] = useState(0);
 
   return (
     <div className="min-w-[1100px] w-full h-full">
@@ -27,8 +28,10 @@ function Funcionarios({ setAdicionandoFunc }) {
             nivelFiltro={nivelFiltro}
             setNivelFiltro={setNivelFitro}
             mesAniversarioFiltro={mesAniversarioFiltro}
-            setMesAniversatioFiltro={setMesAniversatioFiltro}
+            setMesAniversarioFiltro={setMesAniversarioFiltro}
             setFuncionariosFiltrados={setFuncionariosFiltrados}
+            filtroAtivo={filtroAtivo} // passa o valor
+            setFiltroAtivo={setFiltroAtivo} // passa o setter
           />
         </div>
         <div className="mt-3 text-center font-bold">
@@ -39,14 +42,20 @@ function Funcionarios({ setAdicionandoFunc }) {
         </div>
       </div>
       <div className="mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
-        <TabelaFuncionarios
-          funcionarios={
-            funcionariosFiltrados.length ? funcionariosFiltrados : funcionarios
-          }
-          setFuncionarios={setFuncionarios}
-          totalSalario={totalSalario}
-          setTotalSalario={setTotalSalario}
-        />
+        {filtroAtivo && funcionariosFiltrados.length === 0 ? (
+          <div className="text-center text-white p-6 text-4xl">Nenhum dado encontrado!</div>
+        ) : (
+          <TabelaFuncionarios
+            funcionarios={
+              funcionariosFiltrados.length
+                ? funcionariosFiltrados
+                : funcionarios
+            }
+            setFuncionarios={setFuncionarios}
+            totalSalario={totalSalario}
+            setTotalSalario={setTotalSalario}
+          />
+        )}
       </div>
       <div className="mt-5 flex justify-center gap-6">
         <button

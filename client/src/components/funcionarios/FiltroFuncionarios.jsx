@@ -17,8 +17,10 @@ function FiltrosFuncionarios({
   nivelFiltro,
   setNivelFiltro,
   mesAniversarioFiltro,
-  setMesAniversatioFiltro,
+  setMesAniversarioFiltro,
   setFuncionariosFiltrados,
+  filtroAtivo,
+  setFiltroAtivo,
 }) {
   function definirFiltros() {
     const meses = [
@@ -77,11 +79,28 @@ function FiltrosFuncionarios({
 
       return sexoOk && cargoOk && setorOk && nivelOk && mesAniversarioOk;
     });
+
+    const filtrosAtivos =
+      sexoSel.size > 0 ||
+      cargoSel.size > 0 ||
+      setorSel.size > 0 ||
+      nivelSel.size > 0 ||
+      mesAniversarioSel.size > 0;
+    if (typeof setFiltroAtivo === "function") setFiltroAtivo(filtrosAtivos);
+
     setFuncionariosFiltrados(filtrados);
   }
   useEffect(() => {
+    console.log("a", filtroAtivo);
     definirFiltros();
-  }, [sexoFiltro, cargoFiltro, setorFiltro, nivelFiltro, mesAniversarioFiltro]);
+  }, [
+    funcionarios,
+    sexoFiltro,
+    cargoFiltro,
+    setorFiltro,
+    nivelFiltro,
+    mesAniversarioFiltro,
+  ]);
 
   return (
     <div className="w-full rounded-lg transition-colors text-xl p-2">
@@ -106,7 +125,7 @@ function FiltrosFuncionarios({
         />
         <FiltroMesAniversario
           funcionarioFiltro={mesAniversarioFiltro}
-          setFuncionarioFiltro={setMesAniversatioFiltro}
+          setFuncionarioFiltro={setMesAniversarioFiltro}
         />
       </div>
     </div>

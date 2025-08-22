@@ -88,23 +88,23 @@ function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
                 : "hover:bg-white/3 transition-colors"
             }
           >
-            <td className="px-4 py-2 align-top flex gap-2 items-center">
+            <td className="px-4 py-2 text- flex gap-2 w-[250px]">
               {funcionario.funcionario_nome || ""}
             </td>
-            <td className="px-4 py-2 align-top">
+            <td className="px-4 py-2 items-center w-[65px] ">
               {funcionario.funcionario_sexo == "masculino" ? (
                 <Mars className="text-blue-600" />
               ) : (
                 <Venus className="text-pink-600" />
               )}
             </td>
-            <td className="px-4 py-2 align-top">
+            <td className="px-4 py-2 align-top w-[150px] text-center">
               {funcionario.setor.setor_nome || ""}
             </td>
-            <td className="px-4 py-2 align-top">
+            <td className="px-4 py-2 align-top w-[150px]">
               {funcionario.cargo.cargo_nome || ""}
             </td>
-            <td className="px-4 py-2 align-top">
+            <td className="px-4 py-2 align-top w-[20]">
               {funcionario.nivel.nivel_nome || ""}
             </td>
             <td className="px-4 py-2 align-top">
