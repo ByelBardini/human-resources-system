@@ -8,7 +8,7 @@ import {
 } from "./../controllers/funcionarioController.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
-import upload from "../middlewares/upload.js";
+import uploadFotoFuncionario from "../middlewares/uploadFotoFuncionario.js";
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.get("/funcionario/full/:id", verificaToken, getFuncionarioFull);
 router.put("/funcionario/:id", verificaToken, putFuncionario);
 router.post(
   "/funcionario",
-  upload.single("foto"),
+  uploadFotoFuncionario.single("foto"),
   verificaToken,
   postFuncionario
 );

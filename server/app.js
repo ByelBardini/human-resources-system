@@ -11,6 +11,8 @@ import setorRoutes from "./routes/setorRoutes.js";
 import funcionarioRoutes from "./routes/funcionarioRoutes.js";
 import cargoRoutes from "./routes/cargoRoutes.js";
 import descricaoRoutes from "./routes/descricaoRoutes.js";
+import notificacaoRoutes from "./routes/notificacaoRoutes.js";
+import downloadRoute from "./routes/downloadRoute.js";
 
 dotenv.config();
 
@@ -40,6 +42,7 @@ app.use(
 );
 
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/", authRoutes);
 app.use("/", usuarioRoutes);
 app.use("/", empresaRoutes);
@@ -47,5 +50,7 @@ app.use("/", setorRoutes);
 app.use("/", funcionarioRoutes);
 app.use("/", cargoRoutes);
 app.use("/", descricaoRoutes);
+app.use("/", notificacaoRoutes);
+app.use("/", downloadRoute);
 
 export default app;

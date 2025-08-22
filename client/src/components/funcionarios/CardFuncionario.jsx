@@ -1,6 +1,9 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-import { X, Filter, Plus, EyeOff, ImageOff } from "lucide-react";
+import { X, ImageOff } from "lucide-react";
 import { getFuncionarioFull } from "../../services/api/funcionarioService.js";
+import { getNotificacoes } from "../../services/api/notificacoesServices.js";
+import Notificacoes from "../notificacoes/Notificacoes.jsx";
 
 const FUNCIONARIO_VAZIO = {
   funcionario_nome: "",
@@ -14,22 +17,35 @@ const FUNCIONARIO_VAZIO = {
   nivel: { nivel_nome: "", nivel_salario: 0 },
 };
 
-export default function CardFuncionario({ setCard }) {
+export default function CardFuncionario({
+  adicionado,
+  setAdicionado,
+  setCard,
+  setNotificacao,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
+}) {
   const [openSec, setOpenSec] = useState(null);
   const [funcionario, setFuncionario] = useState(FUNCIONARIO_VAZIO);
+  const [notificacoes, setNotificacoes] = useState([]);
 
   const sections = [
     { key: "faltas", label: "Faltas" },
     { key: "atestados", label: "Atestados" },
     { key: "advertencias", label: "Advertências" },
+    { key: "suspensoes", label: "Suspensões" },
   ];
 
   async function puxaDados() {
     const id = localStorage.getItem("funcionario_id");
     try {
       const funcionario = await getFuncionarioFull(id);
-      console.log(funcionario);
+      const notificacoes = await getNotificacoes(id);
+      console.log("Funcionário:", funcionario);
+      console.log("Notificações:", notificacoes);
       setFuncionario(funcionario);
+      setNotificacoes(notificacoes);
     } catch (err) {
       console.error("erro ao buscar funcionário:", err);
     }
@@ -37,7 +53,8 @@ export default function CardFuncionario({ setCard }) {
 
   useEffect(() => {
     puxaDados();
-  }, []);
+    setAdicionado(false);
+  }, [adicionado]);
 
   function formatarData(val) {
     if (!val) return "";
@@ -95,11 +112,11 @@ export default function CardFuncionario({ setCard }) {
             <aside className="space-y-4 w-[300px] shrink-0">
               <div
                 className="p-2 w-full aspect-square max-h-[280px] rounded-2xl border border-white/15 bg-white/5
-                 flex items-center justify-center text-white/60 shadow-[0_10px_30px_rgba(0,0,0,.25)]"
+                 flex items-center justify-center text-white shadow-[0_10px_30px_rgba(0,0,0,.25)]"
               >
                 {funcionario.funcionario_imagem_caminho != null ? (
                   <img
-                  className="h-full w-full object-cover rounded-2xl"
+                    className="h-full w-full object-cover rounded-2xl"
                     src={`http://localhost:3030${funcionario.funcionario_imagem_caminho}`}
                   ></img>
                 ) : (
@@ -121,9 +138,10 @@ export default function CardFuncionario({ setCard }) {
 
                 <div className="mt-3 text-sm text-white/60">SALÁRIO</div>
                 <div className="font-medium">
-                  R$ {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
-                minimumFractionDigits: 2,
-              }) || ""}
+                  R${" "}
+                  {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
+                    minimumFractionDigits: 2,
+                  }) || ""}
                 </div>
               </div>
             </aside>
@@ -193,33 +211,17 @@ export default function CardFuncionario({ setCard }) {
           </div>
 
           {openSec && (
-            <div className="rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10">
-                <span className="font-medium capitalize">
-                  {sections.find((s) => s.key === openSec)?.label}
-                </span>
-                <div className="ml-auto flex items-center gap-2">
-                  <button className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20">
-                    <Plus size={16} /> Novo
-                  </button>
-                  <button className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20">
-                    <Filter size={16} /> Filtro
-                  </button>
-                  <button
-                    onClick={() => setOpenSec(null)}
-                    className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20"
-                  >
-                    <EyeOff size={16} /> Ocultar
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-4 max-h-72 overflow-y-auto">
-                <div className="rounded-xl bg-white/5 border border-white/10 p-3 text-white/70">
-                  — Sem registros —
-                </div>
-              </div>
-            </div>
+            <Notificacoes
+              setOpenSec={setOpenSec}
+              openSec={openSec}
+              sections={sections}
+              notificacoes={notificacoes}
+              formatarData={formatarData}
+              setNotificacao={setNotificacao}
+              setAviso={setAviso}
+              setCorAviso={setCorAviso}
+              setTextoAviso={setTextoAviso}
+            />
           )}
         </div>
       </div>

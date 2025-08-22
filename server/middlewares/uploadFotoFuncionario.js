@@ -3,14 +3,15 @@ import path from "path";
 import multer from "multer";
 
 const uploadRoot = path.join(process.cwd(), "uploads");
-const fotosDir   = path.join(uploadRoot, "fotos");
+const fotosDir = path.join(uploadRoot, "fotos");
 
 fs.mkdirSync(fotosDir, { recursive: true });
 
 function makeFilename(req, file, cb) {
   const ext = path.extname(file.originalname).toLowerCase();
   const baseFromBody = String(req.body?.nome || "funcionario")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9-_]/g, "-")
     .toLowerCase();
   cb(null, `${Date.now()}-${baseFromBody}${ext}`);
@@ -18,7 +19,10 @@ function makeFilename(req, file, cb) {
 
 function fileFilter(_req, file, cb) {
   const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
-  cb(ok ? null : new Error("Tipo de arquivo inválido (use JPG, PNG ou WEBP)"), ok);
+  cb(
+    ok ? null : new Error("Tipo de arquivo inválido (use JPG, PNG ou WEBP)"),
+    ok
+  );
 }
 
 const storage = multer.diskStorage({
@@ -26,10 +30,10 @@ const storage = multer.diskStorage({
   filename: makeFilename,
 });
 
-const upload = multer({
+const uploadFotoFuncionario = multer({
   storage,
   fileFilter,
   limits: { fileSize: 2 * 1024 * 1024 },
 });
 
-export default upload;
+export default uploadFotoFuncionario;

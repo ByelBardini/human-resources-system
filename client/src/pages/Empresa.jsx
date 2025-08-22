@@ -19,6 +19,7 @@ function Empresa() {
 
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
   const [cardFuncionario, setCardFuncionario] = useState(false);
+  const [emitirNotificacao, setEmitirNotificacao] = useState(false);
 
   const [modificaDesc, setModificaDesc] = useState(false);
   const [desc, setDesc] = useState();
@@ -86,6 +87,11 @@ function Empresa() {
         setCorAviso={setCorAviso}
         setTextoAviso={setTextoAviso}
         setCarregando={setCarregando}
+        setNotificacao={setEmitirNotificacao}
+        notificacao={emitirNotificacao}
+        setConfirmacao={setConfirmacao}
+        setTextoConfirmacao={setTextoConfirmacao}
+        setOnSimConfirmacao={setOnSimConfirmacao}
       />
 
       {confirmacao && (

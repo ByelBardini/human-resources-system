@@ -2,7 +2,7 @@ CREATE TABLE `sistema_rh`.`notificacoes` (
   `notificacao_id` INT NOT NULL AUTO_INCREMENT,
   `notificacao_funcionario_id` INT NOT NULL,
   `notificacao_tipo` ENUM("falta", "meia-falta", "advertencia", "atestado") NOT NULL,
-  `notificadao_data` DATE NOT NULL,
+  `notificacao_data` DATE NOT NULL,
   `notificacao_descricao` TEXT NULL,
   PRIMARY KEY (`notificacao_id`),
   INDEX `notificacao_funcionario_id_idx` (`notificacao_funcionario_id` ASC) VISIBLE,
@@ -62,3 +62,10 @@ ADD CONSTRAINT `descricao_cargo_id`
 
 ALTER TABLE `sistema_rh`.`funcionarios` 
 ADD COLUMN `funcionario_observacao` TEXT NULL AFTER `funcionario_data_admissao`;
+
+ALTER TABLE `sistema_rh`.`notificacoes` 
+ADD COLUMN `notificacao_imagem_caminho` VARCHAR(255) NULL AFTER `notificacao_descricao`,
+CHANGE COLUMN `notificacao_tipo` `notificacao_tipo` ENUM('falta', 'meia-falta', 'advertencia', 'atestado', 'suspensao') NOT NULL ;
+
+ALTER TABLE `sistema_rh`.`notificacoes` 
+ADD COLUMN `notificacao_data_final` DATE NULL DEFAULT NULL AFTER `notificacao_data`;
