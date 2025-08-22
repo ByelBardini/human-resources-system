@@ -51,3 +51,16 @@ export async function resetaSenha(id) {
     throw err;
   }
 }
+
+export async function trocaSenha(nova_senha) {
+  try {
+    const response = await api.put(`/usuario/trocasenha`, {
+      nova_senha,
+    });
+    console.log(response);
+    return response.data;
+  } catch (err) {
+    console.error("Erro ao trocar sua senha:", err);
+    throw err;
+  }
+}
