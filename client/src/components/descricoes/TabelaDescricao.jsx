@@ -44,7 +44,11 @@ function TabelaDescricao({
       setTabelaVazia(false);
       return;
     }
-    if (setorFiltro.length > 0 || cargoFiltro.length > 0) {
+    if (
+      setorFiltro.length > 0 ||
+      cargoFiltro.length > 0 ||
+      descricoes.length == 0
+    ) {
       setListaDescricoes([descricoesFiltradas]);
       setTabelaVazia(true);
       return;
