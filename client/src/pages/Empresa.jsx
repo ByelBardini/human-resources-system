@@ -20,6 +20,9 @@ function Empresa() {
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
   const [cardFuncionario, setCardFuncionario] = useState(false);
   const [emitirNotificacao, setEmitirNotificacao] = useState(false);
+  const [modificaFuncionario, setModificaFuncionario] = useState(false);
+
+  const [modificado, setModificado] = useState(false);
 
   const [modificaDesc, setModificaDesc] = useState(false);
   const [desc, setDesc] = useState();
@@ -92,6 +95,10 @@ function Empresa() {
         setConfirmacao={setConfirmacao}
         setTextoConfirmacao={setTextoConfirmacao}
         setOnSimConfirmacao={setOnSimConfirmacao}
+        modificaFuncionario={modificaFuncionario}
+        setModificaFuncionario={setModificaFuncionario}
+        setModificado={setModificado}
+        modificado={modificado}
       />
 
       {confirmacao && (
@@ -143,6 +150,8 @@ function Empresa() {
             setAdicionandoFunc={setAdicionandoFunc}
             setDesc={setDesc}
             setModificaDesc={setModificaDesc}
+            setModificado={setModificado}
+            modificado={modificado}
           />
         </div>
       </div>

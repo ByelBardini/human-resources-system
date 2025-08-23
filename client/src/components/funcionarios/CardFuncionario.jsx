@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-import { X, ImageOff } from "lucide-react";
+import { X, ImageOff, Pen } from "lucide-react";
 import { getFuncionarioFull } from "../../services/api/funcionarioService.js";
 import { getNotificacoes } from "../../services/api/notificacoesServices.js";
 import Notificacoes from "../notificacoes/Notificacoes.jsx";
@@ -25,6 +25,9 @@ export default function CardFuncionario({
   setAviso,
   setCorAviso,
   setTextoAviso,
+  setModifica,
+  modificado,
+  setModificado,
 }) {
   const [openSec, setOpenSec] = useState(null);
   const [funcionario, setFuncionario] = useState(FUNCIONARIO_VAZIO);
@@ -36,6 +39,16 @@ export default function CardFuncionario({
     { key: "advertencias", label: "Advertências" },
     { key: "suspensoes", label: "Suspensões" },
   ];
+
+  function abreModificacao() {
+    localStorage.setItem("setor", funcionario.setor.setor_id);
+    localStorage.setItem("cargo", funcionario.cargo.cargo_id);
+    localStorage.setItem("nivel", funcionario.nivel.nivel_nome);
+    localStorage.setItem("celular", funcionario.funcionario_celular);
+    localStorage.setItem("observacao", funcionario.funcionario_observacao);
+    localStorage.setItem("imagem", funcionario.funcionario_imagem_caminho);
+    setModifica(true);
+  }
 
   async function puxaDados() {
     const id = localStorage.getItem("funcionario_id");
@@ -54,7 +67,8 @@ export default function CardFuncionario({
   useEffect(() => {
     puxaDados();
     setAdicionado(false);
-  }, [adicionado]);
+    setModificado(false);
+  }, [adicionado, modificado]);
 
   function formatarData(val) {
     if (!val) return "";
@@ -85,7 +99,7 @@ export default function CardFuncionario({
                       max-h-[85vh] overflow-y-auto"
       >
         <div>
-          <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-xl">
+          <div className="top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-xl relative">
             <h2 className="text-lg font-semibold tracking-wide">FUNCIONÁRIO</h2>
             <div className="flex items-center gap-2">
               <button
@@ -104,6 +118,15 @@ export default function CardFuncionario({
                 <X size={18} />
               </button>
             </div>
+            <button
+              type="button"
+              title="Editar"
+              onClick={abreModificacao}
+              className="absolute -bottom-16 right-6 cursor-pointer inline-flex h-9 w-9 items-center justify-center
+             rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/20 transition shadow-md"
+            >
+              <Pen size={18} />
+            </button>
           </div>
         </div>
 

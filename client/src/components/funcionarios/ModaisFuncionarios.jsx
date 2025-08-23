@@ -1,6 +1,7 @@
 import AdicionaFuncionarioModal from "./AdicionaFuncionarioModal";
-import CardFuncionario from ".//CardFuncionario.jsx";
+import CardFuncionario from "./CardFuncionario.jsx";
 import ModalCriaNotificacao from "../notificacoes/ModalCriaNotificacao.jsx";
+import ModalModificaFuncionario from "./ModalModificaFuncionario.jsx";
 import { useState } from "react";
 
 function ModaisFuncionarios({
@@ -17,10 +18,25 @@ function ModaisFuncionarios({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
+  setModificaFuncionario,
+  modificaFuncionario,
+  modificado,
+  setModificado,
 }) {
   const [adicionado, setAdicionado] = useState(false);
   return (
     <div>
+      {modificaFuncionario && (
+        <ModalModificaFuncionario
+          setModifica={setModificaFuncionario}
+          setAviso={setAviso}
+          setCorAviso={setCorAviso}
+          setTextoAviso={setTextoAviso}
+          setCarregando={setCarregando}
+          setModificado={setModificado}
+        />
+      )}
+
       {notificacao && (
         <ModalCriaNotificacao
           setNotificacao={setNotificacao}
@@ -53,6 +69,9 @@ function ModaisFuncionarios({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          setModifica={setModificaFuncionario}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       )}
     </div>

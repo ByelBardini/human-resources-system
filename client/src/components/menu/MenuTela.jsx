@@ -19,6 +19,8 @@ function MenuTela({
   setAdicionandoFunc,
   setDesc,
   setModificaDesc,
+  modificado,
+  setModificado,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -37,6 +39,8 @@ function MenuTela({
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setCardFuncionario={setCardFuncionario}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       )}
       {opcaoSelecionada == "projecaoSalarial" && (

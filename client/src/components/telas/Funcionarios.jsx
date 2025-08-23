@@ -1,7 +1,12 @@
 import { useState } from "react";
 import TabelaFuncionarios from "../funcionarios/TabelaFuncionarios.jsx";
 
-function Funcionarios({ setAdicionandoFunc, setCardFuncionario }) {
+function Funcionarios({
+  setAdicionandoFunc,
+  setCardFuncionario,
+  modificado,
+  setModificado,
+}) {
   const [funcionarios, setFuncionarios] = useState([]);
 
   const [totalSalario, setTotalSalario] = useState(0);
@@ -40,6 +45,8 @@ function Funcionarios({ setAdicionandoFunc, setCardFuncionario }) {
           setFuncionarios={setFuncionarios}
           totalSalario={totalSalario}
           setTotalSalario={setTotalSalario}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       </div>
       <div className="mt-5 flex justify-center gap-6">

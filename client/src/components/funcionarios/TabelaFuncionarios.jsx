@@ -8,6 +8,8 @@ function TabelaFuncionarios({
   setCardFuncionario,
   setFuncionarios,
   funcionarios,
+  modificado,
+  setModificado,
 }) {
   const [clicado, setClicado] = useState("");
 
@@ -65,7 +67,8 @@ function TabelaFuncionarios({
 
   useEffect(() => {
     puxarFuncionarios();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <table className="min-w-[1100px] w-full text-sm text-white/90">

@@ -37,6 +37,21 @@ export async function postFuncionario(payload, fotoFile) {
   return data;
 }
 
+export async function putFuncionario(id, payload, fotoFile) {
+  const fd = new FormData();
+  Object.entries(payload).forEach(([k, v]) => fd.append(k, v ?? ""));
+
+  if (fotoFile) {
+    fd.append("foto", fotoFile);
+  }
+
+  const { data } = await api.put(`/funcionario/${id}`, fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+    withCredentials: true,
+  });
+  return data;
+}
+
 export async function getCargoSetor(id) {
   try {
     const response = await api.get(`/funcionario/cargo/${id}`);

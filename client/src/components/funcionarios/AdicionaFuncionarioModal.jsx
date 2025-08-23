@@ -196,7 +196,6 @@ function AdicionaFuncionarioModal({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nome */}
               <div className="md:col-span-2">
                 <label className="block text-sm text-white/70 mb-1">Nome</label>
                 <input
@@ -207,7 +206,6 @@ function AdicionaFuncionarioModal({
                 />
               </div>
 
-              {/* Setor */}
               <div>
                 <label className="block text-sm text-white/70 mb-1">
                   Setor
@@ -292,7 +290,6 @@ function AdicionaFuncionarioModal({
                 </select>
               </div>
 
-              {/* CPF */}
               <div>
                 <label className="block text-sm text-white/70 mb-1">CPF</label>
                 <input
@@ -303,7 +300,6 @@ function AdicionaFuncionarioModal({
                 />
               </div>
 
-              {/* Telefone */}
               <div>
                 <label className="block text-sm text-white/70 mb-1">
                   Telefone
@@ -316,7 +312,6 @@ function AdicionaFuncionarioModal({
                 />
               </div>
 
-              {/* Sexo */}
               <div>
                 <label className="block text-sm text-white/70 mb-1">Sexo</label>
                 <select
@@ -335,7 +330,6 @@ function AdicionaFuncionarioModal({
                 </select>
               </div>
 
-              {/* Datas */}
               <div>
                 <label className="block text-sm text-white/70 mb-1">
                   Data de Nascimento
@@ -360,7 +354,6 @@ function AdicionaFuncionarioModal({
             </div>
           </div>
 
-          {/* footer */}
           <div className="px-6 py-4 border-t border-white/10 flex justify-end gap-3">
             <button
               onClick={() => setAdicionandoFunc(false)}
