@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import TabelaFuncionarios from "../funcionarios/TabelaFuncionarios.jsx";
 import FiltrosFuncionarios from "../funcionarios/FiltroFuncionarios.jsx";
