@@ -28,6 +28,7 @@ export default function CardFuncionario({
   setModifica,
   modificado,
   setModificado,
+  setInativando,
 }) {
   const [openSec, setOpenSec] = useState(null);
   const [funcionario, setFuncionario] = useState(FUNCIONARIO_VAZIO);
@@ -106,8 +107,9 @@ export default function CardFuncionario({
                 type="button"
                 className="cursor-pointer px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25"
                 title="Inativar funcionário"
+                onClick={() => setInativando(true)}
               >
-                Inativar funcionário
+                Desligar funcionário
               </button>
               <button
                 type="button"

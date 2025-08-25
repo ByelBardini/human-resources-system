@@ -54,7 +54,6 @@ function ModalTrocaSenha({
         className="relative w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 p-6 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Trocar senha</h2>
           <button
@@ -124,8 +123,8 @@ function ModalTrocaSenha({
           </p>
           {!valido && (senha.length > 0 || confirma.length > 0) && (
             <p className="text-xs text-red-300">
-              {senha.length < 8
-                ? "A senha precisa ter pelo menos 8 caracteres."
+              {senha.length < 4
+                ? "A senha precisa ter pelo menos 4 caracteres."
                 : confirma !== senha
                 ? "As senhas não coincidem."
                 : ""}

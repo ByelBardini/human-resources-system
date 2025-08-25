@@ -69,3 +69,6 @@ CHANGE COLUMN `notificacao_tipo` `notificacao_tipo` ENUM('falta', 'meia-falta', 
 
 ALTER TABLE `sistema_rh`.`notificacoes` 
 ADD COLUMN `notificacao_data_final` DATE NULL DEFAULT NULL AFTER `notificacao_data`;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_motivo_inativa` TEXT NULL AFTER `funcionario_data_desligamento`;

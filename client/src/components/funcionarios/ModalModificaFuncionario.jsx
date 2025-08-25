@@ -77,7 +77,8 @@ function ModalModificaFuncionario({
       setTimeout(() => {
         setAviso(false);
         setModifica(false);
-      });
+        
+      }, 500);
     } catch (err) {
       setCarregando(false);
       setCorAviso("vermelho");

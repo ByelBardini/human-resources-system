@@ -66,6 +66,11 @@ Funcionario.init({
     allowNull: true,
     defaultValue: null,
   },
+  funcionario_motivo_inativa: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  },
   funcionario_ativo: {
     type: DataTypes.TINYINT,
     defaultValue: 1,

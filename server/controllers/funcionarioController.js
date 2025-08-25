@@ -44,7 +44,7 @@ export async function getFuncionarios(req, res) {
 
   try {
     const funcionarios = await Funcionario.findAll({
-      where: { funcionario_empresa_id: id },
+      where: { funcionario_empresa_id: id, funcionario_ativo: 1 },
       attributes: [
         "funcionario_id",
         "funcionario_nome",
@@ -180,9 +180,7 @@ export async function putFuncionario(req, res) {
 
     return res
       .status(201)
-      .json({ message: "Funcionário alterado com sucesso!" 
-
-      });
+      .json({ message: "Funcionário alterado com sucesso!" });
   } catch (err) {
     console.error("Erro ao atualizar funcionário:", err);
     return res.status(500).json({ error: "Erro ao atualizar funcionário" });
@@ -263,7 +261,14 @@ export async function postFuncionario(req, res) {
 
 export async function inativaFuncionario(req, res) {
   const { id } = req.params;
+  const { data_inativa, comentario } = req.body;
   const { usuario_id } = req.session.user;
+
+  if (!data_inativa) {
+    return res
+      .status(401)
+      .json({ error: "Necessário informar a data de inativação." });
+  }
 
   if (!usuario_id) {
     return res
@@ -279,6 +284,9 @@ export async function inativaFuncionario(req, res) {
     }
 
     funcionario.funcionario_ativo = 0;
+    funcionario.funcionario_data_desligamento = data_inativa;
+    funcionario.funcionario_motivo_inativa = comentario;
+
     await funcionario.save();
 
     return res

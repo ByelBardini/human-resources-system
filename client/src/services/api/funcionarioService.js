@@ -61,3 +61,16 @@ export async function getCargoSetor(id) {
     throw err;
   }
 }
+
+export async function inativarFuncionario(id, data, comentario) {
+  try {
+    const response = await api.put(`/funcionario/inativa/${id}`, {
+      comentario: comentario,
+      data_inativa: data,
+    });
+    return response.data;
+  } catch (err) {
+    console.log("Erro ao inativar funcionario", err);
+    throw err;
+  }
+}
