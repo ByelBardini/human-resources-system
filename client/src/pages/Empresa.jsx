@@ -18,6 +18,11 @@ function Empresa() {
   const [aumentoGeral, setAumentoGeral] = useState(false);
 
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
+  const [cardFuncionario, setCardFuncionario] = useState(false);
+  const [emitirNotificacao, setEmitirNotificacao] = useState(false);
+  const [modificaFuncionario, setModificaFuncionario] = useState(false);
+
+  const [modificado, setModificado] = useState(false);
 
   const [modificaDesc, setModificaDesc] = useState(false);
   const [desc, setDesc] = useState();
@@ -77,12 +82,23 @@ function Empresa() {
       />
 
       <ModaisFuncionarios
+        setCard={setCardFuncionario}
+        card={cardFuncionario}
         adicionandoFunc={adicionandoFunc}
         setAdicionandoFunc={setAdicionandoFunc}
         setAviso={setAviso}
         setCorAviso={setCorAviso}
         setTextoAviso={setTextoAviso}
         setCarregando={setCarregando}
+        setNotificacao={setEmitirNotificacao}
+        notificacao={emitirNotificacao}
+        setConfirmacao={setConfirmacao}
+        setTextoConfirmacao={setTextoConfirmacao}
+        setOnSimConfirmacao={setOnSimConfirmacao}
+        modificaFuncionario={modificaFuncionario}
+        setModificaFuncionario={setModificaFuncionario}
+        setModificado={setModificado}
+        modificado={modificado}
       />
 
       {confirmacao && (
@@ -120,6 +136,7 @@ function Empresa() {
         </div>
         <div className="overflow-y-auto min-w-300 min-h-140 max-h-140 w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <MenuTela
+            setCardFuncionario={setCardFuncionario}
             opcaoSelecionada={opcaoSelecionada}
             setCarregando={setCarregando}
             setAviso={setAviso}
@@ -133,6 +150,8 @@ function Empresa() {
             setAdicionandoFunc={setAdicionandoFunc}
             setDesc={setDesc}
             setModificaDesc={setModificaDesc}
+            setModificado={setModificado}
+            modificado={modificado}
           />
         </div>
       </div>

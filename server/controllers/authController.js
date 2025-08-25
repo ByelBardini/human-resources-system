@@ -37,6 +37,7 @@ export async function login(req, res) {
     };
 
     const resposta = {
+      usuario_id: usuario.usuario_id,
       usuario_nome: usuario.usuario_nome,
       usuario_troca_senha: usuario.usuario_troca_senha,
       usuario_role: usuario.usuario_role,
@@ -45,7 +46,7 @@ export async function login(req, res) {
     const payload = {
       usuario_id: usuario.usuario_id,
       usuario_role: usuario.usuario_role,
-    }
+    };
 
     const token = jwt.sign(payload, CHAVE, {
       expiresIn: "8h",
@@ -59,7 +60,7 @@ export async function login(req, res) {
         sameSite: "lax",
         secure: false,
         path: "/",
-        maxAge: 8 * 60 * 60 * 1000, 
+        maxAge: 8 * 60 * 60 * 1000,
       })
       .status(200)
       .json(resposta);

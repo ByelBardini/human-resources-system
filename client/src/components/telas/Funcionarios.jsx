@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
+import { SearchX } from "lucide-react";
 import TabelaFuncionarios from "../funcionarios/TabelaFuncionarios.jsx";
 import FiltrosFuncionarios from "../funcionarios/FiltroFuncionarios.jsx";
 
-function Funcionarios({ setAdicionandoFunc }) {
+function Funcionarios({
+  setAdicionandoFunc,
+  setCardFuncionario,
+  modificado,
+  setModificado,
+}) {
   const [funcionarios, setFuncionarios] = useState([]);
   const [funcionariosFiltrados, setFuncionariosFiltrados] = useState([]);
   const [sexoFiltro, setSexoFiltro] = useState([]);
@@ -57,8 +63,9 @@ function Funcionarios({ setAdicionandoFunc }) {
       </div>
       <div className="mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
         {filtroAtivo && funcionariosFiltrados.length === 0 ? (
-          <div className="text-center text-white p-6 text-4xl">
-            Nenhum dado encontrado!
+          <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
+            <SearchX size={16} className="opacity-80" />
+            Nenhum cargo encontrado
           </div>
         ) : (
           <TabelaFuncionarios
@@ -68,6 +75,9 @@ function Funcionarios({ setAdicionandoFunc }) {
                 : funcionarios
             }
             setFuncionarios={setFuncionarios}
+            setCardFuncionario={setCardFuncionario}
+            setModificado={setModificado}
+            modificado={modificado}
           />
         )}
       </div>

@@ -25,12 +25,13 @@ function Login() {
   async function logarSistema() {
     setCarregando(true);
     try {
-      const { usuario_nome, usuario_troca_senha, usuario_role } = await logar(
+      const { usuario_nome, usuario_troca_senha, usuario_role, usuario_id } = await logar(
         login,
         senha
       );
 
       localStorage.setItem("usuario_nome", usuario_nome);
+      localStorage.setItem("usuario_id", usuario_id);
       localStorage.setItem("usuario_role", usuario_role);
       if (usuario_troca_senha != 0) {
         localStorage.setItem("usuario_troca_senha", usuario_troca_senha);

@@ -1,4 +1,5 @@
 import cors from "cors";
+import path from "path";
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -10,6 +11,8 @@ import setorRoutes from "./routes/setorRoutes.js";
 import funcionarioRoutes from "./routes/funcionarioRoutes.js";
 import cargoRoutes from "./routes/cargoRoutes.js";
 import descricaoRoutes from "./routes/descricaoRoutes.js";
+import notificacaoRoutes from "./routes/notificacaoRoutes.js";
+import downloadRoute from "./routes/downloadRoute.js";
 
 dotenv.config();
 
@@ -29,7 +32,7 @@ app.use(
     saveUninitialized: false,
     resave: false,
     cookie: {
-      maxAge: 1 * 1000 * 60 * 24,
+      maxAge: 1000 * 60 * 60 * 24,
       httpOnly: true,
       sameSite: "Lax",
       secure: false,
@@ -38,6 +41,8 @@ app.use(
   })
 );
 
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/", authRoutes);
 app.use("/", usuarioRoutes);
 app.use("/", empresaRoutes);
@@ -45,5 +50,7 @@ app.use("/", setorRoutes);
 app.use("/", funcionarioRoutes);
 app.use("/", cargoRoutes);
 app.use("/", descricaoRoutes);
+app.use("/", notificacaoRoutes);
+app.use("/", downloadRoute);
 
 export default app;

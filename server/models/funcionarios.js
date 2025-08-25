@@ -56,8 +56,18 @@ Funcionario.init({
     type: DataTypes.DATE,
     allowNull: false,
   },
+  funcionario_observacao: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    defaultValue: null,
+  },
   funcionario_data_desligamento: {
     type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null,
+  },
+  funcionario_motivo_inativa: {
+    type: DataTypes.TEXT,
     allowNull: true,
     defaultValue: null,
   },

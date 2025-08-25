@@ -11,7 +11,13 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 
-function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
+function TabelaFuncionarios({
+  setCardFuncionario,
+  setFuncionarios,
+  funcionarios,
+  modificado,
+  setModificado,
+}) {
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
   const [salarioSort, setSalarioSort] = useState(false);
@@ -63,6 +69,11 @@ function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
 
     setFuncionarios(ordenado);
     setAdmissaoSort(!admissaoSort);
+  }
+
+  function abreCard(id) {
+    localStorage.setItem("funcionario_id", id);
+    setCardFuncionario(true);
   }
 
   function selecionaCampo(id) {
@@ -144,7 +155,8 @@ function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
 
   useEffect(() => {
     puxarFuncionarios();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <table className="min-w-[1100px] w-full text-sm text-white/90">
@@ -209,7 +221,7 @@ function TabelaFuncionarios({ setFuncionarios, funcionarios }) {
       <tbody className="min-w-[1100px] w-full divide-y divide-white/10">
         {funcionarios.map((funcionario) => (
           <tr
-            onDoubleClick={() => alert()}
+            onDoubleClick={() => abreCard(funcionario.funcionario_id)}
             key={funcionario.funcionario_id}
             onClick={() => selecionaCampo(funcionario.funcionario_id)}
             className={

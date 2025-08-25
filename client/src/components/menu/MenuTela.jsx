@@ -4,6 +4,7 @@ import ManualFuncoes from "../telas/ManualFuncoes.jsx";
 import ProjecaoSalarial from "../telas/ProjecaoSalarial.jsx";
 
 function MenuTela({
+  setCardFuncionario,
   opcaoSelecionada,
   setCarregando,
   setAviso,
@@ -18,6 +19,8 @@ function MenuTela({
   setAdicionandoFunc,
   setDesc,
   setModificaDesc,
+  modificado,
+  setModificado,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -35,6 +38,9 @@ function MenuTela({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          setCardFuncionario={setCardFuncionario}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       )}
       {opcaoSelecionada == "projecaoSalarial" && (
