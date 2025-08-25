@@ -58,6 +58,7 @@ export default function CardFuncionario({
       const notificacoes = await getNotificacoes(id);
       console.log("Funcionário:", funcionario);
       console.log("Notificações:", notificacoes);
+      console.log("ativo", funcionario.funcionario_ativo);
       setFuncionario(funcionario);
       setNotificacoes(notificacoes);
     } catch (err) {
@@ -103,14 +104,17 @@ export default function CardFuncionario({
           <div className="top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-xl relative">
             <h2 className="text-lg font-semibold tracking-wide">FUNCIONÁRIO</h2>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="cursor-pointer px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25"
-                title="Inativar funcionário"
-                onClick={() => setInativando(true)}
-              >
-                Desligar funcionário
-              </button>
+              {funcionario.funcionario_ativo == 1 && (
+                <button
+                  type="button"
+                  className="cursor-pointer px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25"
+                  title="Inativar funcionário"
+                  onClick={() => setInativando(true)}
+                >
+                  Desligar funcionário
+                </button>
+              )}
+
               <button
                 type="button"
                 className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 hover:bg-white/20"
@@ -120,15 +124,17 @@ export default function CardFuncionario({
                 <X size={18} />
               </button>
             </div>
-            <button
-              type="button"
-              title="Editar"
-              onClick={abreModificacao}
-              className="absolute -bottom-16 right-6 cursor-pointer inline-flex h-9 w-9 items-center justify-center
+            {funcionario.funcionario_ativo == 1 && (
+              <button
+                type="button"
+                title="Editar"
+                onClick={abreModificacao}
+                className="absolute -bottom-16 right-6 cursor-pointer inline-flex h-9 w-9 items-center justify-center
              rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/20 transition shadow-md"
-            >
-              <Pen size={18} />
-            </button>
+              >
+                <Pen size={18} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -149,26 +155,44 @@ export default function CardFuncionario({
                 )}
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-4">
-                <div className="text-sm text-white/60">SETOR</div>
-                <div className="font-medium">
-                  {funcionario.setor.setor_nome || ""}
-                </div>
+              {funcionario.funcionario_ativo ? (
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-4">
+                  <div className="text-sm text-white/60">SETOR</div>
+                  <div className="font-medium">
+                    {funcionario.setor.setor_nome || ""}
+                  </div>
 
-                <div className="mt-3 text-sm text-white/60">CARGO</div>
-                <div className="font-medium">
-                  {funcionario.cargo.cargo_nome || ""} -{" "}
-                  {funcionario.nivel.nivel_nome || ""}
-                </div>
+                  <div className="mt-3 text-sm text-white/60">CARGO</div>
+                  <div className="font-medium">
+                    {funcionario.cargo.cargo_nome || ""} -{" "}
+                    {funcionario.nivel.nivel_nome || ""}
+                  </div>
 
-                <div className="mt-3 text-sm text-white/60">SALÁRIO</div>
-                <div className="font-medium">
-                  R${" "}
-                  {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
-                    minimumFractionDigits: 2,
-                  }) || ""}
+                  <div className="mt-3 text-sm text-white/60">SALÁRIO</div>
+                  <div className="font-medium">
+                    R${" "}
+                    {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
+                      minimumFractionDigits: 2,
+                    }) || ""}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-2xl border border-white/10 bg-white/10 px-5 py-4">
+                  <div className="text-sm text-white/60">
+                    DATA DE DESLIGAMENTO
+                  </div>
+                  <div className="font-medium">
+                    {formatarData(funcionario.funcionario_data_desligamento)}
+                  </div>
+
+                  <div className="mt-3 text-sm text-white/60">
+                    MOTIVO DO DESLIGAMENTO
+                  </div>
+                  <div className="font-medium">
+                    {funcionario.funcionario_motivo_inativa || ""}
+                  </div>
+                </div>
+              )}
             </aside>
 
             <section className="space-y-6 min-w-0 self-center">
@@ -246,6 +270,7 @@ export default function CardFuncionario({
               setAviso={setAviso}
               setCorAviso={setCorAviso}
               setTextoAviso={setTextoAviso}
+              ativo={funcionario.funcionario_ativo}
             />
           )}
         </div>

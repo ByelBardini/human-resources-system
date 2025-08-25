@@ -70,6 +70,47 @@ export async function getFuncionarios(req, res) {
   }
 }
 
+export async function getFuncionariosInativos(req, res) {
+  const { id } = req.params;
+
+  const { usuario_id } = req.session.user;
+
+  if (!usuario_id) {
+    return res
+      .status(401)
+      .json({ error: "Necessário estar logado para realizar operações." });
+  }
+
+  try {
+    const funcionarios = await Funcionario.findAll({
+      where: { funcionario_empresa_id: id, funcionario_ativo: 0 },
+      attributes: [
+        "funcionario_id",
+        "funcionario_nome",
+        "funcionario_sexo",
+        "funcionario_data_nascimento",
+        "funcionario_data_admissao",
+        "funcionario_data_desligamento",
+        "funcionario_gasto_desligamento",
+      ],
+      include: [
+        { model: Setor, as: "setor", attributes: ["setor_nome"] },
+        {
+          model: Nivel,
+          as: "nivel",
+          attributes: ["nivel_nome", "nivel_salario"],
+        },
+        { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+      ],
+    });
+
+    return res.status(200).json(funcionarios);
+  } catch (err) {
+    console.error("Erro ao buscar funcionários:", err);
+    return res.status(500).json({ error: "Erro ao buscar funcionários" });
+  }
+}
+
 export async function getFuncionarioFull(req, res) {
   const { id } = req.params;
 
@@ -84,17 +125,6 @@ export async function getFuncionarioFull(req, res) {
   try {
     const funcionario = await Funcionario.findOne({
       where: { funcionario_id: id },
-      attributes: [
-        "funcionario_id",
-        "funcionario_nome",
-        "funcionario_cpf",
-        "funcionario_celular",
-        "funcionario_sexo",
-        "funcionario_imagem_caminho",
-        "funcionario_data_nascimento",
-        "funcionario_data_admissao",
-        "funcionario_observacao",
-      ],
       include: [
         { model: Setor, as: "setor", attributes: ["setor_id", "setor_nome"] },
         {
@@ -261,13 +291,13 @@ export async function postFuncionario(req, res) {
 
 export async function inativaFuncionario(req, res) {
   const { id } = req.params;
-  const { data_inativa, comentario } = req.body;
+  const { data_inativa, comentario, gasto_desligamento } = req.body;
   const { usuario_id } = req.session.user;
 
-  if (!data_inativa) {
+  if (!data_inativa || !gasto_desligamento) {
     return res
       .status(401)
-      .json({ error: "Necessário informar a data de inativação." });
+      .json({ error: "Necessário informar a data e gasto de inativação." });
   }
 
   if (!usuario_id) {
@@ -286,6 +316,7 @@ export async function inativaFuncionario(req, res) {
     funcionario.funcionario_ativo = 0;
     funcionario.funcionario_data_desligamento = data_inativa;
     funcionario.funcionario_motivo_inativa = comentario;
+    funcionario.funcionario_gasto_desligamento = gasto_desligamento;
 
     await funcionario.save();
 

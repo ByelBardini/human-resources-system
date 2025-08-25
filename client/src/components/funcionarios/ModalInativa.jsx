@@ -13,19 +13,31 @@ function ModalInativa({
 }) {
   const [data, setData] = useState("");
   const [comentario, setComentario] = useState("");
+  const [preco, setPreco] = useState("R$ 0,00");
+
+  function formatarRealDinamico(valor) {
+    valor = valor.replace(/\D/g, "");
+    if (!valor) return "R$ 0,00";
+    valor = (parseInt(valor, 10) / 100).toFixed(2);
+    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `R$ ${valor}`;
+  }
 
   async function inativar() {
     const id = localStorage.getItem("funcionario_id");
 
-    if (data == "") {
-      setTextoAviso("Você precisa informar a data de inativação!");
+    if (data == "" || preco == "R$ 0,00") {
+      setTextoAviso(
+        "Você precisa informar a data de inativação e o preço de desligamento!"
+      );
       setCorAviso("vermelho");
       setAviso(true);
       return;
     }
     setCarregando(true);
     try {
-      await inativarFuncionario(id, data, comentario);
+      const precoFormatado = parseInt(preco.replace(/\D/g, ""), 10) / 100;
+      await inativarFuncionario(id, data, comentario, precoFormatado);
       setTextoAviso("Funcionário desligado com sucesso!");
       setCorAviso("verde");
       setAviso(true);
@@ -97,6 +109,20 @@ function ModalInativa({
               className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40
                          outline-none focus:bg-white/15 resize-y min-h-28 whitespace-pre-wrap break-words leading-relaxed"
               onChange={(e) => setComentario(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-white/70 mb-1">
+              Valor gasto com o desligamento
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              onChange={(e) => setPreco(formatarRealDinamico(e.target.value))}
+              value={preco}
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
+                         outline-none focus:bg-white/15 [color-scheme:dark]"
             />
           </div>
         </div>

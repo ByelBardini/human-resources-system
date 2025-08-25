@@ -1,6 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState } from "react";
-import { getFuncionarios } from "../../services/api/funcionarioService.js";
+import {
+  getFuncionarios,
+  getFuncionariosInativos,
+} from "../../services/api/funcionarioService.js";
 import {
   Mars,
   Venus,
@@ -17,6 +20,7 @@ function TabelaFuncionarios({
   funcionarios,
   modificado,
   setModificado,
+  inativos,
 }) {
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
@@ -84,8 +88,14 @@ function TabelaFuncionarios({
     }
   }
 
-  function calcularTempoAdmissao(funcionario_data_admissao) {
-    const hoje = new Date();
+  function calcularTempoAdmissao(
+    inativos,
+    funcionario_data_admissao,
+    funcionario_data_desligamento
+  ) {
+    const hoje = inativos
+      ? new Date()
+      : new Date(funcionario_data_desligamento);
     const admissao = new Date(funcionario_data_admissao);
 
     let anos = hoje.getFullYear() - admissao.getFullYear();
@@ -146,7 +156,10 @@ function TabelaFuncionarios({
   async function puxarFuncionarios() {
     const id = localStorage.getItem("empresa_id");
     try {
-      const funcionarios = await getFuncionarios(id);
+      const funcionarios = inativos
+        ? await getFuncionarios(id)
+        : await getFuncionariosInativos(id);
+      console.log("funcionariosssss:", funcionarios);
       setFuncionarios(funcionarios);
     } catch (err) {
       console.error("Erro ao buscar cargos:", err);
@@ -156,7 +169,7 @@ function TabelaFuncionarios({
   useEffect(() => {
     puxarFuncionarios();
     setModificado(false);
-  }, [modificado]);
+  }, [modificado, inativos]);
 
   return (
     <table className="min-w-[1100px] w-full text-sm text-white/90">
@@ -178,34 +191,58 @@ function TabelaFuncionarios({
           <th className="px-4 py-3 font-medium">Setor</th>
           <th className="px-4 py-3 font-medium">Função</th>
           <th className="px-4 py-3 font-medium">Nível</th>
+          {inativos ? (
+            <th className="px-4 py-3 font-medium">
+              <div className="flex justify-between">
+                Salário
+                <button className="cursor-pointer" onClick={ordenarPorSalario}>
+                  {salarioSort ? (
+                    <ArrowUp10 size={18} strokeWidth={2.2} />
+                  ) : (
+                    <ArrowUp01 size={18} strokeWidth={2.2} />
+                  )}
+                </button>
+              </div>
+            </th>
+          ) : (
+            <th className="px-4 py-3 font-medium">
+              <div className="flex justify-between">
+                Gasto
+                <button className="cursor-pointer" onClick={ordenarPorSalario}>
+                  {salarioSort ? (
+                    <ArrowUp10 size={18} strokeWidth={2.2} />
+                  ) : (
+                    <ArrowUp01 size={18} strokeWidth={2.2} />
+                  )}
+                </button>
+              </div>
+            </th>
+          )}
+          {inativos && (
+            <th className="px-4 py-3 font-medium">
+              <div className="flex justify-between">
+                Idade
+                <button
+                  className="cursor-pointer"
+                  onClick={ordenarPorNascimento}
+                >
+                  {nascimentoSort ? (
+                    <ArrowUp10 size={18} strokeWidth={2.2} />
+                  ) : (
+                    <ArrowUp01 size={18} strokeWidth={2.2} />
+                  )}
+                </button>
+              </div>
+            </th>
+          )}
+          {inativos ? (
+            <th className="px-4 py-3 font-medium">Nascimento</th>
+          ) : (
+            <th className="px-4 py-3 font-medium">Desligamento</th>
+          )}
           <th className="px-4 py-3 font-medium">
             <div className="flex justify-between">
-              Salário
-              <button className="cursor-pointer" onClick={ordenarPorSalario}>
-                {salarioSort ? (
-                  <ArrowUp10 size={18} strokeWidth={2.2} />
-                ) : (
-                  <ArrowUp01 size={18} strokeWidth={2.2} />
-                )}
-              </button>
-            </div>
-          </th>
-          <th className="px-4 py-3 font-medium">
-            <div className="flex justify-between">
-              Idade
-              <button className="cursor-pointer" onClick={ordenarPorNascimento}>
-                {nascimentoSort ? (
-                  <ArrowUp10 size={18} strokeWidth={2.2} />
-                ) : (
-                  <ArrowUp01 size={18} strokeWidth={2.2} />
-                )}
-              </button>
-            </div>
-          </th>
-          <th className="px-4 py-3 font-medium">Nascimento</th>
-          <th className="px-4 py-3 font-medium">
-            <div className="flex justify-between">
-              Anos de empresa
+              Tempo de empresa
               <button className="cursor-pointer" onClick={ordenarPorAdmissao}>
                 {admissaoSort ? (
                   <ArrowUp10 size={18} strokeWidth={2.2} />
@@ -249,20 +286,42 @@ function TabelaFuncionarios({
             <td className="px-4 py-2 w-[90px] text-center">
               {funcionario.nivel.nivel_nome || ""}
             </td>
-            <td className="px-4 py-2 w-[110px] text-center">
-              R$
-              {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
-                minimumFractionDigits: 2,
-              }) || ""}
-            </td>
-            <td className="px-4 py-2 w-[100px] text-center">
-              {calcularIdade(funcionario.funcionario_data_nascimento)} Anos
-            </td>
-            <td className="px-4 py-2 whitespace-nowrap text-center">
-              {formatarData(funcionario.funcionario_data_nascimento) || ""}
-            </td>
+            {inativos ? (
+              <td className="px-4 py-2 w-[110px] text-center">
+                R$
+                {funcionario.nivel.nivel_salario.toLocaleString("pt-br", {
+                  minimumFractionDigits: 2,
+                }) || ""}
+              </td>
+            ) : (
+              <td className="px-4 py-2 w-[110px] text-center">
+                R$
+                {Number(
+                  funcionario.funcionario_gasto_desligamento).toLocaleString("pt-BR", {
+                  minimumFractionDigits: 2,
+                }) || ""}
+              </td>
+            )}
+            {inativos ? (
+              <td className="px-4 py-2 w-[100px] text-center">
+                {calcularIdade(funcionario.funcionario_data_nascimento)} Anos
+              </td>
+            ) : (
+              <td className="px-4 py-2 w-[100px] text-center">
+                {formatarData(funcionario.funcionario_data_desligamento)}
+              </td>
+            )}
+            {inativos && (
+              <td className="px-4 py-2 whitespace-nowrap text-center">
+                {formatarData(funcionario.funcionario_data_nascimento) || ""}
+              </td>
+            )}
             <td className="px-4 py-2 w-[170px] text-center">
-              {calcularTempoAdmissao(funcionario.funcionario_data_admissao)}
+              {calcularTempoAdmissao(
+                inativos,
+                funcionario.funcionario_data_admissao,
+                funcionario.funcionario_data_desligamento
+              )}
             </td>
             <td className="px-4 py-2 whitespace-nowrap text-center">
               {formatarData(funcionario.funcionario_data_admissao) || ""}

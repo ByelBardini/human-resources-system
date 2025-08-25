@@ -9,10 +9,18 @@ function AdicionaCargoModal({
   setCarregando,
 }) {
   const [nomeCargo, setNomeCargo] = useState("");
-  const [salarioInicial, setSalarioInicial] = useState("");
+  const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
+
+  function formatarRealDinamico(valor) {
+    valor = valor.replace(/\D/g, "");
+    if (!valor) return "R$ 0,00";
+    valor = (parseInt(valor, 10) / 100).toFixed(2);
+    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `R$ ${valor}`;
+  }
 
   async function criarCargo() {
-    if (nomeCargo.trim() === "" || salarioInicial.trim() === "") {
+    if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
       setCorAviso("amarelo");
       setTextoAviso("Por favor, preencha todos os campos.");
       setAviso(true);
@@ -20,8 +28,9 @@ function AdicionaCargoModal({
     }
     setCarregando(true);
     try {
+      const salInicial = parseInt(salarioInicial.replace(/\D/g, ""), 10) / 100;
       const id_empresa = localStorage.getItem("empresa_id");
-      await postCargos(id_empresa, nomeCargo, salarioInicial);
+      await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
       setCorAviso("verde");
       setTextoAviso("Cargo criado com sucesso!");
@@ -83,13 +92,16 @@ function AdicionaCargoModal({
           <div>
             <div className="flex">
               <label className="block text-sm text-white/80 mb-1">
-                Salário Inicial (apenas números)
+                Salário Inicial
               </label>
             </div>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              onChange={(e) =>
+                setSalarioInicial(formatarRealDinamico(e.target.value))
+              }
               value={salarioInicial}
-              onChange={(e) => setSalarioInicial(e.target.value)}
               placeholder="Ex: 2000"
               className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
             />

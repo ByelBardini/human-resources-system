@@ -21,6 +21,7 @@ function FiltrosFuncionarios({
   setFuncionariosFiltrados,
   filtroAtivo,
   setFiltroAtivo,
+  inativos,
 }) {
   function definirFiltros() {
     const meses = [
@@ -123,10 +124,12 @@ function FiltrosFuncionarios({
           funcionarioFiltro={nivelFiltro}
           setFuncionarioFiltro={setNivelFiltro}
         />
-        <FiltroMesAniversario
-          funcionarioFiltro={mesAniversarioFiltro}
-          setFuncionarioFiltro={setMesAniversarioFiltro}
-        />
+        {inativos && (
+          <FiltroMesAniversario
+            funcionarioFiltro={mesAniversarioFiltro}
+            setFuncionarioFiltro={setMesAniversarioFiltro}
+          />
+        )}
       </div>
     </div>
   );

@@ -72,3 +72,6 @@ ADD COLUMN `notificacao_data_final` DATE NULL DEFAULT NULL AFTER `notificacao_da
 
 ALTER TABLE `sistema_rh`.`funcionarios` 
 ADD COLUMN `funcionario_motivo_inativa` TEXT NULL AFTER `funcionario_data_desligamento`;
+
+ALTER TABLE `sistema_rh`.`funcionarios` 
+ADD COLUMN `funcionario_gasto_desligamento` DOUBLE NULL AFTER `funcionario_motivo_inativa`;
