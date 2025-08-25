@@ -41,10 +41,14 @@ function Funcionarios({
   }
 
   useEffect(() => {
-    const listaFuncionarios = funcionariosFiltrados.length
-      ? funcionariosFiltrados
-      : funcionarios;
-    setTotalSalario(salarioTotal(listaFuncionarios));
+    if (filtroAtivo && funcionariosFiltrados.length === 0) {
+      setTotalSalario(0);
+    } else {
+      const listaFuncionarios = funcionariosFiltrados.length
+        ? funcionariosFiltrados
+        : funcionarios;
+      setTotalSalario(salarioTotal(listaFuncionarios));
+    }
   }, [funcionarios, funcionariosFiltrados, inativos]);
 
   const brl = new Intl.NumberFormat("pt-BR", {
@@ -52,7 +56,6 @@ function Funcionarios({
     currency: "BRL",
   });
   const label = inativos ? "Total por mês" : "Gasto total com desligamentos";
-  const valor = Number(totalSalario ?? 0);
 
   const colors = inativos
     ? {
@@ -102,7 +105,7 @@ function Funcionarios({
             <span className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
             <span className="text-xs text-white/60">{label}</span>
             <span className="text-lg font-semibold tracking-tight">
-              {brl.format(valor)}
+              {brl.format(totalSalario)}
             </span>
             <span
               className={`ml-1 rounded-md px-1.5 py-0.5 text-[10px] ${colors.chipBg} ${colors.chipText}`}
@@ -114,9 +117,11 @@ function Funcionarios({
       </div>
       <div className="mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
         {filtroAtivo && funcionariosFiltrados.length === 0 ? (
-          <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
-            <SearchX size={16} className="opacity-80" />
-            Nenhum cargo encontrado
+          <div className="flex justify-center p-2">
+            <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
+              <SearchX size={16} className="opacity-80" />
+              Nenhum funcionário encontrado
+            </div>
           </div>
         ) : (
           <TabelaFuncionarios
