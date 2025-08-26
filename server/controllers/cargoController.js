@@ -1,5 +1,4 @@
 import { Cargo, Nivel, Descricao } from "../models/index.js";
-import { UniqueConstraintError } from "sequelize";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
 

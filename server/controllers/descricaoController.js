@@ -1,4 +1,5 @@
 import { Descricao, Setor, Cargo } from "../models/index.js";
+import { ApiError } from "../middlewares/ApiError.js";
 
 export async function getDescricoes(req, res) {
   const id = req.params.id;
