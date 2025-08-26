@@ -10,25 +10,28 @@ import {
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
 import uploadFotoFuncionario from "../middlewares/uploadFotoFuncionario.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { checarLogado } from "../middlewares/chegarLogado.js";
 
 const router = express.Router();
 
-router.get("/funcionario/cargo/:id", verificaToken, getCargoSetor);
-router.get("/funcionario/:id", verificaToken, getFuncionarios);
-router.get("/funcionario/inativos/:id", verificaToken, getFuncionariosInativos);
-router.get("/funcionario/full/:id", verificaToken, getFuncionarioFull);
+router.use(verificaToken);
+router.use(checarLogado);
+
+router.get("/funcionario/cargo/:id", asyncHandler(getCargoSetor));
+router.get("/funcionario/:id", asyncHandler(getFuncionarios));
+router.get("/funcionario/inativos/:id", asyncHandler(getFuncionariosInativos));
+router.get("/funcionario/full/:id", asyncHandler(getFuncionarioFull));
 router.put(
   "/funcionario/:id",
   uploadFotoFuncionario.single("foto"),
-  verificaToken,
-  putFuncionario
+  asyncHandler(putFuncionario)
 );
 router.post(
   "/funcionario",
   uploadFotoFuncionario.single("foto"),
-  verificaToken,
-  postFuncionario
+  asyncHandler(postFuncionario)
 );
-router.put("/funcionario/inativa/:id", verificaToken, inativaFuncionario);
+router.put("/funcionario/inativa/:id", asyncHandler(inativaFuncionario));
 
 export default router;
