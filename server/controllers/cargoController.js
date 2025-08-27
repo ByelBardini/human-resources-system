@@ -1,6 +1,10 @@
-import { Cargo, Nivel, Descricao } from "../models/index.js";
+import { Cargo, Nivel, Descricao, Log, Funcionario } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
+
+function getUsuarioId(req) {
+  return req?.user?.usuario_id ?? null;
+}
 
 const transformaEmNumero = (valor) => {
   if (typeof valor === "number") return valor;
@@ -19,6 +23,8 @@ const duasCasas = (x) =>
   Math.round((transformaEmNumero(x) + Number.EPSILON) * 100) / 100;
 
 export async function postCargo(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { cargo_empresa_id, cargo_nome, salario_inicial } = req.body;
 
   if (!cargo_empresa_id || !cargo_nome || salario_inicial == null) {
@@ -33,8 +39,11 @@ export async function postCargo(req, res) {
         cargo_descricao: null,
         cargo_ativo: 1,
       },
-
-      { transaction: t }
+      {
+        transaction: t,
+        salario_inicial: salario_inicial,
+        usuario_id: usuario_id,
+      }
     );
     const salInicial = duasCasas(salario_inicial);
     const salJuniorI = duasCasas(salInicial * 1.05);
@@ -120,6 +129,8 @@ export async function postCargo(req, res) {
 }
 
 export async function aumentoGeral(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { cargo_empresa_id, porcentagem } = req.body;
   if (!cargo_empresa_id || porcentagem == null) {
     throw ApiError.badRequest("Todos os dados são necessários.");
@@ -200,6 +211,18 @@ export async function aumentoGeral(req, res) {
         );
       }
     }
+    await Log.create(
+      {
+        log_usuario_id: usuario_id,
+        log_operacao_realizada: "Aumento Geral Aplicado",
+        log_valor_antigo: "-",
+        log_valor_novo: `${porcentagem} %`,
+        log_data_alteracao: new Date(),
+      },
+      {
+        transaction: t,
+      }
+    );
   });
   return res.status(200).json({ message: "Aumento aplicado com sucesso." });
 }
@@ -227,13 +250,47 @@ export async function getCargos(req, res) {
 }
 
 export async function deleteCargo(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID do cargo a ser deletado.");
   }
   const cargo = await Cargo.findByPk(id);
 
-  cargo.destroy();
+  if (!cargo) throw ApiError.notFound("Cargo não encontrado.");
 
-  return res.status(200).json({ message: "Cargo excluído com sucesso!" });
+  try {
+    await sequelize.transaction(async (t) => {
+      const [qtdFuncs] = await Promise.all([
+        Funcionario.count({
+          where: { funcionario_cargo_id: id },
+          transaction: t,
+        }),
+      ]);
+
+      if (qtdFuncs) {
+        throw ApiError.conflict(
+          `Não é possível excluir: existem ${qtdFuncs} funcionário(s) vinculados a este cargo. `
+        );
+      }
+
+      await cargo.destroy({ transaction: t, usuario_id });
+    });
+
+    return res.status(200).json({ message: "Cargo excluído com sucesso!" });
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    if (
+      err?.name === "SequelizeForeignKeyConstraintError" ||
+      err?.original?.code === "ER_ROW_IS_REFERENCED"
+    ) {
+      throw ApiError.conflict(
+        "Não é possível excluir: o cargo está em uso por outras tabelas."
+      );
+    }
+
+    console.error("Erro ao excluir cargo:", err);
+    throw ApiError.internal("Erro ao excluir cargo.");
+  }
 }
