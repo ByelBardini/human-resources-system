@@ -222,6 +222,20 @@ Notificacao.afterCreate(async (instance, options) => {
   }
 });
 
+// Logging Descrição
+
+Descricao.afterUpdate(async (instance, options) => {
+  const usuario_id = options.usuario_id || null;
+
+  await Log.create({
+      log_usuario_id: usuario_id,
+      log_operacao_realizada: "Descricao Atualizada",
+      log_valor_antigo: JSON.stringify(instance._previousDataValues),
+      log_valor_novo: JSON.stringify(instance.toJSON()),
+      log_data_alteracao: new Date(),
+    });
+})
+
 export {
   Empresa,
   Funcionario,
