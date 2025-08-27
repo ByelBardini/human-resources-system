@@ -16,7 +16,7 @@ function FiltroNivel({ setFuncionarioFiltro, funcionarioFiltro }) {
     setFuncionarioFiltro((prev) =>
       selecionado
         ? prev.filter((s) => s.nivel_nome !== valor)
-        : [...prev, {nivel_nome: valor} ]
+        : [...prev, { nivel_nome: valor }]
     );
   }
 
@@ -56,7 +56,6 @@ function FiltroNivel({ setFuncionarioFiltro, funcionarioFiltro }) {
       document.removeEventListener("keydown", handleKey);
     };
   }, [open]);
-   
 
   return (
     <div className="relative inline-block">
@@ -64,7 +63,7 @@ function FiltroNivel({ setFuncionarioFiltro, funcionarioFiltro }) {
         ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex gap-3 p-2 items-center rounded-lg border border-white/10 transition-colors text-xl bg-white/5 text-white hover:bg-white/10"
+        className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-white/10 bg-white/5 text-white/90 text-[13px] leading-none tracking-tight hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
         aria-haspopup="menu"
         aria-expanded={open}
         title="Filtrar por nivel"

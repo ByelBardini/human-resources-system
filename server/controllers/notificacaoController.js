@@ -1,4 +1,5 @@
 import { Notificacao } from "../models/index.js";
+import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
 
 const toBool = (v) => v === true || v === "true" || v === "1";
@@ -26,16 +27,9 @@ function adicionaDiasSuspensao(notificacao_data) {
 }
 
 export async function getNotificacoes(req, res) {
-  const { usuario_id } = req.session.user;
-  if (!usuario_id) {
-    return res
-      .status(401)
-      .json({ error: "Necessário estar logado para realizar operações." });
-  }
-
   const id = req.params.id;
   if (!id) {
-    return res.status(400).json({ error: "Necessário id do usuário" });
+    throw ApiError.badRequest("Necessário ID do funcionário");
   }
   const mesAtual = new Date();
   const comecoDoMes = new Date(
@@ -59,153 +53,122 @@ export async function getNotificacoes(req, res) {
 
   const formatar = (d) => d.toISOString().slice(0, 10);
 
-  try {
-    const [faltas, atestados, advertencias, suspensoes] = await Promise.all([
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["falta", "meia-falta"] },
-          notificacao_data: {
-            [Op.gte]: formatar(comecoDoMes),
-            [Op.lt]: formatar(comecoProximoMes),
-          },
+  const [faltas, atestados, advertencias, suspensoes] = await Promise.all([
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["falta", "meia-falta"] },
+        notificacao_data: {
+          [Op.gte]: formatar(comecoDoMes),
+          [Op.lt]: formatar(comecoProximoMes),
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["atestado"] },
-          notificacao_data: {
-            [Op.gte]: formatar(comecoDoMes),
-            [Op.lt]: formatar(comecoProximoMes),
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["atestado"] },
+        notificacao_data: {
+          [Op.gte]: formatar(comecoDoMes),
+          [Op.lt]: formatar(comecoProximoMes),
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["advertencia"] },
-          notificacao_data: {
-            [Op.gte]: formatar(comecoDoMes),
-            [Op.lt]: formatar(comecoProximoMes),
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["advertencia"] },
+        notificacao_data: {
+          [Op.gte]: formatar(comecoDoMes),
+          [Op.lt]: formatar(comecoProximoMes),
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["suspensao"] },
-          notificacao_data: {
-            [Op.gte]: formatar(comecoDoMes),
-            [Op.lt]: formatar(comecoProximoMes),
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["suspensao"] },
+        notificacao_data: {
+          [Op.gte]: formatar(comecoDoMes),
+          [Op.lt]: formatar(comecoProximoMes),
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-    ]);
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+  ]);
 
-    res.status(200).json({ faltas, atestados, advertencias, suspensoes });
-  } catch (err) {
-    console.error("Erro ao buscar notificações:", err);
-    return res.status(500).json({
-      error:
-        "Erro ao buscar notificações, fale com um administrador do sistema",
-    });
-  }
+  res.status(200).json({ faltas, atestados, advertencias, suspensoes });
 }
 
 export async function getNotificacoesPorMes(req, res) {
-  const { usuario_id } = req.session.user;
-  if (!usuario_id) {
-    return res
-      .status(401)
-      .json({ error: "Necessário estar logado para realizar operações." });
-  }
-
   const id = req.params.id;
   if (!id) {
-    return res.status(400).json({ error: "Necessário id do usuário" });
+    throw ApiError.badRequest("Necessário ID do funcionário");
   }
 
   const { data_inicial, data_final } = req.query;
   if (!data_final || !data_inicial) {
-    return res
-      .status(400)
-      .json({ error: "necessário data inicial e final da pesquisa" });
+    throw ApiError.badRequest("Necessário data inicial e final da pesquisa");
   }
 
-  try {
-    const [faltas, atestados, advertencias, suspensoes] = await Promise.all([
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["falta", "meia-falta"] },
-          notificacao_data: {
-            [Op.gte]: data_inicial,
-            [Op.lt]: data_final,
-          },
+  const [faltas, atestados, advertencias, suspensoes] = await Promise.all([
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["falta", "meia-falta"] },
+        notificacao_data: {
+          [Op.gte]: data_inicial,
+          [Op.lt]: data_final,
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["atestado"] },
-          notificacao_data: {
-            [Op.gte]: data_inicial,
-            [Op.lt]: data_final,
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["atestado"] },
+        notificacao_data: {
+          [Op.gte]: data_inicial,
+          [Op.lt]: data_final,
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["advertencia"] },
-          notificacao_data: {
-            [Op.gte]: data_inicial,
-            [Op.lt]: data_final,
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["advertencia"] },
+        notificacao_data: {
+          [Op.gte]: data_inicial,
+          [Op.lt]: data_final,
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-      Notificacao.findAll({
-        where: {
-          notificacao_funcionario_id: id,
-          notificacao_tipo: { [Op.in]: ["suspensao"] },
-          notificacao_data: {
-            [Op.gte]: data_inicial,
-            [Op.lt]: data_final,
-          },
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+    Notificacao.findAll({
+      where: {
+        notificacao_funcionario_id: id,
+        notificacao_tipo: { [Op.in]: ["suspensao"] },
+        notificacao_data: {
+          [Op.gte]: data_inicial,
+          [Op.lt]: data_final,
         },
-        order: [["notificacao_data", "DESC"]],
-      }),
-    ]);
+      },
+      order: [["notificacao_data", "DESC"]],
+    }),
+  ]);
 
-    res.status(200).json({ faltas, atestados, advertencias, suspensoes });
-  } catch (err) {
-    console.error("Erro ao buscar notificações:", err);
-    return res.status(500).json({
-      error:
-        "Erro ao buscar notificações, fale com um administrador do sistema",
-    });
-  }
+  res.status(200).json({ faltas, atestados, advertencias, suspensoes });
 }
 
 export async function postNotificacao(req, res) {
-  const { usuario_id } = req.session.user;
-  if (!usuario_id) {
-    return res
-      .status(401)
-      .json({ error: "Necessário estar logado para realizar operações." });
-  }
   const { id } = req.params;
 
   if (!id) {
-    return res.status(401).json({ error: "Necessário id do funcionário!" });
+    throw ApiError.badRequest("Necessário ID do funcionário");
   }
 
   let {
@@ -217,7 +180,7 @@ export async function postNotificacao(req, res) {
     notificacao_emitir_suspensao = false,
   } = req.body;
   if (!notificacao_tipo || !notificacao_data) {
-    return res.status(401).json({ error: "Tipo e data são obrigatórios!" });
+    throw ApiError.badRequest("Tipo e data são obrigatórios");
   }
 
   const emitirAdvertencia = toBool(notificacao_emitir_advertencia);
@@ -235,54 +198,47 @@ export async function postNotificacao(req, res) {
     ? `/uploads/notificacoes/${req.file.filename}`
     : null;
 
-  try {
-    if (emitirAdvertencia || emitirSuspensao) {
-      const base = {
-        notificacao_funcionario_id: id,
-        notificacao_tipo,
-        notificacao_data: dataIniMySQL,
-        notificacao_descricao,
-        notificacao_data_final: dataFimMySQL,
-        notificacao_imagem_caminho: arquivoPath,
-      };
-
-      const extra = emitirAdvertencia
-        ? {
-            notificacao_funcionario_id: id,
-            notificacao_tipo: "advertencia",
-            notificacao_data: dataIniMySQL,
-            notificacao_descricao,
-            notificacao_data_final: null,
-            notificacao_imagem_caminho: arquivoPath,
-          }
-        : {
-            notificacao_funcionario_id: id,
-            notificacao_tipo: "suspensao",
-            notificacao_data: dataIniMySQL,
-            notificacao_descricao,
-            notificacao_data_final: adicionaDiasSuspensao(notificacao_data),
-            notificacao_imagem_caminho: arquivoPath,
-          };
-
-      await Notificacao.bulkCreate([base, extra]);
-      return res
-        .status(201)
-        .json({ message: "Notificações criadas com sucesso!" });
-    }
-    await Notificacao.create({
+  if (emitirAdvertencia || emitirSuspensao) {
+    const base = {
       notificacao_funcionario_id: id,
       notificacao_tipo,
       notificacao_data: dataIniMySQL,
       notificacao_descricao,
       notificacao_data_final: dataFimMySQL,
       notificacao_imagem_caminho: arquivoPath,
-    });
+    };
 
-    return res.status(201).json({ message: "Notificação criada com sucesso!" });
-  } catch (err) {
-    console.error("Erro ao gerar notificação:", err);
-    return res.status(500).json({
-      error: "Erro ao gerar notificação, fale com um administrador do sistema",
-    });
+    const extra = emitirAdvertencia
+      ? {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: "advertencia",
+          notificacao_data: dataIniMySQL,
+          notificacao_descricao,
+          notificacao_data_final: null,
+          notificacao_imagem_caminho: arquivoPath,
+        }
+      : {
+          notificacao_funcionario_id: id,
+          notificacao_tipo: "suspensao",
+          notificacao_data: dataIniMySQL,
+          notificacao_descricao,
+          notificacao_data_final: adicionaDiasSuspensao(notificacao_data),
+          notificacao_imagem_caminho: arquivoPath,
+        };
+
+    await Notificacao.bulkCreate([base, extra]);
+    return res
+      .status(201)
+      .json({ message: "Notificações criadas com sucesso!" });
   }
+  await Notificacao.create({
+    notificacao_funcionario_id: id,
+    notificacao_tipo,
+    notificacao_data: dataIniMySQL,
+    notificacao_descricao,
+    notificacao_data_final: dataFimMySQL,
+    notificacao_imagem_caminho: arquivoPath,
+  });
+
+  return res.status(201).json({ message: "Notificação criada com sucesso!" });
 }

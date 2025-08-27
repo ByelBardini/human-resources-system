@@ -1,10 +1,18 @@
-import { getEmpresas, getEmpresaImagem } from "./../controllers/empresaController.js";
+import {
+  getEmpresas,
+  getEmpresaImagem,
+} from "./../controllers/empresaController.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { checarLogado } from "../middlewares/chegarLogado.js";
 
 const router = express.Router();
 
-router.get("/empresas", verificaToken, getEmpresas);
-router.get("/empresas/:id/imagem", verificaToken, getEmpresaImagem);
+router.use(verificaToken);
+router.use(checarLogado);
+
+router.get("/empresas", asyncHandler(getEmpresas));
+router.get("/empresas/:id/imagem", asyncHandler(getEmpresaImagem));
 
 export default router;

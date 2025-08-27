@@ -1,17 +1,16 @@
 import {
   getSetoresPorEmpresa,
-  postSetor,
-  putSetor,
-  deleteSetor,
 } from "../controllers/setorController.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { checarLogado } from "../middlewares/chegarLogado.js";
 
 const router = express.Router();
 
-router.get("/setor/:id", verificaToken, getSetoresPorEmpresa);
-router.post("/setor", verificaToken, postSetor);
-router.put("/setor/:id", verificaToken, putSetor);
-router.delete("/setor/:id", verificaToken, deleteSetor);
+router.use(verificaToken);
+router.use(checarLogado);
+
+router.get("/setor/:id", asyncHandler(getSetoresPorEmpresa));
 
 export default router;

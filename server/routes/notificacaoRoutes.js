@@ -6,16 +6,20 @@ import {
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
 import uploadArquivoNotificacao from "../middlewares/uploadArquivoNotificacao.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { checarLogado } from "../middlewares/chegarLogado.js";
 
 const router = express.Router();
 
-router.get("/notificacoes/:id", verificaToken, getNotificacoes);
-router.get("/notificacoes/mes/:id", verificaToken, getNotificacoesPorMes);
+router.use(verificaToken);
+router.use(checarLogado);
+
+router.get("/notificacoes/:id", asyncHandler(getNotificacoes));
+router.get("/notificacoes/mes/:id", asyncHandler(getNotificacoesPorMes));
 router.post(
   "/notificacoes/:id",
-  verificaToken,
   uploadArquivoNotificacao.single("arquivo"),
-  postNotificacao
+  asyncHandler(postNotificacao)
 );
 
 export default router;

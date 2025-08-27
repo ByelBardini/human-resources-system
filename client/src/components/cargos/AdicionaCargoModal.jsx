@@ -1,5 +1,6 @@
 import { postCargos } from "../../services/api/cargoServices.js";
 import { useState } from "react";
+import { X } from "lucide-react";
 
 function AdicionaCargoModal({
   setAdicionando,
@@ -9,10 +10,18 @@ function AdicionaCargoModal({
   setCarregando,
 }) {
   const [nomeCargo, setNomeCargo] = useState("");
-  const [salarioInicial, setSalarioInicial] = useState("");
+  const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
+
+  function formatarRealDinamico(valor) {
+    valor = valor.replace(/\D/g, "");
+    if (!valor) return "R$ 0,00";
+    valor = (parseInt(valor, 10) / 100).toFixed(2);
+    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return `R$ ${valor}`;
+  }
 
   async function criarCargo() {
-    if (nomeCargo.trim() === "" || salarioInicial.trim() === "") {
+    if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
       setCorAviso("amarelo");
       setTextoAviso("Por favor, preencha todos os campos.");
       setAviso(true);
@@ -20,8 +29,9 @@ function AdicionaCargoModal({
     }
     setCarregando(true);
     try {
+      const salInicial = parseInt(salarioInicial.replace(/\D/g, ""), 10) / 100;
       const id_empresa = localStorage.getItem("empresa_id");
-      await postCargos(id_empresa, nomeCargo, salarioInicial);
+      await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
       setCorAviso("verde");
       setTextoAviso("Cargo criado com sucesso!");
@@ -45,64 +55,88 @@ function AdicionaCargoModal({
   return (
     <div
       onClick={() => setAdicionando(false)}
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-25"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
     >
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white/5 backdrop-blur-lg rounded-lg p-6 w-full max-w-md border border-white/10 shadow-lg"
+        className="relative z-10 w-full max-w-xl rounded-2xl border border-white/10
+                 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl
+                 shadow-2xl text-white overflow-hidden"
       >
-        <button onClick={() => setAdicionando(false)}>
-          <p className="text-white hover:text-white/70 transition absolute top-4 right-4 text-2xl font-bold cursor-pointer">
-            ×
-          </p>
-        </button>
-        <h2 className="text-2xl font-semibold text-white mb-4 text-center">
-          Adicionar Novo Cargo
-        </h2>
-        <p className="text-sm text-white/70 mb-6 text-center">
-          Os salários dos níveis são calculados automaticamente com base no
-          salário inicial.
-        </p>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+          <h2 className="text-lg font-semibold">Adicionar Novo Cargo</h2>
+          <button
+            type="button"
+            className="cursor-pointer inline-flex h-9 w-9 items-center justify-center
+                     rounded-xl bg-white/10 border border-white/10 hover:bg-white/20"
+            title="Fechar"
+            onClick={() => setAdicionando(false)}
+          >
+            <span className="text-xl leading-none">
+              <X size={18} />
+            </span>
+          </button>
+        </div>
 
-        <form className="space-y-4">
+        <div className="px-6 py-5 space-y-5">
+          <p className="text-sm text-white/70">
+            Os salários dos níveis são calculados automaticamente com base no
+            salário inicial.
+          </p>
+
           <div>
-            <div className="flex">
-              <label className="block text-sm text-white/80 mb-1">
-                Nome do Cargo
-              </label>
-            </div>
+            <label className="block text-sm text-white/70 mb-1">
+              Nome do Cargo
+            </label>
             <input
               type="text"
               value={nomeCargo}
               onChange={(e) => setNomeCargo(e.target.value)}
               placeholder="Ex: Assistente Administrativo"
-              className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
+                       placeholder-white/40 outline-none focus:bg-white/15 [color-scheme:dark]"
             />
           </div>
 
           <div>
-            <div className="flex">
-              <label className="block text-sm text-white/80 mb-1">
-                Salário Inicial (apenas números)
-              </label>
-            </div>
+            <label className="block text-sm text-white/70 mb-1">
+              Salário Inicial
+            </label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              onChange={(e) =>
+                setSalarioInicial(formatarRealDinamico(e.target.value))
+              }
               value={salarioInicial}
-              onChange={(e) => setSalarioInicial(e.target.value)}
-              placeholder="Ex: 2000"
-              className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+              placeholder="R$ 0,00"
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
+                       placeholder-white/40 outline-none focus:bg-white/15 [color-scheme:dark]"
             />
           </div>
+        </div>
 
+        {/* footer */}
+        <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setAdicionando(false)}
+            className="cursor-pointer px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+          >
+            Cancelar
+          </button>
           <button
             type="button"
             onClick={criarCargo}
-            className="mt-5 cursor-pointer w-full rounded-xl bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
+            className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow"
           >
             Criar Cargo
           </button>
-        </form>
+        </div>
       </div>
     </div>
   );
