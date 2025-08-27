@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import FiltrosDescricao from "../descricoes/FiltrosDescricao.jsx";
 import TabelaDescricao from "../descricoes/TabelaDescricao.jsx";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { getDescricoes } from "../../services/api/descricaoService.js";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -10,14 +12,16 @@ function ManualFuncoes({ setDesc, setModificaDesc }) {
   const [cargoFiltro, setCargoFiltro] = useState([]);
   const [descricoesFiltradas, setDescricoesFiltradas] = useState([]);
 
+  const { mostrarAviso } = useAviso();
+
   async function puxarDescricoes() {
     const id = localStorage.getItem("empresa_id");
     try {
       const descricoes = await getDescricoes(id);
-      console.log(descricoes);
       setDescricoes(descricoes);
     } catch (err) {
-      console.eror(err);
+      mostrarAviso("erro", err.message);
+      console.eror(err.message, err);
     }
   }
 

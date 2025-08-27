@@ -82,7 +82,7 @@ function FiltroCargo({
         aria-expanded={open}
         title="Mais opções"
       >
-        Cargo <ChevronDown />
+        Função <ChevronDown />
       </button>
 
       {open &&

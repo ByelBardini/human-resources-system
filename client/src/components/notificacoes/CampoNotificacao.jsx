@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { useAviso } from "../../context/AvisoContext";
 import { Download, XCircle, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -32,10 +33,8 @@ function CampoNotificacao({
   formatarData,
   tipo,
   falta,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
 }) {
+  const {mostrarAviso}=useAviso();
   const [dias, setDias] = useState(0);
   const temDataFinal = tipo == "suspensao" || tipo == "atestado";
 
@@ -45,9 +44,7 @@ function CampoNotificacao({
     )}`;
     const resp = await fetch(url, { credentials: "include" });
     if (!resp.ok) {
-      setAviso(true);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao realizar o download");
+      mostrarAviso("erro", "Erro ao realizar o download")
       return;
     }
 

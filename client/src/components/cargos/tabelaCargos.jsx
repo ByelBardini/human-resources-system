@@ -149,7 +149,7 @@ function TabelaCargos({
             <td colSpan={11} className="px-6 py-10 text-center min-w-[1300px]" >
               <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
                 <SearchX size={16} className="opacity-80" />
-                Nenhum cargo encontrado
+                Nenhuma função encontrado
               </div>
             </td>
           </tr>

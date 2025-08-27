@@ -24,7 +24,6 @@ function FiltroMesAniversario({ setFuncionarioFiltro, funcionarioFiltro }) {
   ];
 
   function clica(mes) {
-    console.log(mes);
     const valor = mes.toLowerCase();
     const selecionado = funcionarioFiltro.some((s) => s.mes_nome === valor);
     setFuncionarioFiltro((prev) =>

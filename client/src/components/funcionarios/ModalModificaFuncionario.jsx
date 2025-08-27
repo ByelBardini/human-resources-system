@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { X, UploadCloud, Image } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import {
   getCargoSetor,
   putFuncionario,
@@ -7,12 +9,11 @@ import {
 
 function ModalModificaFuncionario({
   setModifica,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setModificado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
+
   const [cargos, setCargos] = useState([]);
   const [setores, setSetores] = useState([]);
 
@@ -48,8 +49,9 @@ function ModalModificaFuncionario({
       const response = await getCargoSetor(id);
       setSetores(response.setor);
       setCargos(response.cargo);
-    } catch (error) {
-      console.error("Erro ao buscar cargos e setores:", error);
+    } catch (err) {
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
     }
   }
 
@@ -66,25 +68,19 @@ function ModalModificaFuncionario({
     setCarregando(true);
 
     try {
-      const resposta = await putFuncionario(id, payload, fotoFile);
+      await putFuncionario(id, payload, fotoFile);
       setCarregando(false);
 
-      setCorAviso("verde");
-      setTextoAviso("Funcionário modificado com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Funcionário modificado com sucesso!");
       setModificado(true);
-      console.log(resposta);
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setModifica(false);
-        
       }, 500);
     } catch (err) {
       setCarregando(false);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao modificar funcionário:", err);
-      setAviso(true);
-      console.error("Erro ao modificar funcionário:", err);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
       return;
     }
   }
@@ -223,7 +219,7 @@ function ModalModificaFuncionario({
 
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
-                    Cargo
+                    Função
                   </label>
                   <select
                     value={cargo}

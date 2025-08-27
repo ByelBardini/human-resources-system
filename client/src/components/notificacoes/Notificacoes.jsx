@@ -11,9 +11,6 @@ function Notificacoes({
   notificacoes,
   formatarData,
   setNotificacao,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   ativo,
 }) {
   const [notificacaoSelecionada, setNotificacaoSelecionada] = useState([]);
@@ -106,9 +103,6 @@ function Notificacoes({
             setDataFinal={setDataFinal}
             setFiltradas={setFiltradas}
             setFiltroAtivo={setFiltroAtivo}
-            setAviso={setAviso}
-            setCorAviso={setCorAviso}
-            setTextoAviso={setTextoAviso}
           />
           <button
             onClick={() => setOpenSec(null)}
@@ -151,9 +145,6 @@ function Notificacoes({
                 formatarData={formatarData}
                 tipo={n.notificacao_tipo}
                 falta={falta}
-                setAviso={setAviso}
-                setCorAviso={setCorAviso}
-                setTextoAviso={setTextoAviso}
               />
             ))
           ) : (

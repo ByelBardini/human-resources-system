@@ -10,9 +10,6 @@ function ModaisFuncionarios({
   card,
   adicionandoFunc,
   setAdicionandoFunc,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setNotificacao,
   notificacao,
@@ -32,9 +29,6 @@ function ModaisFuncionarios({
       {modificaFuncionario && (
         <ModalModificaFuncionario
           setModifica={setModificaFuncionario}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setModificado={setModificado}
         />
@@ -43,9 +37,6 @@ function ModaisFuncionarios({
       {notificacao && (
         <ModalCriaNotificacao
           setNotificacao={setNotificacao}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setAdicionado={setAdicionado}
           setConfirmacao={setConfirmacao}
@@ -57,9 +48,6 @@ function ModaisFuncionarios({
       {adicionandoFunc && (
         <AdicionaFuncionarioModal
           setAdicionandoFunc={setAdicionandoFunc}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
         />
       )}
@@ -70,9 +58,6 @@ function ModaisFuncionarios({
           setNotificacao={setNotificacao}
           adicionado={adicionado}
           setAdicionado={setAdicionado}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setModifica={setModificaFuncionario}
           setModificado={setModificado}
           modificado={modificado}
@@ -84,9 +69,6 @@ function ModaisFuncionarios({
       {inativando && (
         <ModalInativa
           setInativando={setInativando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setCard={setCard}
           setAdicionado={setAdicionado}

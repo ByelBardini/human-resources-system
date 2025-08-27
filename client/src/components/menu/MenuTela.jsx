@@ -7,9 +7,6 @@ function MenuTela({
   setCardFuncionario,
   opcaoSelecionada,
   setCarregando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setAdicionando,
   cargoCriado,
   setConfirmacao,
@@ -27,17 +24,11 @@ function MenuTela({
       {opcaoSelecionada == "home" && (
         <HomeMenu
           setCarregando={setCarregando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
         />
       )}
       {opcaoSelecionada == "funcionarios" && (
         <Funcionarios
           setAdicionandoFunc={setAdicionandoFunc}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCardFuncionario={setCardFuncionario}
           setModificado={setModificado}
           modificado={modificado}
@@ -50,9 +41,6 @@ function MenuTela({
           setConfirmacao={setConfirmacao}
           setTextoConfirmacao={setTextoConfirmacao}
           setOnSimConfirmacao={setOnSimConfirmacao}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setAumentoGeral={setAumentoGeral}
           setCarregando={setCarregando}
         />

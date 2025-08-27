@@ -19,7 +19,6 @@ function FiltrosFuncionarios({
   mesAniversarioFiltro,
   setMesAniversarioFiltro,
   setFuncionariosFiltrados,
-  filtroAtivo,
   setFiltroAtivo,
   inativos,
 }) {
@@ -92,7 +91,6 @@ function FiltrosFuncionarios({
     setFuncionariosFiltrados(filtrados);
   }
   useEffect(() => {
-    console.log("a", filtroAtivo);
     definirFiltros();
   }, [
     funcionarios,

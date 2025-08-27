@@ -1,16 +1,15 @@
+import { inativarFuncionario } from "../../services/api/funcionarioService.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { X } from "lucide-react";
 import { useState } from "react";
-import { inativarFuncionario } from "../../services/api/funcionarioService.js";
 
 function ModalInativa({
   setInativando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setCard,
   setAdicionado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [data, setData] = useState("");
   const [comentario, setComentario] = useState("");
   const [preco, setPreco] = useState("R$ 0,00");
@@ -27,34 +26,25 @@ function ModalInativa({
     const id = localStorage.getItem("funcionario_id");
 
     if (data == "" || preco == "R$ 0,00") {
-      setTextoAviso(
+      mostrarAviso(
+        "erro",
         "Você precisa informar a data de inativação e o preço de desligamento!"
       );
-      setCorAviso("vermelho");
-      setAviso(true);
       return;
     }
     setCarregando(true);
     try {
       const precoFormatado = parseInt(preco.replace(/\D/g, ""), 10) / 100;
       await inativarFuncionario(id, data, comentario, precoFormatado);
-      setTextoAviso("Funcionário desligado com sucesso!");
-      setCorAviso("verde");
-      setAviso(true);
+      mostrarAviso("sucesso", "Funcionário desligado com sucesso!");
       setAdicionado(true);
       setTimeout(() => {
         setCard(false);
         setInativando(false);
-        setAviso(false);
+        limparAviso;
       }, 500);
     } catch (err) {
-      setCorAviso("vermelho");
-      setTextoAviso(
-        `Erro ao desligar Funcionário: ${
-          err?.response?.data?.error || err?.message || "tente novamente"
-        }`
-      );
-      setAviso(true);
+      mostrarAviso("erro", err.message)
       console.error(err);
     } finally {
       setCarregando(false);

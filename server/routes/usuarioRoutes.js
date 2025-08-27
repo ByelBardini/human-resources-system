@@ -8,7 +8,7 @@ import {
 import verificaToken from "../middlewares/verificaToken.js";
 import express from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { checarLogado } from "../middlewares/chegarLogado.js";
+import { checarLogado } from "../middlewares/checarLogado.js";
 
 const router = express.Router();
 router.use(checarLogado);

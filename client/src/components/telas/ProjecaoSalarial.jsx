@@ -1,5 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
 import FiltroCargos from "../cargos/FiltroCargos.jsx";
 
@@ -8,12 +10,10 @@ export default function ProjecaoSalarial({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
-  setCorAviso,
-  setTextoAviso,
-  setAviso,
   setAumentoGeral,
   setCarregando,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [cargosFiltro, setCargosFiltro] = useState([]);
 
@@ -22,7 +22,7 @@ export default function ProjecaoSalarial({
   function clicaDeleta(id) {
     setConfirmacao(true);
     setTextoConfirmacao(
-      "Você tem certeza que deseja excluir esse cargo? Essa ação é irreversível"
+      "Você tem certeza que deseja excluir essa função? Essa ação é irreversível"
     );
     setOnSimConfirmacao(() => () => deletaCargo(id));
   }
@@ -33,21 +33,17 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      setCorAviso("verde");
-      setTextoAviso("Cargo excluído com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Função excluída com sucesso!");
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         buscaCargos();
         window.location.reload();
       }, 500);
     } catch (err) {
       setCarregando(false);
       setConfirmacao(false);
-      console.error("Erro ao deletar cargo:", err);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao deletar cargo:", err.message || err);
-      setAviso(true);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
     }
   }
 
@@ -64,10 +60,10 @@ export default function ProjecaoSalarial({
 
     try {
       const cargos = await getCargos(empresa_id);
-      console.log(cargos);
       setCargos(cargos);
     } catch (err) {
-      console.error("Erro ao buscar cargos:", err);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
     }
   }
 
@@ -100,7 +96,7 @@ export default function ProjecaoSalarial({
           onClick={() => setAdicionando(true)}
           className="cursor-pointer px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow"
         >
-          Adicionar Cargo
+          Adicionar Função
         </button>
 
         <button

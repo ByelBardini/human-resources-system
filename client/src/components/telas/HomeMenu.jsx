@@ -3,8 +3,11 @@
 import { getEmpresaImagem } from "../../services/api/empresasService.js";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
-function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
+function HomeMenu({ setCarregando }) {
+  const { mostrarAviso, limparAviso } = useAviso();
+
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
 
@@ -17,10 +20,8 @@ function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
       const imagem = await getEmpresaImagem(id);
       setImagem(imagem);
     } catch (err) {
-      setAviso(true);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao buscar imagem da empresa.");
-      console.error("Erro ao buscar imagem da empresa:", err);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
     } finally {
       setCarregando(false);
     }
@@ -31,7 +32,6 @@ function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
   }, []);
 
   return (
-    
     <div>
       <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Menu Principal</h1>
       <div className="relative flex justify-center items-center">

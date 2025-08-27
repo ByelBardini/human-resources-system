@@ -1,4 +1,5 @@
 import { aumentoCargo } from "../../services/api/cargoServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { useState } from "react";
 import { X } from "lucide-react";
 
@@ -7,11 +8,9 @@ function ModalAumentoGeral({
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setAumentoGeral,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
 }) {
+  const {mostrarAviso, limparAviso}=useAviso();
   const [porcentagem, setPorcentagem] = useState("");
 
   function clicaAdiciona() {
@@ -22,9 +21,7 @@ function ModalAumentoGeral({
 
   async function confirmaAdicionar() {
     if (porcentagem == "") {
-      setCorAviso("vermelho");
-      setTextoAviso("O valor da porcentagem é necessário");
-      setAviso(true);
+      mostrarAviso("erro", "O valor da porcentagem é necessário")
       return;
     }
 
@@ -33,21 +30,17 @@ function ModalAumentoGeral({
       const id_empresa = localStorage.getItem("empresa_id");
       await aumentoCargo(id_empresa, porcentagem);
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Aumento aplicado com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Aumento aplicado com sucesso!");
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setAumentoGeral(false);
         window.location.reload();
       }, 500);
       return;
     } catch (err) {
       setCarregando(false);
-      console.error("Erro ao criar cargo:", err);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao criar cargo:", err.message || err);
-      setAviso(true);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
       return;
     }
   }
@@ -84,8 +77,8 @@ function ModalAumentoGeral({
 
         <div className="px-6 py-5 space-y-5">
           <p className="text-sm text-white/70">
-            Insira apenas a porcentagem do aumento, ele será aplicado a todos os
-            cargos, e os salários dos níveis será recalculado
+            Insira apenas a porcentagem do aumento, ele será aplicado a todas as
+            funções, e os salários dos níveis será recalculado
           </p>
 
           <div>

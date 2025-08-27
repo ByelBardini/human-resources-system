@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { useState } from "react";
 import {
   getFuncionarios,
@@ -22,6 +23,7 @@ function TabelaFuncionarios({
   setModificado,
   inativos,
 }) {
+  const { mostrarAviso } = useAviso();
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
   const [salarioSort, setSalarioSort] = useState(false);
@@ -159,10 +161,10 @@ function TabelaFuncionarios({
       const funcionarios = inativos
         ? await getFuncionarios(id)
         : await getFuncionariosInativos(id);
-      console.log("funcionariosssss:", funcionarios);
       setFuncionarios(funcionarios);
     } catch (err) {
-      console.error("Erro ao buscar cargos:", err);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
     }
   }
 
@@ -297,7 +299,8 @@ function TabelaFuncionarios({
               <td className="px-4 py-2 w-[110px] text-center">
                 R$
                 {Number(
-                  funcionario.funcionario_gasto_desligamento).toLocaleString("pt-BR", {
+                  funcionario.funcionario_gasto_desligamento
+                ).toLocaleString("pt-BR", {
                   minimumFractionDigits: 2,
                 }) || ""}
               </td>

@@ -3,45 +3,36 @@ import {
   inativaUsuario,
   resetaSenha,
 } from "../../services/api/usuariosServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModalUsuario({
   usuarioSelecionado,
   setVisualiza,
   setCarregando,
-  setTextoAviso,
-  setCorAviso,
-  setAviso,
   modificou,
 }) {
+  const { mostrarAviso } = useAviso();
   async function inativarUsuario() {
     const id = localStorage.getItem("usuario_id");
     if (id == usuarioSelecionado.usuario_id) {
-      setTextoAviso("Você não pode inativar seu própio usuário!");
-      setCorAviso("vermelho");
-      setAviso(true);
+      mostrarAviso("erro", "Você não pode inativar seu própio usuário!");
       return;
     }
     setCarregando(true);
     try {
       await inativaUsuario(usuarioSelecionado.usuario_id);
 
-      setTextoAviso(
+      mostrarAviso(
+        "sucesso",
         usuarioSelecionado.usuario_ativo == 1
           ? "Usuário inativado com sucesso!"
           : "Usuário ativo com sucesso!"
       );
-      setCorAviso("verde");
       modificou(true);
-      setAviso(true);
       setVisualiza(false);
     } catch (err) {
-      setCorAviso("vermelho");
-      setTextoAviso(
-        `Erro ao inativar usuário: ${
-          err?.response?.data?.error || err?.message || "tente novamente"
-        }`
-      );
-      setAviso(true);
+      mostrarAviso("erro", `Erro ao inativar usuário: ${err?.message}`);
+      mostrarAviso("erro", err.message);
       console.error(err);
     } finally {
       setCarregando(false);
@@ -53,19 +44,11 @@ function ModalUsuario({
     try {
       await resetaSenha(usuarioSelecionado.usuario_id);
 
-      setTextoAviso("Senha resetada com sucesso! \nSenha Padrão: 12345");
-      setCorAviso("verde");
+      mostrarAviso("erro", "Senha resetada com sucesso! \nSenha Padrão: 12345");
       modificou(true);
-      setAviso(true);
       setVisualiza(false);
     } catch (err) {
-      setCorAviso("vermelho");
-      setTextoAviso(
-        `Erro ao resetar senha: ${
-          err?.response?.data?.error || err?.message || "tente novamente"
-        }`
-      );
-      setAviso(true);
+      mostrarAviso(`Erro ao resetar senha: ${err?.message}`);
       console.error(err);
     } finally {
       setCarregando(false);

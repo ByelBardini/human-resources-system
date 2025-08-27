@@ -1,13 +1,16 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getUsuario } from "../services/api/usuariosServices.js";
+import { useAviso } from "../context/AvisoContext.jsx";
 import ModalAviso from "../components/default/ModalAviso.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background";
 import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
+
 function Usuario() {
   const navigate = useNavigate();
 
@@ -19,9 +22,8 @@ function Usuario() {
   const [atualizado, setAtualizado] = useState(false);
 
   const [carregando, setCarregando] = useState(false);
-  const [aviso, setAviso] = useState(false);
-  const [corAviso, setCorAviso] = useState("");
-  const [textoAviso, setTextoAviso] = useState("");
+
+  const { aviso, corAviso, textoAviso, mostrarAviso, limparAviso } = useAviso();
 
   async function buscaUsuarios() {
     try {
@@ -29,9 +31,7 @@ function Usuario() {
       setUsuarios(usuarios);
       setAtualizado(false);
     } catch (err) {
-      setAviso(true);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao buscar usuários:", err);
+      mostrarAviso("erro", err.message);
       console.error(err);
     }
   }
@@ -46,19 +46,12 @@ function Usuario() {
       <Background />
 
       {aviso && (
-        <ModalAviso
-          texto={textoAviso}
-          cor={corAviso}
-          onClick={() => setAviso(false)}
-        />
+        <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
       )}
       {cria && (
         <ModalCriaUsuario
           setCria={setCria}
           setCarregando={setCarregando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCadastrado={setAtualizado}
           cadastrado={atualizado}
         />
@@ -67,9 +60,6 @@ function Usuario() {
         <ModalUsuario
           setVisualiza={setVisualiza}
           usuarioSelecionado={usuarioSelecionado}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           modificou={setAtualizado}
         />

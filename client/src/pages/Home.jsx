@@ -1,25 +1,24 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { LogOut, UsersRound } from "lucide-react";
 import { logout } from "../services/auth/authService.js";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAviso } from "../context/AvisoContext.jsx";
 import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import CampoEmpresa from "../components/empresas/CampoEmpresa.jsx";
 import Loading from "../components/default/Loading.jsx";
-import ModalAviso from "../components/default/ModalAviso.jsx";
 import Background from "../components/default/Background.jsx";
 
 function Home() {
+  const { mostrarAviso } = useAviso();
+
   const navigate = useNavigate();
 
   const role = localStorage.getItem("usuario_role");
 
   const [carregando, setCarregando] = useState(false);
   const [trocaSenha, setTrocaSenha] = useState(false);
-
-  const [aviso, setAviso] = useState(false);
-  const [corAviso, setCorAviso] = useState("");
-  const [textoAviso, setTextoAviso] = useState("");
 
   const [empresas, setEmpresas] = useState([]);
 
@@ -38,9 +37,7 @@ function Home() {
       setCarregando(false);
     } catch (err) {
       setCarregando(false);
-      setCorAviso("vermelho");
-      setTextoAviso(err.message);
-      setAviso(true);
+      mostrarAviso("erro", err.message);
     }
   }
 
@@ -57,9 +54,6 @@ function Home() {
       {trocaSenha && (
         <ModalTrocaSenha
           setTrocaSenha={setTrocaSenha}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
         />
       )}
@@ -80,14 +74,6 @@ function Home() {
         >
           <UsersRound size={20} />
         </button>
-      )}
-
-      {aviso && (
-        <ModalAviso
-          texto={textoAviso}
-          cor={corAviso}
-          onClick={() => setAviso(false)}
-        />
       )}
 
       {carregando && <Loading />}

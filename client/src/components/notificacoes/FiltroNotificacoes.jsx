@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Filter } from "lucide-react";
 import { getNotificacoesMes } from "../../services/api/notificacoesServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
 function FiltroNotificacoes({
   dataInicial,
@@ -10,10 +11,8 @@ function FiltroNotificacoes({
   setDataInicial,
   setFiltroAtivo,
   setFiltradas,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
 }) {
+  const {mostrarAviso} = useAviso();
   const [valido, setValido] = useState(false);
 
   async function busca() {
@@ -23,10 +22,8 @@ function FiltroNotificacoes({
       setFiltradas(filtrados);
       setFiltroAtivo(true);
     } catch (err) {
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao aplicar filtro de data:", err);
-      setAviso(true);
-      console.error(err);
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
     }
   }
 

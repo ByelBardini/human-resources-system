@@ -10,8 +10,10 @@ import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
 import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
 import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
 import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
+import { useAviso } from "../context/AvisoContext.jsx";
 
 function Empresa() {
+  const { aviso, corAviso, textoAviso, limparAviso } = useAviso();
   const navigate = useNavigate();
 
   const [adicionandoCargo, setAdicionandoCargo] = useState(false);
@@ -28,10 +30,6 @@ function Empresa() {
   const [desc, setDesc] = useState();
 
   const [carregando, setCarregando] = useState(false);
-
-  const [aviso, setAviso] = useState(false);
-  const [corAviso, setCorAviso] = useState("");
-  const [textoAviso, setTextoAviso] = useState("");
 
   const [confirmacao, setConfirmacao] = useState(false);
   const [textoConfirmacao, setTextoConfirmacao] = useState("");
@@ -57,9 +55,6 @@ function Empresa() {
         <ModificaDescricaoModal
           setModificaDesc={setModificaDesc}
           descricao={desc}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setConfirmacao={setConfirmacao}
           setTextoConfirmacao={setTextoConfirmacao}
@@ -71,9 +66,6 @@ function Empresa() {
         adicionando={adicionandoCargo}
         aumentoGeral={aumentoGeral}
         setAdicionando={setAdicionandoCargo}
-        setAviso={setAviso}
-        setCorAviso={setCorAviso}
-        setTextoAviso={setTextoAviso}
         setCarregando={setCarregando}
         setConfirmacao={setConfirmacao}
         setTextoConfirmacao={setTextoConfirmacao}
@@ -86,9 +78,6 @@ function Empresa() {
         card={cardFuncionario}
         adicionandoFunc={adicionandoFunc}
         setAdicionandoFunc={setAdicionandoFunc}
-        setAviso={setAviso}
-        setCorAviso={setCorAviso}
-        setTextoAviso={setTextoAviso}
         setCarregando={setCarregando}
         setNotificacao={setEmitirNotificacao}
         notificacao={emitirNotificacao}
@@ -110,11 +99,7 @@ function Empresa() {
       )}
 
       {aviso && (
-        <ModalAviso
-          texto={textoAviso}
-          cor={corAviso}
-          onClick={() => setAviso(false)}
-        />
+        <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
       )}
 
       {carregando && <Loading />}
@@ -139,9 +124,6 @@ function Empresa() {
             setCardFuncionario={setCardFuncionario}
             opcaoSelecionada={opcaoSelecionada}
             setCarregando={setCarregando}
-            setAviso={setAviso}
-            setCorAviso={setCorAviso}
-            setTextoAviso={setTextoAviso}
             setAdicionando={setAdicionandoCargo}
             setConfirmacao={setConfirmacao}
             setTextoConfirmacao={setTextoConfirmacao}

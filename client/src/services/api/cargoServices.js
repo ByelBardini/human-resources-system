@@ -1,3 +1,4 @@
+import { handleApiError } from "./handleApiError.js";
 import { api } from "../api.js";
 
 export async function postCargos(
@@ -12,9 +13,8 @@ export async function postCargos(
       salario_inicial: cargo_salario_inicial,
     });
     return response.data;
-  } catch (error) {
-    console.error("Erro ao criar cargo:", error);
-    throw error;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao criar cargo:");
   }
 }
 
@@ -24,11 +24,9 @@ export async function aumentoCargo(id_empresa, porcentagemAumento) {
       cargo_empresa_id: id_empresa,
       porcentagem: porcentagemAumento,
     });
-
     return response.sata;
-  } catch (error) {
-    console.error("Erro ao criar cargo:", error);
-    throw error;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao aumentar salário:");
   }
 }
 
@@ -37,8 +35,7 @@ export async function getCargos(id_empresa) {
     const response = await api.get(`/cargos/${id_empresa}`);
     return response.data;
   } catch (err) {
-    console.error("Erro ao buscar cargos:", err);
-    throw err;
+    throw handleApiError(err, "Erro ao buscar cargos:");
   }
 }
 
@@ -47,7 +44,6 @@ export async function deleteCargo(id_cargo) {
     const response = await api.delete(`cargos/${id_cargo}`);
     return response.data;
   } catch (err) {
-    console.error("Erro ao buscar cargos:", err);
-    throw err;
+    throw handleApiError(err, "Erro ao deletar cargos:");
   }
 }

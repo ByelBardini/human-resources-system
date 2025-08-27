@@ -1,14 +1,10 @@
 import { postCargos } from "../../services/api/cargoServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { useState } from "react";
 import { X } from "lucide-react";
 
-function AdicionaCargoModal({
-  setAdicionando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
-  setCarregando,
-}) {
+function AdicionaCargoModal({ setAdicionando, setCarregando }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [nomeCargo, setNomeCargo] = useState("");
   const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
 
@@ -22,9 +18,7 @@ function AdicionaCargoModal({
 
   async function criarCargo() {
     if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
-      setCorAviso("amarelo");
-      setTextoAviso("Por favor, preencha todos os campos.");
-      setAviso(true);
+      mostrarAviso("aviso", "Por favor, preencha todos os campos.");
       return;
     }
     setCarregando(true);
@@ -33,21 +27,17 @@ function AdicionaCargoModal({
       const id_empresa = localStorage.getItem("empresa_id");
       await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Cargo criado com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Cargo criado com sucesso!");
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setAdicionando(false);
         window.location.reload();
       }, 500);
       return;
     } catch (err) {
       setCarregando(false);
-      console.error("Erro ao criar cargo:", err);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao criar cargo:", err.message || err);
-      setAviso(true);
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
       return;
     }
   }
@@ -90,7 +80,7 @@ function AdicionaCargoModal({
 
           <div>
             <label className="block text-sm text-white/70 mb-1">
-              Nome do Cargo
+              Nome da Função
             </label>
             <input
               type="text"
@@ -134,7 +124,7 @@ function AdicionaCargoModal({
             onClick={criarCargo}
             className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow"
           >
-            Criar Cargo
+            Criar Função
           </button>
         </div>
       </div>

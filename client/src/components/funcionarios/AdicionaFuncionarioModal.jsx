@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { formatToCPFOrCNPJ, isCPF, formatToPhone } from "brazilian-values";
@@ -5,14 +6,10 @@ import {
   postFuncionario,
   getCargoSetor,
 } from "../../services/api/funcionarioService.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
-function AdicionaFuncionarioModal({
-  setAdicionandoFunc,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
-  setCarregando,
-}) {
+function AdicionaFuncionarioModal({ setAdicionandoFunc, setCarregando }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [setores, setSetores] = useState([]);
   const [cargos, setCargos] = useState([]);
   const [cpfValido, setCpfValido] = useState(null);
@@ -39,8 +36,9 @@ function AdicionaFuncionarioModal({
       const response = await getCargoSetor(id);
       setSetores(response.setor);
       setCargos(response.cargo);
-    } catch (error) {
-      console.error("Erro ao buscar cargos e setores:", error);
+    } catch (err) {
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
     }
   }
 
@@ -78,7 +76,6 @@ function AdicionaFuncionarioModal({
     } else {
       setCpfValido(false);
     }
-    console.log("CPF válido:", cpfValido);
   }
 
   function formatarTelefone(e) {
@@ -91,9 +88,7 @@ function AdicionaFuncionarioModal({
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("en-CA");
     if (dateNascimento > dataFormatada) {
-      setCorAviso("vermelho");
-      setTextoAviso("Data de nascimento inválida!");
-      setAviso(true);
+      mostrarAviso("erro", "Data de nascimento inválida!");
       setNascimento("");
       setNascimentoValido(false);
     } else {
@@ -107,9 +102,7 @@ function AdicionaFuncionarioModal({
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("en-CA");
     if (dataAdmissao > dataFormatada) {
-      setCorAviso("vermelho");
-      setTextoAviso("Data de admissão inválida!");
-      setAviso(true);
+      mostrarAviso("erro", "Data de admissão inválida!");
       setAdmissao("");
       setAdmissaoValido(false);
     } else {
@@ -131,27 +124,19 @@ function AdicionaFuncionarioModal({
       nascimento == "" ||
       admissao == ""
     ) {
-      setCorAviso("vermelho");
-      setTextoAviso("Todos os dados são necessários!");
-      setAviso(true);
+      mostrarAviso("erro", "Todos os dados são necessários!");
       return;
     }
     if (cpfValido === false) {
-      setCorAviso("vermelho");
-      setTextoAviso("CPF inválido!");
-      setAviso(true);
+      mostrarAviso("erro", "CPF inválido!");
       return;
     }
     if (nascimentoValido === false) {
-      setCorAviso("vermelho");
-      setTextoAviso("Data de nascimento inválida!");
-      setAviso(true);
+      mostrarAviso("erro", "Data de nascimento inválida!");
       return;
     }
     if (admissaoValido === false) {
-      setCorAviso("vermelho");
-      setTextoAviso("Data de nascimento inválida!");
-      setAviso(true);
+      mostrarAviso("erro", "Data de admissão inválida!");
       return;
     }
 
@@ -170,24 +155,19 @@ function AdicionaFuncionarioModal({
     setCarregando(true);
 
     try {
-      const resposta = await postFuncionario(payload, fotoFile);
+      await postFuncionario(payload, fotoFile);
       setCarregando(false);
 
-      setCorAviso("verde");
-      setTextoAviso("Funcionário inserido com sucesso!");
-      setAviso(true);
-      console.log(resposta);
+      mostrarAviso("sucesso", "Funcionário inserido com sucesso!")
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setAdicionandoFunc(false);
         window.location.reload();
       });
     } catch (err) {
       setCarregando(false);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao inserir funcionário:", err);
-      setAviso(true);
-      console.error("Erro ao inserir funcionário:", err);
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
       return;
     }
   }
@@ -302,7 +282,7 @@ function AdicionaFuncionarioModal({
 
               <div>
                 <label className="block text-sm text-white/70 mb-1">
-                  Cargo
+                  Função
                 </label>
                 <select
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
