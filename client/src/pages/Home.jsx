@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { LogOut, UsersRound } from "lucide-react";
 import { logout } from "../services/auth/authService.js";
 import { getEmpresas } from "../services/api/empresasService.js";
@@ -37,10 +38,22 @@ function Home() {
       setEmpresas(empresasData);
       setCarregando(false);
     } catch (err) {
-      setCarregando(false);
-      setCorAviso("vermelho");
-      setTextoAviso(err.message);
-      setAviso(true);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso(err.message);
+        setAviso(true);
+      }
     }
   }
 
@@ -61,6 +74,7 @@ function Home() {
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
+          navigate={navigate}
         />
       )}
 

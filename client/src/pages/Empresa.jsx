@@ -152,6 +152,7 @@ function Empresa() {
             setModificaDesc={setModificaDesc}
             setModificado={setModificado}
             modificado={modificado}
+            navigate={navigate}
           />
         </div>
       </div>

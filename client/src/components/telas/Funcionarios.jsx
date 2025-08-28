@@ -9,6 +9,10 @@ function Funcionarios({
   setCardFuncionario,
   modificado,
   setModificado,
+  navigate,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
 }) {
   const [funcionarios, setFuncionarios] = useState([]);
   const [funcionariosFiltrados, setFuncionariosFiltrados] = useState([]);
@@ -135,6 +139,10 @@ function Funcionarios({
             setModificado={setModificado}
             modificado={modificado}
             inativos={inativos}
+            navigate={navigate}
+            setAviso={setAviso}
+            setCorAviso={setCorAviso}
+            setTextoAviso={setTextoAviso}
           />
         )}
       </div>

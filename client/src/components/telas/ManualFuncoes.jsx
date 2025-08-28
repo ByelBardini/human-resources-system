@@ -1,10 +1,18 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import FiltrosDescricao from "../descricoes/FiltrosDescricao.jsx";
 import TabelaDescricao from "../descricoes/TabelaDescricao.jsx";
 import { getDescricoes } from "../../services/api/descricaoService.js";
 import { useState } from "react";
 import { useEffect } from "react";
 
-function ManualFuncoes({ setDesc, setModificaDesc }) {
+function ManualFuncoes({
+  setDesc,
+  setModificaDesc,
+  setCorAviso,
+  setTextoAviso,
+  setAviso,
+  navigate,
+}) {
   const [descricoes, setDescricoes] = useState([]);
   const [setorFiltro, setSetorFiltro] = useState([]);
   const [cargoFiltro, setCargoFiltro] = useState([]);
@@ -17,7 +25,18 @@ function ManualFuncoes({ setDesc, setModificaDesc }) {
       console.log(descricoes);
       setDescricoes(descricoes);
     } catch (err) {
-      console.eror(err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        console.eror(err);
+      }
     }
   }
 

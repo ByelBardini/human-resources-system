@@ -1,10 +1,10 @@
 import {
   getSetoresPorEmpresa,
 } from "../controllers/setorController.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
+import { checarLogado } from "../middlewares/checarLogado.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
-import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { checarLogado } from "../middlewares/chegarLogado.js";
 
 const router = express.Router();
 

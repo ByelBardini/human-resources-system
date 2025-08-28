@@ -21,6 +21,7 @@ function MenuTela({
   setModificaDesc,
   modificado,
   setModificado,
+  navigate,
 }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -30,6 +31,7 @@ function MenuTela({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          navigate={navigate}
         />
       )}
       {opcaoSelecionada == "funcionarios" && (
@@ -41,6 +43,7 @@ function MenuTela({
           setCardFuncionario={setCardFuncionario}
           setModificado={setModificado}
           modificado={modificado}
+          navigate={navigate}
         />
       )}
       {opcaoSelecionada == "projecaoSalarial" && (
@@ -55,10 +58,18 @@ function MenuTela({
           setTextoAviso={setTextoAviso}
           setAumentoGeral={setAumentoGeral}
           setCarregando={setCarregando}
+          navigate={navigate}
         />
       )}
       {opcaoSelecionada == "manualFuncoes" && (
-        <ManualFuncoes setDesc={setDesc} setModificaDesc={setModificaDesc} />
+        <ManualFuncoes
+          setDesc={setDesc}
+          setModificaDesc={setModificaDesc}
+          navigate={navigate}
+          setAviso={setAviso}
+          setCorAviso={setCorAviso}
+          setTextoAviso={setTextoAviso}
+        />
       )}
     </div>
   );

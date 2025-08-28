@@ -4,7 +4,13 @@ import { getEmpresaImagem } from "../../services/api/empresasService.js";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
-function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
+function HomeMenu({
+  setCarregando,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
+  navigate,
+}) {
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
 
@@ -17,10 +23,22 @@ function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
       const imagem = await getEmpresaImagem(id);
       setImagem(imagem);
     } catch (err) {
-      setAviso(true);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao buscar imagem da empresa.");
-      console.error("Erro ao buscar imagem da empresa:", err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setAviso(true);
+        setCorAviso("vermelho");
+        setTextoAviso("Erro ao buscar imagem da empresa.");
+        console.error("Erro ao buscar imagem da empresa:", err);
+      }
     } finally {
       setCarregando(false);
     }
@@ -31,7 +49,6 @@ function HomeMenu({ setCarregando, setAviso, setCorAviso, setTextoAviso }) {
   }, []);
 
   return (
-    
     <div>
       <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Menu Principal</h1>
       <div className="relative flex justify-center items-center">

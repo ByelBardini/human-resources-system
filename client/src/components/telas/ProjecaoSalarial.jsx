@@ -13,6 +13,7 @@ export default function ProjecaoSalarial({
   setAviso,
   setAumentoGeral,
   setCarregando,
+  navigate,
 }) {
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [cargosFiltro, setCargosFiltro] = useState([]);
@@ -42,12 +43,24 @@ export default function ProjecaoSalarial({
         window.location.reload();
       }, 500);
     } catch (err) {
-      setCarregando(false);
-      setConfirmacao(false);
-      console.error("Erro ao deletar cargo:", err);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao deletar cargo:", err.message || err);
-      setAviso(true);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCarregando(false);
+        setConfirmacao(false);
+        console.error("Erro ao deletar cargo:", err);
+        setCorAviso("vermelho");
+        setTextoAviso("Erro ao deletar cargo:", err.message || err);
+        setAviso(true);
+      }
     }
   }
 
