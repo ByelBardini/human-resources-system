@@ -53,6 +53,14 @@ export default function ProjecaoSalarial({
           setAviso(false);
           navigate("/", { replace: true });
         }, 1000);
+      } else if (err.status == 409) {
+        setCarregando(false);
+        setConfirmacao(false);
+        setCorAviso("vermelho");
+        setTextoAviso(
+          "Impossível excluir um cargo que já possua funcionários vinculados"
+        );
+        setAviso(true);
       } else {
         setCarregando(false);
         setConfirmacao(false);
