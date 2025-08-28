@@ -155,6 +155,123 @@ Descricao.belongsTo(Setor, {
   as: "setor",
 });
 
+// Logging Funcionário
+Funcionario.afterCreate(async (instance, options) => {
+  try {
+    const usuario_id = options?.usuario_id || null;
+
+    await Log.create(
+      {
+        log_usuario_id: usuario_id,
+        log_operacao_realizada: "Funcionario Cadastrado",
+        log_valor_antigo: "-",
+        log_valor_novo: JSON.stringify(instance.toJSON()),
+        log_data_alteracao: new Date(),
+      },
+      { transaction: options?.transaction }
+    );
+  } catch (e) {
+    console.error("Erro ao registrar log (afterCreate):", e);
+  }
+});
+
+Funcionario.afterUpdate(async (instance, options) => {
+  const usuario_id = options.usuario_id || null;
+
+  if (
+    instance.changed("funcionario_ativo") &&
+    instance.funcionario_ativo === 0
+  ) {
+    await Log.create({
+      log_usuario_id: usuario_id,
+      log_operacao_realizada: "Funcionario Desligado",
+      log_valor_antigo: JSON.stringify(instance._previousDataValues),
+      log_valor_novo: "-",
+      log_data_alteracao: new Date(),
+    });
+  } else {
+    await Log.create({
+      log_usuario_id: usuario_id,
+      log_operacao_realizada: "Funcionario Modificado",
+      log_valor_antigo: JSON.stringify(instance._previousDataValues),
+      log_valor_novo: JSON.stringify(instance.toJSON()),
+      log_data_alteracao: new Date(),
+    });
+  }
+});
+
+//Logging Notificações
+
+Notificacao.afterCreate(async (instance, options) => {
+  console.log("AAAAAAAAAAAAAAAAAAAAAAAAA");
+  try {
+    const usuario_id = options?.usuario_id || null;
+
+    await Log.create(
+      {
+        log_usuario_id: usuario_id,
+        log_operacao_realizada: "Notificacao Registrada",
+        log_valor_antigo: "-",
+        log_valor_novo: JSON.stringify(instance.toJSON()),
+        log_data_alteracao: new Date(),
+      },
+      { transaction: options?.transaction }
+    );
+  } catch (e) {
+    console.error("Erro ao registrar log (afterCreate):", e);
+  }
+});
+
+// Logging Descrição
+
+Descricao.afterUpdate(async (instance, options) => {
+  const usuario_id = options.usuario_id || null;
+
+  await Log.create({
+    log_usuario_id: usuario_id,
+    log_operacao_realizada: "Descricao Atualizada",
+    log_valor_antigo: JSON.stringify(instance._previousDataValues),
+    log_valor_novo: JSON.stringify(instance.toJSON()),
+    log_data_alteracao: new Date(),
+  });
+});
+
+// Logging cargo
+
+Cargo.afterCreate(async (instance, options) => {
+  const usuario_id = options.usuario_id || null;
+  const salario_inicial = options.salario_inicial || null;
+
+  const dados = instance.toJSON(); 
+
+  const cargo = { ...dados, salario_inicial };
+
+  await Log.create({
+    log_usuario_id: usuario_id,
+    log_operacao_realizada: "Cargo Criado",
+    log_valor_antigo: "-",
+    log_valor_novo: JSON.stringify(cargo),
+    log_data_alteracao: new Date(),
+  });
+});
+
+Cargo.afterDestroy(async (instance, options) => {
+  const usuario_id = options.usuario_id || null;
+  const salario_inicial = options.salario_inicial || null;
+
+  const dados = instance.toJSON(); 
+
+  const cargo = { ...dados, salario_inicial };
+
+  await Log.create({
+    log_usuario_id: usuario_id,
+    log_operacao_realizada: "Cargo Excluído",
+    log_valor_antigo: JSON.stringify(instance._previousDataValues),
+    log_valor_novo: "-",
+    log_data_alteracao: new Date(),
+  });
+});
+
 export {
   Empresa,
   Funcionario,

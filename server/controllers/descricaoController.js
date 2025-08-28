@@ -1,6 +1,10 @@
 import { Descricao, Setor, Cargo } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 
+function getUsuarioId(req) {
+  return req?.user?.usuario_id ?? null;
+}
+
 export async function getDescricoes(req, res) {
   const id = req.params.id;
   if (!id) {
@@ -29,6 +33,8 @@ export async function getDescricoes(req, res) {
 }
 
 export async function putDescricao(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { id } = req.params;
   const {
     descricao_setor_id = "",
@@ -61,6 +67,7 @@ export async function putDescricao(req, res) {
     },
     {
       where: { descricao_setor_id: descricao_setor_id },
+      usuario_id: usuario_id,
     }
   );
 

@@ -1,7 +1,12 @@
 import { Funcionario, Setor, Cargo, Nivel } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
+import sequelize from "../config/database.js";
 import fs from "fs/promises";
 import path from "path";
+
+function getUsuarioId(req) {
+  return req?.user?.usuario_id ?? null;
+}
 
 export async function getCargoSetor(req, res) {
   const { id } = req.params;
@@ -105,6 +110,8 @@ export async function getFuncionarioFull(req, res) {
 }
 
 export async function putFuncionario(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { id } = req.params;
   const {
     funcionario_setor_id,
@@ -150,14 +157,19 @@ export async function putFuncionario(req, res) {
   }
   const fotoAntiga = funcionario.funcionario_imagem_caminho || null;
 
-  await funcionario.update({
-    funcionario_setor_id,
-    funcionario_cargo_id,
-    funcionario_nivel_id: nivel.nivel_id,
-    funcionario_celular,
-    funcionario_observacao,
-    ...(fotoPath ? { funcionario_imagem_caminho: fotoPath } : {}),
-  });
+  await funcionario.update(
+    {
+      funcionario_setor_id,
+      funcionario_cargo_id,
+      funcionario_nivel_id: nivel.nivel_id,
+      funcionario_celular,
+      funcionario_observacao,
+      ...(fotoPath ? { funcionario_imagem_caminho: fotoPath } : {}),
+    },
+    {
+      usuario_id: usuario_id,
+    }
+  );
 
   if (fotoPath && fotoAntiga && fotoAntiga !== fotoPath) {
     const oldAbs = path.join(process.cwd(), fotoAntiga.replace(/^\//, ""));
@@ -168,6 +180,8 @@ export async function putFuncionario(req, res) {
 }
 
 export async function postFuncionario(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const {
     funcionario_empresa_id,
     funcionario_setor_id,
@@ -204,24 +218,31 @@ export async function postFuncionario(req, res) {
     },
   });
 
-  const novoFuncionario = await Funcionario.create({
-    funcionario_empresa_id,
-    funcionario_setor_id,
-    funcionario_cargo_id,
-    funcionario_nivel_id: nivel.nivel_id,
-    funcionario_nome,
-    funcionario_cpf,
-    funcionario_celular,
-    funcionario_sexo,
-    funcionario_data_nascimento,
-    funcionario_data_admissao,
-    funcionario_imagem_caminho: fotoPath,
-  });
+  const novoFuncionario = await Funcionario.create(
+    {
+      funcionario_empresa_id,
+      funcionario_setor_id,
+      funcionario_cargo_id,
+      funcionario_nivel_id: nivel.nivel_id,
+      funcionario_nome,
+      funcionario_cpf,
+      funcionario_celular,
+      funcionario_sexo,
+      funcionario_data_nascimento,
+      funcionario_data_admissao,
+      funcionario_imagem_caminho: fotoPath,
+    },
+    {
+      usuario_id: usuario_id,
+    }
+  );
 
   return res.status(201).json(novoFuncionario);
 }
 
 export async function inativaFuncionario(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { id } = req.params;
   const { data_inativa, comentario, gasto_desligamento } = req.body;
 
@@ -237,12 +258,17 @@ export async function inativaFuncionario(req, res) {
     throw ApiError.badRequest("Funcionário não encontrado");
   }
 
-  funcionario.funcionario_ativo = 0;
-  funcionario.funcionario_data_desligamento = data_inativa;
-  funcionario.funcionario_motivo_inativa = comentario;
-  funcionario.funcionario_gasto_desligamento = gasto_desligamento;
+  await sequelize.transaction(async (t) => {
+    funcionario.funcionario_ativo = 0;
+    funcionario.funcionario_data_desligamento = data_inativa;
+    funcionario.funcionario_motivo_inativa = comentario;
+    funcionario.funcionario_gasto_desligamento = gasto_desligamento;
 
-  await funcionario.save();
+    await funcionario.save({
+      transaction: t,
+      usuario_id: usuario_id,
+    });
+  });
 
   return res
     .status(200)

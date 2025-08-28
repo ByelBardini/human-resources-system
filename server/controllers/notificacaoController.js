@@ -1,6 +1,11 @@
 import { Notificacao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
+import sequelize from "../config/database.js";
+
+function getUsuarioId(req) {
+  return req?.user?.usuario_id ?? null;
+}
 
 const toBool = (v) => v === true || v === "true" || v === "1";
 
@@ -165,6 +170,8 @@ export async function getNotificacoesPorMes(req, res) {
 }
 
 export async function postNotificacao(req, res) {
+  const usuario_id = getUsuarioId(req);
+
   const { id } = req.params;
 
   if (!id) {
@@ -226,19 +233,30 @@ export async function postNotificacao(req, res) {
           notificacao_imagem_caminho: arquivoPath,
         };
 
-    await Notificacao.bulkCreate([base, extra]);
+    await sequelize.transaction(async (t) => {
+      await Notificacao.bulkCreate([base, extra], {
+        individualHooks: true,
+        transaction: t,
+        usuario_id: usuario_id,
+      });
+    });
     return res
       .status(201)
       .json({ message: "Notificações criadas com sucesso!" });
   }
-  await Notificacao.create({
-    notificacao_funcionario_id: id,
-    notificacao_tipo,
-    notificacao_data: dataIniMySQL,
-    notificacao_descricao,
-    notificacao_data_final: dataFimMySQL,
-    notificacao_imagem_caminho: arquivoPath,
-  });
+  await Notificacao.create(
+    {
+      notificacao_funcionario_id: id,
+      notificacao_tipo,
+      notificacao_data: dataIniMySQL,
+      notificacao_descricao,
+      notificacao_data_final: dataFimMySQL,
+      notificacao_imagem_caminho: arquivoPath,
+    },
+    {
+      usuario_id: usuario_id,
+    }
+  );
 
   return res.status(201).json({ message: "Notificação criada com sucesso!" });
 }
