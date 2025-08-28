@@ -103,6 +103,14 @@ function FiltrosFuncionarios({
     mesAniversarioFiltro,
   ]);
 
+  function limparFiltro() {
+    setSexoFiltro([]);
+    setSetorFiltro([]);
+    setCargoFiltro([]);
+    setNivelFiltro([]);
+    setMesAniversarioFiltro([]);
+  }
+
   return (
     <div className="w-full rounded-lg transition-colors text-xl p-2">
       <div className="w-full flex gap-3 justify-center">
@@ -130,6 +138,14 @@ function FiltrosFuncionarios({
             setFuncionarioFiltro={setMesAniversarioFiltro}
           />
         )}
+        <button
+          type="button"
+          onClick={limparFiltro}
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md border border-white/10 bg-white/5 text-white/90 text-[13px] leading-none tracking-tight hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+          title="Limpar Filtro"
+        >
+          Limpar Filtro
+        </button>
       </div>
     </div>
   );

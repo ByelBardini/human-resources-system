@@ -23,6 +23,7 @@ function ModalTrocaSenha({
 
       setCorAviso("verde");
       setTextoAviso("Sua senha foi alterada com sucesso!");
+      localStorage.setItem("usuario_troca_senha", 0);
       setAviso(true);
 
       setTrocaSenha(false);
@@ -56,13 +57,6 @@ function ModalTrocaSenha({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Trocar senha</h2>
-          <button
-            className="rounded-lg p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition"
-            aria-label="Fechar"
-            type="button"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         <div className="space-y-4">
