@@ -6,6 +6,7 @@ export default function CampoEmpresa({ empresas = [], navigate }) {
     localStorage.setItem("empresa_id", empresa.empresa_id);
     localStorage.setItem("empresa_nome", empresa.empresa_nome);
     localStorage.setItem("empresa_cor", empresa.empresa_cor);
+    localStorage.setItem("aba_inicial", "home");
     navigate("/empresa", { replace: true });
   }
 
