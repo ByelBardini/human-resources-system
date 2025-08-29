@@ -8,6 +8,7 @@ function AdicionaCargoModal({
   setCorAviso,
   setTextoAviso,
   setCarregando,
+  setModificado,
 }) {
   const [nomeCargo, setNomeCargo] = useState("");
   const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
@@ -36,10 +37,10 @@ function AdicionaCargoModal({
       setCorAviso("verde");
       setTextoAviso("Cargo criado com sucesso!");
       setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         setAviso(false);
         setAdicionando(false);
-        window.location.reload();
       }, 500);
       return;
     } catch (err) {

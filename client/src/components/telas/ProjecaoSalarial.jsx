@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
@@ -14,6 +15,8 @@ export default function ProjecaoSalarial({
   setAumentoGeral,
   setCarregando,
   navigate,
+  setModificado,
+  modificado,
 }) {
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [cargosFiltro, setCargosFiltro] = useState([]);
@@ -37,10 +40,10 @@ export default function ProjecaoSalarial({
       setCorAviso("verde");
       setTextoAviso("Cargo excluído com sucesso!");
       setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         setAviso(false);
         buscaCargos();
-        window.location.reload();
       }, 500);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
@@ -94,7 +97,8 @@ export default function ProjecaoSalarial({
 
   useEffect(() => {
     buscaCargos();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-0">

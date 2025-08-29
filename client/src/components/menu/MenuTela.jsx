@@ -59,6 +59,8 @@ function MenuTela({
           setAumentoGeral={setAumentoGeral}
           setCarregando={setCarregando}
           navigate={navigate}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       )}
       {opcaoSelecionada == "manualFuncoes" && (
@@ -69,6 +71,8 @@ function MenuTela({
           setAviso={setAviso}
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
+          setModificado={setModificado}
+          modificado={modificado}
         />
       )}
     </div>

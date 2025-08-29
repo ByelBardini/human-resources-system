@@ -25,6 +25,7 @@ function ModificaDescricaoModal({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
+  setModificado,
 }) {
   const [setores, setSetores] = useState([]);
 
@@ -71,10 +72,10 @@ function ModificaDescricaoModal({
       setCorAviso("verde");
       setTextoAviso("Descrição modificada com sucesso!");
       setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         setAviso(false);
         setModificaDesc(false);
-        window.location.reload();
       }, 500);
       return;
     } catch (err) {

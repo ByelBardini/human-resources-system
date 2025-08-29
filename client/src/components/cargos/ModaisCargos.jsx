@@ -13,6 +13,7 @@ function ModaisCargos({
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setAumentoGeral,
+  setModificado,
 }) {
   return (
     <div>
@@ -23,6 +24,7 @@ function ModaisCargos({
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
 
@@ -36,6 +38,7 @@ function ModaisCargos({
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
     </div>

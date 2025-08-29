@@ -12,6 +12,7 @@ function AdicionaFuncionarioModal({
   setCorAviso,
   setTextoAviso,
   setCarregando,
+  setModificado,
 }) {
   const [setores, setSetores] = useState([]);
   const [cargos, setCargos] = useState([]);
@@ -177,10 +178,10 @@ function AdicionaFuncionarioModal({
       setTextoAviso("Funcionário inserido com sucesso!");
       setAviso(true);
       console.log(resposta);
+      setModificado(true);
       setTimeout(() => {
         setAviso(false);
         setAdicionandoFunc(false);
-        window.location.reload();
       }, 500);
     } catch (err) {
       setCarregando(false);

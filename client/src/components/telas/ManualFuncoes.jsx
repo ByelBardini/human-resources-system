@@ -12,6 +12,8 @@ function ManualFuncoes({
   setTextoAviso,
   setAviso,
   navigate,
+  setModificado,
+  modificado,
 }) {
   const [descricoes, setDescricoes] = useState([]);
   const [setorFiltro, setSetorFiltro] = useState([]);
@@ -35,14 +37,15 @@ function ManualFuncoes({
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        console.eror(err);
+        console.error(err);
       }
     }
   }
 
   useEffect(() => {
     puxarDescricoes();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <div className="min-w-[1100px] w-full h-full">

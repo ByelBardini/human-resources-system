@@ -11,6 +11,7 @@ function ModalAumentoGeral({
   setCorAviso,
   setTextoAviso,
   setCarregando,
+  setModificado,
 }) {
   const [porcentagem, setPorcentagem] = useState("");
 
@@ -21,6 +22,7 @@ function ModalAumentoGeral({
   }
 
   async function confirmaAdicionar() {
+    setConfirmacao(false);
     if (porcentagem == "") {
       setCorAviso("vermelho");
       setTextoAviso("O valor da porcentagem é necessário");
@@ -36,10 +38,10 @@ function ModalAumentoGeral({
       setCorAviso("verde");
       setTextoAviso("Aumento aplicado com sucesso!");
       setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         setAviso(false);
         setAumentoGeral(false);
-        window.location.reload();
       }, 500);
       return;
     } catch (err) {

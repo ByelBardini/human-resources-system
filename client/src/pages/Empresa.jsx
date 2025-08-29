@@ -64,6 +64,7 @@ function Empresa() {
           setConfirmacao={setConfirmacao}
           setTextoConfirmacao={setTextoConfirmacao}
           setOnSimConfirmacao={setOnSimConfirmacao}
+          setModificado={setModificado}
         />
       )}
 
@@ -79,6 +80,7 @@ function Empresa() {
         setTextoConfirmacao={setTextoConfirmacao}
         setOnSimConfirmacao={setOnSimConfirmacao}
         setAumentoGeral={setAumentoGeral}
+        setModificado={setModificado}
       />
 
       <ModaisFuncionarios

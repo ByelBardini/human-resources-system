@@ -52,24 +52,19 @@ export async function putDescricao(req, res) {
 
   const descricao = await Descricao.findByPk(id);
 
-  descricao.update(
-    {
-      descricao_setor_id:
-        descricao_setor_id !== ""
-          ? descricao_setor_id
-          : descricao.descricao_setor_id,
-      descricao_escolaridade: descricao_escolaridade,
-      descricao_treinamento: descricao_treinamento,
-      descricao_comportamentos: descricao_comportamento,
-      descricao_tecnicas: descricao_tecnica,
-      descricao_experiencia: descricao_experiencia,
-      descricao_responsabilidades: descricao_responsabilidade,
-    },
-    {
-      where: { descricao_setor_id: descricao_setor_id },
-      usuario_id: usuario_id,
-    }
-  );
+  descricao.descricao_setor_id =
+    descricao_setor_id !== ""
+      ? descricao_setor_id
+      : descricao.descricao_setor_id;
+
+  descricao.descricao_escolaridade = descricao_escolaridade;
+  descricao.descricao_treinamento = descricao_treinamento;
+  descricao.descricao_comportamentos = descricao_comportamento;
+  descricao.descricao_tecnicas = descricao_tecnica;
+  descricao.descricao_experiencia = descricao_experiencia;
+  descricao.descricao_responsabilidades = descricao_responsabilidade;
+
+  await descricao.save({ usuario_id });
 
   return res.status(200).json({ message: "Aumento aplicado com sucesso." });
 }

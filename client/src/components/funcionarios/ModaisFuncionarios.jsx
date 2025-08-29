@@ -61,6 +61,7 @@ function ModaisFuncionarios({
           setCorAviso={setCorAviso}
           setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
 
