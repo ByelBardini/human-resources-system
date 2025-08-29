@@ -42,7 +42,7 @@ function HomeMenu({ setCarregando, navigate }) {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Menu Principal</h1>
+      <h1 className="text-2xl font-bold mb-4 text-white">Bem-vindo ao Menu Principal</h1>
       <div className="relative flex justify-center items-center">
         <div
           className={`absolute top-18 w-75 h-75 rounded-full blur-3xl animate-pulse`}

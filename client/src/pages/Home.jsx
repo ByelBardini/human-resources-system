@@ -11,7 +11,7 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 
 function Home() {
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   const navigate = useNavigate();
 
@@ -39,18 +39,14 @@ function Home() {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso(err.message);
-        setAviso(true);
+        mostrarAviso("erro", err.message);
       }
     }
   }

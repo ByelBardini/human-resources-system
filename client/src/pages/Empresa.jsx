@@ -1,6 +1,7 @@
 import { Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAviso } from "../context/AvisoContext.jsx";
 import Background from "../components/default/Background.jsx";
 import Loading from "../components/default/Loading.jsx";
 import ModalAviso from "../components/default/ModalAviso.jsx";
@@ -10,7 +11,7 @@ import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
 import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
 import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
 import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
-import { useAviso } from "../context/AvisoContext.jsx";
+import Header from "../components/menu/Header.jsx";
 
 function Empresa() {
   const { aviso, corAviso, textoAviso, limparAviso } = useAviso();
@@ -106,15 +107,42 @@ function Empresa() {
 
       {carregando && <Loading />}
 
-      <button
+      {/* <button
         className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Sair"
         onClick={voltar}
       >
         <Undo2 size={20} />
-      </button>
+      </button> */}
 
-      <div className="overflow-x-hidden overflow-y-hidden text-white flex flex-col gap-5 items-center justify-center">
+      <Header
+        opcaoSelecionada={opcaoSelecionada}
+        setOpcaoSelecionada={setOpcaoSelecionada}
+        onSair={voltar}
+      />
+
+      <main className="flex-1 w-full max-w-6xl mx-auto pt-24">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 h-full overflow-y-auto">
+          <MenuTela
+            setCardFuncionario={setCardFuncionario}
+            opcaoSelecionada={opcaoSelecionada}
+            setCarregando={setCarregando}
+            setAdicionando={setAdicionandoCargo}
+            setConfirmacao={setConfirmacao}
+            setTextoConfirmacao={setTextoConfirmacao}
+            setOnSimConfirmacao={setOnSimConfirmacao}
+            setAumentoGeral={setAumentoGeral}
+            setAdicionandoFunc={setAdicionandoFunc}
+            setDesc={setDesc}
+            setModificaDesc={setModificaDesc}
+            setModificado={setModificado}
+            modificado={modificado}
+            navigate={navigate}
+          />
+        </div>
+      </main>
+
+      {/* <div className="overflow-x-hidden overflow-y-hidden text-white flex flex-col gap-5 items-center justify-center">
         <div className="min-w-300 min-h-20 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <MenuOpcoes
             setOpcaoSelecionada={setOpcaoSelecionada}
@@ -139,7 +167,7 @@ function Empresa() {
             navigate={navigate}
           />
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

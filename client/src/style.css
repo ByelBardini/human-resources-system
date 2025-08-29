@@ -9,6 +9,7 @@
   height: 5px;
   width: 5px;
 }
+
 *::-webkit-scrollbar-track {
   border-radius: 5px;
   background-color: #04005200;
@@ -33,4 +34,23 @@
 
 *::-webkit-scrollbar-thumb:active {
   background-color: #002fff71;
+}
+
+@keyframes expandX {
+  0% {
+    transform: scaleX(0);
+  }
+
+  50% {
+    transform: scaleX(1);
+  }
+
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+.test-expand {
+  animation: expandX 4s ease-in-out infinite;
+  transform-origin: center;
 }
