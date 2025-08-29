@@ -3,7 +3,14 @@ import { X, Save, Eye, EyeOff } from "lucide-react";
 import { trocaSenha } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
-function ModalTrocaSenha({ setTrocaSenha, setCarregando }) {
+function ModalTrocaSenha({
+  setTrocaSenha,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
+  setCarregando,
+  navigate,
+}) {
   const [senha, setSenha] = useState("");
   const [confirma, setConfirma] = useState("");
   const [show1, setShow1] = useState(false);
@@ -18,13 +25,33 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando }) {
     try {
       await trocaSenha(senha);
 
-      mostrarAviso("sucesso", "Sua senha foi alterada com sucesso!");
+      setCorAviso("verde");
+      setTextoAviso("Sua senha foi alterada com sucesso!");
+      localStorage.setItem("usuario_troca_senha", 0);
+      setAviso(true);
 
       setTrocaSenha(false);
-
     } catch (err) {
-      mostrarAviso("erro",err.message);
-      console.error(err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCorAviso("vermelho");
+        setTextoAviso(
+          `Erro ao trocar sua senha: ${
+            err?.response?.data?.error || err?.message || "tente novamente"
+          }`
+        );
+        setAviso(true);
+        console.error(err);
+      }
     } finally {
       setCarregando(false);
     }
@@ -44,13 +71,6 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando }) {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Trocar senha</h2>
-          <button
-            className="rounded-lg p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition"
-            aria-label="Fechar"
-            type="button"
-          >
-            <X size={18} />
-          </button>
         </div>
 
         <div className="space-y-4">

@@ -29,9 +29,8 @@ function Login() {
       localStorage.setItem("usuario_nome", usuario_nome);
       localStorage.setItem("usuario_id", usuario_id);
       localStorage.setItem("usuario_role", usuario_role);
-      if (usuario_troca_senha != 0) {
-        localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
-      }
+      localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
+
       setCarregando(false);
       mostrarAviso("sucesso", "Login realizado com sucesso!");
 

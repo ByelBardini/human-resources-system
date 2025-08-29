@@ -10,6 +10,7 @@ function ModalUsuario({
   setVisualiza,
   setCarregando,
   modificou,
+  navigate,
 }) {
   const { mostrarAviso } = useAviso();
   async function inativarUsuario() {
@@ -31,9 +32,26 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      mostrarAviso("erro", `Erro ao inativar usuário: ${err?.message}`);
-      mostrarAviso("erro", err.message);
-      console.error(err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCorAviso("vermelho");
+        setTextoAviso(
+          `Erro ao inativar usuário: ${
+            err?.response?.data?.error || err?.message || "tente novamente"
+          }`
+        );
+        setAviso(true);
+        console.error(err);
+      }
     } finally {
       setCarregando(false);
     }
@@ -48,8 +66,26 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      mostrarAviso(`Erro ao resetar senha: ${err?.message}`);
-      console.error(err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCorAviso("vermelho");
+        setTextoAviso(
+          `Erro ao resetar senha: ${
+            err?.response?.data?.error || err?.message || "tente novamente"
+          }`
+        );
+        setAviso(true);
+        console.error(err);
+      }
     } finally {
       setCarregando(false);
     }

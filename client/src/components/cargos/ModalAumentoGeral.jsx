@@ -9,6 +9,7 @@ function ModalAumentoGeral({
   setOnSimConfirmacao,
   setAumentoGeral,
   setCarregando,
+  setModificado,
 }) {
   const {mostrarAviso, limparAviso}=useAviso();
   const [porcentagem, setPorcentagem] = useState("");
@@ -20,6 +21,7 @@ function ModalAumentoGeral({
   }
 
   async function confirmaAdicionar() {
+    setConfirmacao(false);
     if (porcentagem == "") {
       mostrarAviso("erro", "O valor da porcentagem é necessário")
       return;
@@ -30,11 +32,13 @@ function ModalAumentoGeral({
       const id_empresa = localStorage.getItem("empresa_id");
       await aumentoCargo(id_empresa, porcentagem);
       setCarregando(false);
-      mostrarAviso("sucesso", "Aumento aplicado com sucesso!");
+      setCorAviso("verde");
+      setTextoAviso("Aumento aplicado com sucesso!");
+      setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         limparAviso;
         setAumentoGeral(false);
-        window.location.reload();
       }, 500);
       return;
     } catch (err) {

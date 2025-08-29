@@ -1,4 +1,5 @@
 import { Usuario } from "../models/index.js";
+import { ApiError } from "../middlewares/ApiError.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
@@ -10,7 +11,7 @@ export async function login(req, res) {
   const { usuario_login, usuario_senha } = req.body;
 
   if (!usuario_login || !usuario_senha) {
-    return res.status(400).json({ error: "Login e senha são obrigatórios." });
+    throw ApiError.badRequest("Login e senha obrigatórios.");
   }
 
   try {
@@ -19,17 +20,17 @@ export async function login(req, res) {
     });
 
     if (!usuario) {
-      return res.status(401).json({ error: "Login Incorreto" });
+      throw ApiError.unauthorized("Login incorreto.");
     }
 
     if (usuario.usuario_ativo == 0) {
-      return res.status(403).json({ error: "Usuário inativo" });
+      throw ApiError.unauthorized("Usuário inativo.");
     }
 
     const match = await bcrypt.compare(usuario_senha, usuario.usuario_senha);
 
     if (!match) {
-      return res.status(401).json({ error: "Usuário ou senha inválidos." });
+      throw ApiError.unauthorized("Usuário ou senha inválidos.");
     }
     const userSession = {
       usuario_id: usuario.usuario_id,
@@ -66,12 +67,12 @@ export async function login(req, res) {
       .json(resposta);
   } catch (err) {
     console.error("Erro na consulta:", err);
-    return res.status(500).json({ error: "Erro ao validar usuário" });
+    throw ApiError.internal("Erro ao validar usuário");
   }
 }
 
 export const logout = async (req, res) => {
   if (req.session) req.session.destroy(() => {});
   res.clearCookie("token");
-  return res.json({ mensagem: "Logout realizado com sucesso" });
+  return res.json({ message: "Logout realizado com sucesso" });
 };

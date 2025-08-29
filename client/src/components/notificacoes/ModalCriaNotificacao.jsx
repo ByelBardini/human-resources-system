@@ -66,7 +66,7 @@ function ModalCriaNotificacao({
         limparAviso;
         setAdicionado(true);
         setNotificacao(false);
-      });
+      }, 500);
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message);

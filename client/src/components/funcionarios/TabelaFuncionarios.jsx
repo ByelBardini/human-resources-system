@@ -22,6 +22,10 @@ function TabelaFuncionarios({
   modificado,
   setModificado,
   inativos,
+  navigate,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
 }) {
   const { mostrarAviso } = useAviso();
   const [clicado, setClicado] = useState("");
@@ -163,8 +167,18 @@ function TabelaFuncionarios({
         : await getFuncionariosInativos(id);
       setFuncionarios(funcionarios);
     } catch (err) {
-      mostrarAviso("erro", err.message);
-      console.error(err.message, err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        console.error("Erro ao buscar cargos:", err);
+      }
     }
   }
 

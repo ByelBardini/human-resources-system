@@ -6,7 +6,16 @@ import { getDescricoes } from "../../services/api/descricaoService.js";
 import { useState } from "react";
 import { useEffect } from "react";
 
-function ManualFuncoes({ setDesc, setModificaDesc }) {
+function ManualFuncoes({
+  setDesc,
+  setModificaDesc,
+  setCorAviso,
+  setTextoAviso,
+  setAviso,
+  navigate,
+  setModificado,
+  modificado,
+}) {
   const [descricoes, setDescricoes] = useState([]);
   const [setorFiltro, setSetorFiltro] = useState([]);
   const [cargoFiltro, setCargoFiltro] = useState([]);
@@ -20,14 +29,25 @@ function ManualFuncoes({ setDesc, setModificaDesc }) {
       const descricoes = await getDescricoes(id);
       setDescricoes(descricoes);
     } catch (err) {
-      mostrarAviso("erro", err.message);
-      console.eror(err.message, err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        console.error(err);
+      }
     }
   }
 
   useEffect(() => {
     puxarDescricoes();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <div className="min-w-[1100px] w-full h-full">

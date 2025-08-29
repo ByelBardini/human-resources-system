@@ -12,6 +12,9 @@ export default function ProjecaoSalarial({
   setOnSimConfirmacao,
   setAumentoGeral,
   setCarregando,
+  navigate,
+  setModificado,
+  modificado,
 }) {
   const { mostrarAviso, limparAviso } = useAviso();
   const [cargos, setCargos] = useState([{ niveis: [] }]);
@@ -33,17 +36,41 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      mostrarAviso("sucesso", "Função excluída com sucesso!");
+      setCorAviso("verde");
+      setTextoAviso("Cargo excluído com sucesso!");
+      setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         limparAviso;
         buscaCargos();
-        window.location.reload();
       }, 500);
     } catch (err) {
-      setCarregando(false);
-      setConfirmacao(false);
-      mostrarAviso("erro", err.message);
-      console.error(err.message, err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else if (err.status == 409) {
+        setCarregando(false);
+        setConfirmacao(false);
+        setCorAviso("vermelho");
+        setTextoAviso(
+          "Impossível excluir um cargo que já possua funcionários vinculados"
+        );
+        setAviso(true);
+      } else {
+        setCarregando(false);
+        setConfirmacao(false);
+        console.error("Erro ao deletar cargo:", err);
+        setCorAviso("vermelho");
+        setTextoAviso("Erro ao deletar cargo:", err.message || err);
+        setAviso(true);
+      }
     }
   }
 
@@ -69,7 +96,8 @@ export default function ProjecaoSalarial({
 
   useEffect(() => {
     buscaCargos();
-  }, []);
+    setModificado(false);
+  }, [modificado]);
 
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-0">

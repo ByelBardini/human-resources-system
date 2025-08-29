@@ -1,4 +1,5 @@
 import { api } from "../api.js";
+import { saveToken, clearToken } from "./authStore";
 
 export async function logar(usuario_login, usuario_senha) {
   try {
@@ -6,6 +7,8 @@ export async function logar(usuario_login, usuario_senha) {
       usuario_login,
       usuario_senha,
     });
+
+    if (response.data?.token) await saveToken(response.data.token);
 
     return response.data;
   } catch (err) {
@@ -34,6 +37,7 @@ export async function logout() {
 
     if (response) {
       localStorage.clear();
+      await clearToken();
     }
   } catch (error) {
     console.error("Erro durante logout:", error);

@@ -31,8 +31,22 @@ function Usuario() {
       setUsuarios(usuarios);
       setAtualizado(false);
     } catch (err) {
-      mostrarAviso("erro", err.message);
-      console.error(err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setAviso(true);
+        setCorAviso("vermelho");
+        setTextoAviso("Erro ao buscar usuários:", err);
+        console.error(err);
+      }
     }
   }
 
@@ -54,6 +68,7 @@ function Usuario() {
           setCarregando={setCarregando}
           setCadastrado={setAtualizado}
           cadastrado={atualizado}
+          navigate={navigate}
         />
       )}
       {visualiza && (
@@ -62,6 +77,7 @@ function Usuario() {
           usuarioSelecionado={usuarioSelecionado}
           setCarregando={setCarregando}
           modificou={setAtualizado}
+          navigate={navigate}
         />
       )}
 

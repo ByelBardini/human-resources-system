@@ -5,10 +5,10 @@ import {
   trocaSenhaUsuario,
   inativaUsuario,
 } from "../controllers/usuarioController.js";
-import verificaToken from "../middlewares/verificaToken.js";
-import express from "express";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { checarLogado } from "../middlewares/checarLogado.js";
+import verificaToken from "../middlewares/verificaToken.js";
+import express from "express";
 
 const router = express.Router();
 router.use(checarLogado);

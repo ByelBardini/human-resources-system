@@ -12,12 +12,9 @@ export async function registrarUsuario(req, res) {
   }
 
   if (usuario_role != "adm") {
-    return res
-      .status(403)
-      .json({
-        error:
-          "Necessário ser um usuário administrador para realizar essa ação.",
-      });
+    return res.status(403).json({
+      error: "Necessário ser um usuário administrador para realizar essa ação.",
+    });
   }
 
   if (!usuario_nome || !usuario_login || !usuario_cadastrado_role) {
@@ -51,12 +48,9 @@ export async function resetaSenhaUsuario(req, res) {
   }
 
   if (usuario_role != "adm") {
-    return res
-      .status(403)
-      .json({
-        error:
-          "Necessário ser um usuário administrador para realizar essa ação.",
-      });
+    return res.status(403).json({
+      error: "Necessário ser um usuário administrador para realizar essa ação.",
+    });
   }
   const nova_senha = bcrypt.hashSync("12345", 10);
 
@@ -128,15 +122,14 @@ export async function getUsuarios(req, res) {
   }
 
   if (usuario_role != "adm") {
-    return res
-      .status(403)
-      .json({
-        error:
-          "Necessário ser um usuário administrador para realizar essa ação.",
-      });
+    return res.status(403).json({
+      error: "Necessário ser um usuário administrador para realizar essa ação.",
+    });
   }
   try {
-    const usuarios = await Usuario.findAll();
+    const usuarios = await Usuario.findAll({
+      order: [["usuario_nome", "ASC"]],
+    });
 
     if (usuarios.length == 0) {
       res.status(400).json({
@@ -162,12 +155,9 @@ export async function inativaUsuario(req, res) {
   }
 
   if (usuario_role != "adm") {
-    return res
-      .status(403)
-      .json({
-        error:
-          "Necessário ser um usuário administrador para realizar essa ação.",
-      });
+    return res.status(403).json({
+      error: "Necessário ser um usuário administrador para realizar essa ação.",
+    });
   }
 
   try {

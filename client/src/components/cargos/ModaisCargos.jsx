@@ -10,6 +10,7 @@ function ModaisCargos({
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setAumentoGeral,
+  setModificado,
 }) {
   return (
     <div>
@@ -17,6 +18,7 @@ function ModaisCargos({
         <AdicionaCargoModal
           setAdicionando={setAdicionando}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
 
@@ -27,6 +29,7 @@ function ModaisCargos({
           setOnSimConfirmacao={setOnSimConfirmacao}
           setAumentoGeral={setAumentoGeral}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
     </div>

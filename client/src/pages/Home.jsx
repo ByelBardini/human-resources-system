@@ -36,8 +36,22 @@ function Home() {
       setEmpresas(empresasData);
       setCarregando(false);
     } catch (err) {
-      setCarregando(false);
-      mostrarAviso("erro", err.message);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso(err.message);
+        setAviso(true);
+      }
     }
   }
 
@@ -55,6 +69,7 @@ function Home() {
         <ModalTrocaSenha
           setTrocaSenha={setTrocaSenha}
           setCarregando={setCarregando}
+          navigate={navigate}
         />
       )}
 

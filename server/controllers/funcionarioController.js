@@ -51,6 +51,7 @@ export async function getFuncionarios(req, res) {
       },
       { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
     ],
+    order: [["funcionario_nome", "ASC"]],
   });
 
   return res.status(200).json(funcionarios);
@@ -82,6 +83,7 @@ export async function getFuncionariosInativos(req, res) {
       },
       { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
     ],
+    order: [["funcionario_nome", "ASC"]],
   });
 
   return res.status(200).json(funcionarios);

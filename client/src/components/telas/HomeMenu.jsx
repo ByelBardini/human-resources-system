@@ -8,6 +8,13 @@ import { useAviso } from "../../context/AvisoContext.jsx";
 function HomeMenu({ setCarregando }) {
   const { mostrarAviso, limparAviso } = useAviso();
 
+function HomeMenu({
+  setCarregando,
+  setAviso,
+  setCorAviso,
+  setTextoAviso,
+  navigate,
+}) {
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
 
@@ -20,8 +27,22 @@ function HomeMenu({ setCarregando }) {
       const imagem = await getEmpresaImagem(id);
       setImagem(imagem);
     } catch (err) {
-      mostrarAviso("erro", err.message);
-      console.error(err.message, err);
+      if (err.status == 401 || err.status == 403) {
+        console.log(err);
+        setCarregando(false);
+        setCorAviso("vermelho");
+        setTextoAviso("Sessão inválida! Realize o Login novamente!");
+        setAviso(true);
+        setTimeout(() => {
+          setAviso(false);
+          navigate("/", { replace: true });
+        }, 1000);
+      } else {
+        setAviso(true);
+        setCorAviso("vermelho");
+        setTextoAviso("Erro ao buscar imagem da empresa.");
+        console.error("Erro ao buscar imagem da empresa:", err);
+      }
     } finally {
       setCarregando(false);
     }

@@ -4,10 +4,10 @@ import {
   aumentoGeral,
   deleteCargo,
 } from "../controllers/cargoController.js";
-import express from "express";
-import verificaToken from "../middlewares/verificaToken.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { checarLogado } from "../middlewares/checarLogado.js";
+import express from "express";
+import verificaToken from "../middlewares/verificaToken.js";
 
 const router = express.Router();
 

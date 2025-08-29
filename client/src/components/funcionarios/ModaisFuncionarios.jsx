@@ -49,6 +49,7 @@ function ModaisFuncionarios({
         <AdicionaFuncionarioModal
           setAdicionandoFunc={setAdicionandoFunc}
           setCarregando={setCarregando}
+          setModificado={setModificado}
         />
       )}
 

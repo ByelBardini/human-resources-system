@@ -23,6 +23,7 @@ function ModificaDescricaoModal({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
+  setModificado,
 }) {
   const { mostrarAviso, limparAviso } = useAviso();
   const [setores, setSetores] = useState([]);
@@ -68,11 +69,13 @@ function ModificaDescricaoModal({
         responsabilidades
       );
       setCarregando(false);
-      mostrarAviso("sucesso", "Descrição modificada com sucesso!");
+      setCorAviso("verde");
+      setTextoAviso("Descrição modificada com sucesso!");
+      setAviso(true);
+      setModificado(true);
       setTimeout(() => {
         limparAviso;
         setModificaDesc(false);
-        window.location.reload();
       }, 500);
       return;
     } catch (err) {
