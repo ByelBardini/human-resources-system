@@ -3,20 +3,13 @@ import { X, Save, Eye, EyeOff } from "lucide-react";
 import { trocaSenha } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
-function ModalTrocaSenha({
-  setTrocaSenha,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
-  setCarregando,
-  navigate,
-}) {
+function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
   const [senha, setSenha] = useState("");
   const [confirma, setConfirma] = useState("");
   const [show1, setShow1] = useState(false);
   const [show2, setShow2] = useState(false);
 
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   const valido = senha.length >= 4 && senha === confirma;
 
@@ -25,31 +18,22 @@ function ModalTrocaSenha({
     try {
       await trocaSenha(senha);
 
-      setCorAviso("verde");
-      setTextoAviso("Sua senha foi alterada com sucesso!");
+      mostrarAviso("Sucesso", "Sua senha foi alterada com sucesso!");
       localStorage.setItem("usuario_troca_senha", 0);
-      setAviso(true);
 
       setTrocaSenha(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
-          `Erro ao trocar sua senha: ${
-            err?.response?.data?.error || err?.message || "tente novamente"
-          }`
-        );
-        setAviso(true);
+        mostrarAviso("erro", err.message);
+        limparAviso;
         console.error(err);
       }
     } finally {

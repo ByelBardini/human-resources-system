@@ -9,9 +9,6 @@ import { useEffect } from "react";
 function ManualFuncoes({
   setDesc,
   setModificaDesc,
-  setCorAviso,
-  setTextoAviso,
-  setAviso,
   navigate,
   setModificado,
   modificado,
@@ -21,7 +18,7 @@ function ManualFuncoes({
   const [cargoFiltro, setCargoFiltro] = useState([]);
   const [descricoesFiltradas, setDescricoesFiltradas] = useState([]);
 
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   async function puxarDescricoes() {
     const id = localStorage.getItem("empresa_id");
@@ -30,12 +27,10 @@ function ManualFuncoes({
       setDescricoes(descricoes);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        console.error(err.message, err);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {

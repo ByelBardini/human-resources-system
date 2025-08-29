@@ -23,11 +23,8 @@ function TabelaFuncionarios({
   setModificado,
   inativos,
   navigate,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
 }) {
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
   const [salarioSort, setSalarioSort] = useState(false);
@@ -169,11 +166,9 @@ function TabelaFuncionarios({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {

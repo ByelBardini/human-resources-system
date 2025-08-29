@@ -36,9 +36,7 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      setCorAviso("verde");
-      setTextoAviso("Cargo excluído com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Cargo excluído com sucesso!")
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -46,30 +44,23 @@ export default function ProjecaoSalarial({
       }, 500);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro","Sessão inválida! Realize o Login novamente!");
+        console.error(err.message, err);
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else if (err.status == 409) {
         setCarregando(false);
         setConfirmacao(false);
-        setCorAviso("vermelho");
-        setTextoAviso(
-          "Impossível excluir um cargo que já possua funcionários vinculados"
-        );
-        setAviso(true);
+        console.error(err.message, err);
+        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados")
       } else {
         setCarregando(false);
         setConfirmacao(false);
-        console.error("Erro ao deletar cargo:", err);
-        setCorAviso("vermelho");
-        setTextoAviso("Erro ao deletar cargo:", err.message || err);
-        setAviso(true);
+        mostrarAviso("erro", err.message)
+        console.error( err);
       }
     }
   }

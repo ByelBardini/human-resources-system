@@ -11,7 +11,7 @@ function Login() {
   const navigate = useNavigate();
   const [carregando, setCarregando] = useState(false);
 
-  const { aviso, corAviso, textoAviso, mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   const [login, setLogin] = useState("");
   const [senha, setSenha] = useState("");

@@ -69,9 +69,7 @@ function ModificaDescricaoModal({
         responsabilidades
       );
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Descrição modificada com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Descrição modificada com sucesso!")
       setModificado(true);
       setTimeout(() => {
         limparAviso;

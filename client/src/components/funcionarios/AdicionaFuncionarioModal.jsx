@@ -10,12 +10,10 @@ import { useAviso } from "../../context/AvisoContext.jsx";
 
 function AdicionaFuncionarioModal({
   setAdicionandoFunc,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setModificado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [setores, setSetores] = useState([]);
   const [cargos, setCargos] = useState([]);
   const [cpfValido, setCpfValido] = useState(null);
@@ -43,7 +41,7 @@ function AdicionaFuncionarioModal({
       setSetores(response.setor);
       setCargos(response.cargo);
     } catch (err) {
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message);
       console.error(err.message, err);
     }
   }
@@ -164,10 +162,7 @@ function AdicionaFuncionarioModal({
       await postFuncionario(payload, fotoFile);
       setCarregando(false);
 
-      setCorAviso("verde");
-      setTextoAviso("Funcionário inserido com sucesso!");
-      setAviso(true);
-      console.log(resposta);
+      mostrarAviso("sucesso", "Funcionário inserido com sucesso!");
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -175,7 +170,7 @@ function AdicionaFuncionarioModal({
       }, 500);
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message);
       console.error(err.message, err);
       return;
     }

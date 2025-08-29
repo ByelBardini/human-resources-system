@@ -1,5 +1,6 @@
 import { api } from "../api.js";
 import { saveToken, clearToken } from "./authStore";
+import { handleApiError } from "../api/handleApiError.js";
 
 export async function logar(usuario_login, usuario_senha) {
   try {
@@ -12,22 +13,14 @@ export async function logar(usuario_login, usuario_senha) {
 
     return response.data;
   } catch (err) {
-    if (err.response && err.response.status === 400) {
-      throw new Error(err.response.data?.error || "Preencha login e senha.");
-    } else if (err.response && err.response.status === 401) {
-      throw new Error(
-        err.response.data?.error || "Usuário ou senha incorretos."
-      );
-    } else if (err.response && err.response.status === 403) {
-      throw new Error(
-        err.response.data?.error ||
-          "Usuário inativo ou sem permissão para acessar o sistema."
-      );
-    } else if (err.response && err.response.status === 500) {
-      throw new Error(
-        err.response.data?.error || "Erro interno. Tente novamente mais tarde."
-      );
-    }
+    const { status } = handleApiError(err, "Erro ao fazer login");
+
+    if (status === 400) throw new Error("Preencha login e senha.");
+    if (status === 401) throw new Error("Usuário ou senha incorretos.");
+    if (status === 403) throw new Error("Usuário inativo ou sem permissão para acessar o sistema.");
+    if (status === 409) throw new Error("Conflito de dados.");
+    if (status === 500) throw new Error("Erro interno. Tente novamente mais tarde.");
+
   }
 }
 
@@ -39,7 +32,8 @@ export async function logout() {
       localStorage.clear();
       await clearToken();
     }
-  } catch (error) {
-    console.error("Erro durante logout:", error);
+  } catch (err) {
+    const {message} = handleApiError(err, "Erro durante logout.")
+    console.error(message);
   }
 }

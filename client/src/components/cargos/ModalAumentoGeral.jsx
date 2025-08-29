@@ -32,9 +32,7 @@ function ModalAumentoGeral({
       const id_empresa = localStorage.getItem("empresa_id");
       await aumentoCargo(id_empresa, porcentagem);
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Aumento aplicado com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Aumento aplicado com sucesso!")
       setModificado(true);
       setTimeout(() => {
         limparAviso;

@@ -5,18 +5,10 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
-function HomeMenu({ setCarregando }) {
-  const { mostrarAviso, limparAviso } = useAviso();
-
-function HomeMenu({
-  setCarregando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
-  navigate,
-}) {
+function HomeMenu({ setCarregando, navigate }) {
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
+  const { mostrarAviso, limparAviso } = useAviso();
 
   async function buscarImagemEmpresa() {
     setCarregando(true);
@@ -28,20 +20,16 @@ function HomeMenu({
       setImagem(imagem);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", err.message);
+        console.log(err.message);
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setAviso(true);
-        setCorAviso("vermelho");
-        setTextoAviso("Erro ao buscar imagem da empresa.");
-        console.error("Erro ao buscar imagem da empresa:", err);
+        mostrarAviso("erro", err.message);
+        console.error(err.message, err);
       }
     } finally {
       setCarregando(false);

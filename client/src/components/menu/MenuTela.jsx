@@ -25,9 +25,6 @@ function MenuTela({
       {opcaoSelecionada == "home" && (
         <HomeMenu
           setCarregando={setCarregando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           navigate={navigate}
         />
       )}
@@ -59,9 +56,6 @@ function MenuTela({
           setDesc={setDesc}
           setModificaDesc={setModificaDesc}
           navigate={navigate}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setModificado={setModificado}
           modificado={modificado}
         />

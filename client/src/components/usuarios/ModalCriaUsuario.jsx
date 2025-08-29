@@ -10,7 +10,7 @@ function ModalCriaUsuario({
   cadastrado,
   navigate,
 }) {
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   const [nome, setNome] = useState("");
   const [login, setLogin] = useState("");
@@ -35,25 +35,18 @@ function ModalCriaUsuario({
       setCria(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        console.log(err.message, err);
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
-          `Erro ao cadastrar usuário: ${
-            err?.response?.data?.error || err?.message || "tente novamente"
-          }`
-        );
+        mostrarAviso("erro", err.message);
       }
-      setAviso(true);
-      console.error(err);
+      limparAviso;
+      console.error(err.message, err);
     } finally {
       setCarregando(false);
     }

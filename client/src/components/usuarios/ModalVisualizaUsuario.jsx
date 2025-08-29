@@ -12,7 +12,7 @@ function ModalUsuario({
   modificou,
   navigate,
 }) {
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
   async function inativarUsuario() {
     const id = localStorage.getItem("usuario_id");
     if (id == usuarioSelecionado.usuario_id) {
@@ -35,22 +35,14 @@ function ModalUsuario({
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
-          `Erro ao inativar usuário: ${
-            err?.response?.data?.error || err?.message || "tente novamente"
-          }`
-        );
-        setAviso(true);
-        console.error(err);
+        mostrarAviso("erro", err.message);
+        console.error(err.mesage, err);
       }
     } finally {
       setCarregando(false);
@@ -67,23 +59,16 @@ function ModalUsuario({
       setVisualiza(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        console.log(err.message, err);
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
-          `Erro ao resetar senha: ${
-            err?.response?.data?.error || err?.message || "tente novamente"
-          }`
-        );
-        setAviso(true);
+        mostrarAviso("erro", err.message);
+        limparAviso;
         console.error(err);
       }
     } finally {

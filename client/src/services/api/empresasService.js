@@ -16,6 +16,6 @@ export async function getEmpresaImagem(id){
          // Verifica se a imagem está no formato esperado
         return response.data;
     } catch (err) {
-        throw handleApiError(err, "Erro ao buscar imagem");
+        throw handleApiError(err, "Erro ao buscar imagem da empresa");
     }
 }
