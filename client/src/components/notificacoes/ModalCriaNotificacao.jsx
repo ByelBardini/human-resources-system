@@ -72,7 +72,7 @@ function ModalCriaNotificacao({
         setAviso(false);
         setAdicionado(true);
         setNotificacao(false);
-      });
+      }, 500);
     } catch (err) {
       setCarregando(false);
       setCorAviso("vermelho");

@@ -181,7 +181,7 @@ function AdicionaFuncionarioModal({
         setAviso(false);
         setAdicionandoFunc(false);
         window.location.reload();
-      });
+      }, 500);
     } catch (err) {
       setCarregando(false);
       setCorAviso("vermelho");
