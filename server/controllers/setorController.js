@@ -9,6 +9,7 @@ export async function getSetoresPorEmpresa(req, res) {
 
   const setores = await Setor.findAll({
     where: { setor_empresa_id: id },
+    order: [["setor_nome", "ASC"]],
   });
 
   return res.status(200).json(setores);

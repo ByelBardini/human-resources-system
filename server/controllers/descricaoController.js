@@ -27,6 +27,7 @@ export async function getDescricoes(req, res) {
       { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
       { model: Setor, as: "setor", attributes: ["setor_nome"] },
     ],
+    order: [[{ model: Cargo, as: "cargo" }, "cargo_nome", "ASC"]],
   });
 
   return res.status(200).json(descricoes);
