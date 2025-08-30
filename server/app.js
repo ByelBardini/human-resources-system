@@ -18,11 +18,18 @@ dotenv.config();
 
 const app = express();
 
+const ALLOWED_ORIGINS = ["http://localhost:5173", "tauri://localhost"];
+
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, cb) => {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      return cb(new Error("Origin não permitido pelo CORS: " + origin));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(cookieParser());

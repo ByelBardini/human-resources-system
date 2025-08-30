@@ -22,7 +22,7 @@ function FiltroNotificacoes({
       setFiltradas(filtrados);
       setFiltroAtivo(true);
     } catch (err) {
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message, true)
       console.error(err.message, err);
     }
   }

@@ -44,7 +44,7 @@ function CampoNotificacao({
     )}`;
     const resp = await fetch(url, { credentials: "include" });
     if (!resp.ok) {
-      mostrarAviso("erro", "Erro ao realizar o download")
+      mostrarAviso("erro", "Erro ao realizar o download", true)
       return;
     }
 

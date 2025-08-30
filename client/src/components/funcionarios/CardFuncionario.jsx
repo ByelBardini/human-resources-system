@@ -46,7 +46,7 @@ export default function CardFuncionario({
       setFuncionario(funcionario);
       setNotificacoes(notificacoes);
     } catch (err) {
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message, true)
       console.error(err.message, err);
     }
   }

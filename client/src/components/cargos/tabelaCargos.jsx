@@ -52,7 +52,7 @@ function TabelaCargos({
             >
               {/* Cargo */}
               <td className="px-4 py-2 align-top min-w-[260px] flex">
-                <div className="flex gap-2 items-center ">
+                <div className="flex gap-2 items-center">
                   {selecionado.linha == cargo.cargo_id && (
                     <div className="w-[88px] flex flex-col gap-2">
                       <IconeBotao
@@ -68,88 +68,26 @@ function TabelaCargos({
                 </div>
               </td>
 
-              {/* JUNIOR */}
-              <CampoSalario
-                cargoNiveis={cargo.niveis[0]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[1]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[2]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[3]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              {/* PLENO */}
-              <CampoSalario
-                cargoNiveis={cargo.niveis[4]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[5]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[6]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              {/* SENIOR */}
-              <CampoSalario
-                cargoNiveis={cargo.niveis[7]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[8]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
-
-              <CampoSalario
-                cargoNiveis={cargo.niveis[9]}
-                cargoId={cargo.cargo_id}
-                campoSelecionado={selecionado.campo}
-                selecionaCampo={selecionaCampo}
-              />
+              {/* Níveis dinamicamente */}
+              {cargo.niveis.map((nivel, index) => (
+                <CampoSalario
+                  key={`${cargo.cargo_id}-${index}`}
+                  cargoNiveis={nivel}
+                  cargoId={cargo.cargo_id}
+                  campoSelecionado={selecionado.campo}
+                  selecionaCampo={selecionaCampo}
+                />
+              ))}
             </tr>
           ))}
         </tbody>
       ) : (
         <tbody>
           <tr>
-            <td colSpan={11} className="px-6 py-10 text-center min-w-[1300px]" >
+            <td colSpan={11} className="px-6 py-10 text-center min-w-[1300px]">
               <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
                 <SearchX size={16} className="opacity-80" />
-                Nenhuma função encontrado
+                Nenhuma função encontrada
               </div>
             </td>
           </tr>

@@ -3,7 +3,7 @@ import { useAviso } from "../../context/AvisoContext.jsx";
 import { useState } from "react";
 import { X } from "lucide-react";
 
-function AdicionaCargoModal({ setAdicionando, setCarregando }) {
+function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
   const { mostrarAviso, limparAviso } = useAviso();
   const [nomeCargo, setNomeCargo] = useState("");
   const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
@@ -18,7 +18,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando }) {
 
   async function criarCargo() {
     if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
-      mostrarAviso("aviso", "Por favor, preencha todos os campos.");
+      mostrarAviso("aviso", "Por favor, preencha todos os campos.", true);
       return;
     }
     setCarregando(true);
@@ -27,7 +27,8 @@ function AdicionaCargoModal({ setAdicionando, setCarregando }) {
       const id_empresa = localStorage.getItem("empresa_id");
       await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
-      mostrarAviso("sucesso", "Cargo criado com sucesso!");
+      mostrarAviso("sucesso", "Cargo criado com sucesso!", true);
+      setModificado(true);
       setTimeout(() => {
         limparAviso;
         setAdicionando(false);
@@ -35,7 +36,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando }) {
       return;
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
       return;
     }

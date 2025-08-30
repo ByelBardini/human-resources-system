@@ -28,7 +28,8 @@ function ModalInativa({
     if (data == "" || preco == "R$ 0,00") {
       mostrarAviso(
         "erro",
-        "Você precisa informar a data e o preço de desligamento!"
+        "Você precisa informar a data e o preço de desligamento!",
+        true
       );
       return;
     }
@@ -36,7 +37,7 @@ function ModalInativa({
     try {
       const precoFormatado = parseInt(preco.replace(/\D/g, ""), 10) / 100;
       await inativarFuncionario(id, data, comentario, precoFormatado);
-      mostrarAviso("sucesso", "Funcionário desligado com sucesso!");
+      mostrarAviso("sucesso", "Funcionário desligado com sucesso!", true);
       setAdicionado(true);
       setTimeout(() => {
         setCard(false);
@@ -44,7 +45,7 @@ function ModalInativa({
         limparAviso;
       }, 500);
     } catch (err) {
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message, true);
       console.error(err);
     } finally {
       setCarregando(false);

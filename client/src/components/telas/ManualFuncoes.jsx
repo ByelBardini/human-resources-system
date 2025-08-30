@@ -18,7 +18,7 @@ function ManualFuncoes({
   const [cargoFiltro, setCargoFiltro] = useState([]);
   const [descricoesFiltradas, setDescricoesFiltradas] = useState([]);
 
-  const { mostrarAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   async function puxarDescricoes() {
     const id = localStorage.getItem("empresa_id");
@@ -27,10 +27,10 @@ function ManualFuncoes({
       setDescricoes(descricoes);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
-
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        console.error(err.message, err);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!", true);
         setTimeout(() => {
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {

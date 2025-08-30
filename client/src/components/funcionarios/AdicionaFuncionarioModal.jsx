@@ -41,7 +41,7 @@ function AdicionaFuncionarioModal({
       setSetores(response.setor);
       setCargos(response.cargo);
     } catch (err) {
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
     }
   }
@@ -92,7 +92,7 @@ function AdicionaFuncionarioModal({
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("en-CA");
     if (dateNascimento > dataFormatada) {
-      mostrarAviso("erro", "Data de nascimento inválida!");
+      mostrarAviso("erro", "Data de nascimento inválida!", true);
       setNascimento("");
       setNascimentoValido(false);
     } else {
@@ -106,7 +106,7 @@ function AdicionaFuncionarioModal({
     const dataAtual = new Date();
     const dataFormatada = dataAtual.toLocaleDateString("en-CA");
     if (dataAdmissao > dataFormatada) {
-      mostrarAviso("erro", "Data de admissão inválida!");
+      mostrarAviso("erro", "Data de admissão inválida!", true);
       setAdmissao("");
       setAdmissaoValido(false);
     } else {
@@ -128,7 +128,7 @@ function AdicionaFuncionarioModal({
       nascimento == "" ||
       admissao == ""
     ) {
-      mostrarAviso("erro", "Todos os dados são necessários!");
+      mostrarAviso("erro", "Todos os dados são necessários!", true);
       return;
     }
     if (cpfValido === false) {
@@ -136,11 +136,11 @@ function AdicionaFuncionarioModal({
       return;
     }
     if (nascimentoValido === false) {
-      mostrarAviso("erro", "Data de nascimento inválida!");
+      mostrarAviso("erro", "Data de nascimento inválida!", true);
       return;
     }
     if (admissaoValido === false) {
-      mostrarAviso("erro", "Data de admissão inválida!");
+      mostrarAviso("erro", "Data de admissão inválida!", true);
       return;
     }
 
@@ -162,7 +162,7 @@ function AdicionaFuncionarioModal({
       await postFuncionario(payload, fotoFile);
       setCarregando(false);
 
-      mostrarAviso("sucesso", "Funcionário inserido com sucesso!");
+      mostrarAviso("sucesso", "Funcionário inserido com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -170,7 +170,7 @@ function AdicionaFuncionarioModal({
       }, 500);
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
       return;
     }

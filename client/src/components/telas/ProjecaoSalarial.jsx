@@ -36,31 +36,31 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      mostrarAviso("sucesso", "Função excluída com sucesso!");
+      mostrarAviso("sucesso", "Cargo excluído com sucesso!", true)
+      setModificado(true);
       setTimeout(() => {
         limparAviso;
         buscaCargos();
       }, 500);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
-        setConfirmacao(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        mostrarAviso("erro","Sessão inválida! Realize o Login novamente!");
+        console.error(err.message, err);
         setTimeout(() => {
-          limparAviso();
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else if (err.status == 409) {
         setCarregando(false);
         setConfirmacao(false);
-        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados");
+        console.error(err.message, err);
+        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados", true)
       } else {
         setCarregando(false);
         setConfirmacao(false);
-        console.error("Erro ao deletar cargo:", err);
-        const texto = `Erro ao deletar cargo: ${err.message}`
-        mostrarAviso("erro", texto);
+        mostrarAviso("erro", err.message, true)
+        console.error( err);
       }
     }
   }

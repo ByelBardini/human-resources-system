@@ -6,9 +6,9 @@ import { useState, useEffect } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function HomeMenu({ setCarregando, navigate }) {
-  const { mostrarAviso, limparAviso } = useAviso();
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
+  const { mostrarAviso, limparAviso } = useAviso();
 
   async function buscarImagemEmpresa() {
     setCarregando(true);
@@ -20,16 +20,16 @@ function HomeMenu({ setCarregando, navigate }) {
       setImagem(imagem);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        console.log(err.message);
         setTimeout(() => {
-          limparAviso();
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso("erro", "Erro ao buscar imagem da empresa.");
-        console.error("Erro ao buscar imagem da empresa:", err);
+        mostrarAviso("erro", err.message, true);
+        console.error(err.message, err);
       }
     } finally {
       setCarregando(false);
@@ -41,8 +41,10 @@ function HomeMenu({ setCarregando, navigate }) {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Bem-vindo ao Menu Principal</h1>
+    <div className="w-full">
+      <h1 className="text-2xl font-bold mb-4 text-center text-white">
+        Bem-vindo ao Menu Principal
+      </h1>
       <div className="relative flex justify-center items-center">
         <div
           className={`absolute top-18 w-75 h-75 rounded-full blur-3xl animate-pulse`}

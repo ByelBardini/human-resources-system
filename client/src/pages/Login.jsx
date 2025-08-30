@@ -40,18 +40,19 @@ function Login() {
       }, 500);
     } catch (err) {
       if (err.message.includes("obrigatórios")) {
-        mostrarAviso("erro", "Você precisa preencher todos os campos");
+        mostrarAviso("erro", "Você precisa preencher todos os campos", true);
       } else if (err.message.includes("Login incorreto")) {
-        mostrarAviso("erro", "Usuário não encontrado");
+        mostrarAviso("erro", "Usuário não encontrado", true);
       } else if (err.message.includes("Usuário inativo")) {
         mostrarAviso(
           "erro",
-          "Usuário inativo, fale com um responsável do setor"
+          "Usuário inativo, fale com um responsável do setor",
+          true
         );
       } else if (err.message.includes("Senha incorreta")) {
-        mostrarAviso("erro", "Senha incorreta, verifique novamente");
+        mostrarAviso("erro", "Senha incorreta, verifique novamente", true);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", "Usuário ou senha incorretos", true);
       }
     } finally {
       setCarregando(false);

@@ -18,7 +18,8 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
     try {
       await trocaSenha(senha);
 
-      mostrarAviso("sucesso", "Sua senha foi alterada com sucesso!");
+      mostrarAviso("Sucesso", "Sua senha foi alterada com sucesso!", true);
+      localStorage.setItem("usuario_troca_senha", 0);
 
       setTrocaSenha(false);
     } catch (err) {
@@ -27,16 +28,12 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          limparAviso();
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso(
-          "erro",
-          `Erro ao trocar sua senha: ${
-            err?.response?.data?.error || err?.message || "tente novamente"
-          }`
-        );
+        mostrarAviso("erro", err.message, true);
+        limparAviso;
         console.error(err);
       }
     } finally {
