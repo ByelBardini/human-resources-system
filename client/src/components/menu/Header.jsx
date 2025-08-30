@@ -7,13 +7,12 @@ function Header({ opcaoSelecionada, setOpcaoSelecionada, onSair }) {
 
   return (
     <header className="w-full fixed top-0 left-0 z-50 border-b border-white/10 shadow-md overflow-visible">
-      {/* Faixa animada expandindo */}
       <div
         className="absolute top-0 left-0 w-full h-12 pointer-events-none z-0"
         style={{
           background: `linear-gradient(to right, transparent, ${empresaCor}aa, transparent)`,
           transformOrigin: "center",
-          animation: "expandX 4s ease-in-out infinite",
+          animation: "expandX 15s ease-in-out infinite",
           "@keyframes expandX": {
             "7%": { transform: "scaleX(0)" },
             "50%": { transform: "scaleX(1)" },
@@ -22,20 +21,16 @@ function Header({ opcaoSelecionada, setOpcaoSelecionada, onSair }) {
         }}
       />
 
-      {/* Conteúdo do header */}
       <div className="relative w-full px-6 py-3 flex items-center justify-between backdrop-blur-xl z-10">
-        {/* Botões lado esquerdo */}
         <MenuOpcoes
           opcaoSelecionada={opcaoSelecionada}
           setOpcaoSelecionada={setOpcaoSelecionada}
         />
 
-        {/* Nome da empresa centralizado */}
         <div className="absolute left-1/2 transform -translate-x-1/2 text-lg font-semibold text-white drop-shadow-md">
           {empresaNome}
         </div>
 
-        {/* Botão sair lado direito */}
         <button
           onClick={onSair}
           className="p-2 rounded-full bg-white/10 border border-white/10 text-white hover:bg-white/20 transition-colors shadow-md"

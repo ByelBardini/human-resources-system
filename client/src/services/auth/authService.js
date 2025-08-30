@@ -15,7 +15,7 @@ export async function logar(usuario_login, usuario_senha) {
   } catch (err) {
     const { status } = handleApiError(err, "Erro ao fazer login");
 
-    if (status === 400) throw new Error("Preencha login e senha.");
+    if (status === 400) throw new Error("Login e senha obrigatórios.");
     if (status === 401) throw new Error("Usuário ou senha incorretos.");
     if (status === 403) throw new Error("Usuário inativo ou sem permissão para acessar o sistema.");
     if (status === 409) throw new Error("Conflito de dados.");

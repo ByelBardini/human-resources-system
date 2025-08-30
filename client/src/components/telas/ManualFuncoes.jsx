@@ -28,7 +28,7 @@ function ManualFuncoes({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.error(err.message, err);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!", true);
         setTimeout(() => {
           limparAviso;
           navigate("/", { replace: true });

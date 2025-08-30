@@ -4,12 +4,14 @@ export function useAviso() {
   const [aviso, setAviso] = useState(false);
   const [corAviso, setCorAviso] = useState("vermelho");
   const [textoAviso, setTextoAviso] = useState("");
+  const [showButton, setShowButton] = useState(false); // 👈 novo estado
 
-  const mostrarAviso = useCallback((tipo, mensagem) => {
+  const mostrarAviso = useCallback((tipo, mensagem, comBotao = false) => {
     const cores = { sucesso: "verde", erro: "vermelho", aviso: "amarelo" };
 
     setCorAviso(cores[tipo] || "vermelho");
     setTextoAviso(mensagem);
+    setShowButton(comBotao);
     setAviso(true);
   }, []);
 
@@ -17,5 +19,5 @@ export function useAviso() {
     setAviso(false);
   }, []);
 
-  return { aviso, corAviso, textoAviso, mostrarAviso, limparAviso };
+  return { aviso, corAviso, textoAviso, showButton, mostrarAviso, limparAviso };
 }

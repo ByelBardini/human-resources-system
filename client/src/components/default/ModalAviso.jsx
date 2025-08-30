@@ -2,7 +2,12 @@
 import { motion } from "framer-motion";
 import { CircleAlert, CircleX, CircleCheckBig } from "lucide-react";
 
-function ModalAviso({ texto = "Aviso", cor = "vermelho", onClick }) {
+function ModalAviso({
+  texto = "Aviso",
+  cor = "vermelho",
+  onClick,
+  showButton = false,
+}) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -24,18 +29,18 @@ function ModalAviso({ texto = "Aviso", cor = "vermelho", onClick }) {
       >
         <div
           className={`pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-b ${
-            cor == "amarelo"
+            cor === "amarelo"
               ? "from-amber-300/30"
-              : cor == "vermelho"
+              : cor === "vermelho"
               ? "from-red-300/30"
               : "from-emerald-300/30"
           } via-transparent to-transparent opacity-60`}
         />
 
         <div className="flex items-center justify-center mb-4">
-          {cor == "amarelo" ? (
+          {cor === "amarelo" ? (
             <CircleAlert className="text-white" size={36} />
-          ) : cor == "vermelho" ? (
+          ) : cor === "vermelho" ? (
             <CircleX className="text-white" size={36} />
           ) : (
             <CircleCheckBig className="text-white" size={36} />
@@ -46,21 +51,23 @@ function ModalAviso({ texto = "Aviso", cor = "vermelho", onClick }) {
           {texto}
         </h2>
 
-        <div className="flex items-center justify-center gap-3">
-          <button
-            className={`cursor-pointer rounded-xl ${
-              cor == "amarelo"
-                ? "bg-amber-300 shadow-amber-900/30 hover:bg-amber-500 active:bg-amber-700 transition"
-                : cor == "vermelho"
-                ? "bg-red-600 shadow-red-900/30 hover:bg-red-500 active:bg-red-700 transition"
-                : "bg-emerald-300 shadow-emerald-900/30 hover:bg-emerald-500 active:bg-emerald-700 transition"
-            } text-white font-medium py-2.5 px-8 shadow-lg`}
-            onClick={onClick}
-            autoFocus
-          >
-            OK
-          </button>
-        </div>
+        {showButton && ( // 👈 só mostra quando você mandar
+          <div className="flex items-center justify-center gap-3">
+            <button
+              className={`cursor-pointer rounded-xl ${
+                cor === "amarelo"
+                  ? "bg-amber-300 shadow-amber-900/30 hover:bg-amber-500 active:bg-amber-700 transition"
+                  : cor === "vermelho"
+                  ? "bg-red-600 shadow-red-900/30 hover:bg-red-500 active:bg-red-700 transition"
+                  : "bg-emerald-300 shadow-emerald-900/30 hover:bg-emerald-500 active:bg-emerald-700 transition"
+              } text-white font-medium py-2.5 px-8 shadow-lg`}
+              onClick={onClick}
+              autoFocus
+            >
+              OK
+            </button>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

@@ -1,17 +1,15 @@
-import { Undo2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAviso } from "../context/AvisoContext.jsx";
 import Background from "../components/default/Background.jsx";
 import Loading from "../components/default/Loading.jsx";
 import ModalAviso from "../components/default/ModalAviso.jsx";
-import MenuOpcoes from "../components/menu/MenuOpcoes.jsx";
+import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
+import Header from "../components/menu/Header.jsx";
 import MenuTela from "../components/menu/MenuTela.jsx";
 import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
 import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
-import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
 import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
-import Header from "../components/menu/Header.jsx";
 
 function Empresa() {
   const { aviso, corAviso, textoAviso, limparAviso } = useAviso();
@@ -19,19 +17,14 @@ function Empresa() {
 
   const [adicionandoCargo, setAdicionandoCargo] = useState(false);
   const [aumentoGeral, setAumentoGeral] = useState(false);
-
   const [adicionandoFunc, setAdicionandoFunc] = useState(false);
   const [cardFuncionario, setCardFuncionario] = useState(false);
   const [emitirNotificacao, setEmitirNotificacao] = useState(false);
   const [modificaFuncionario, setModificaFuncionario] = useState(false);
-
   const [modificado, setModificado] = useState(false);
-
   const [modificaDesc, setModificaDesc] = useState(false);
   const [desc, setDesc] = useState();
-
   const [carregando, setCarregando] = useState(false);
-
   const [confirmacao, setConfirmacao] = useState(false);
   const [textoConfirmacao, setTextoConfirmacao] = useState("");
   const [onSimConfirmacao, setOnSimConfirmacao] = useState("");
@@ -52,6 +45,7 @@ function Empresa() {
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
 
+      {/* Modal editar descrição */}
       {modificaDesc && (
         <ModificaDescricaoModal
           setModificaDesc={setModificaDesc}
@@ -64,6 +58,7 @@ function Empresa() {
         />
       )}
 
+      {/* Modais de cargos */}
       <ModaisCargos
         adicionando={adicionandoCargo}
         aumentoGeral={aumentoGeral}
@@ -76,6 +71,7 @@ function Empresa() {
         setModificado={setModificado}
       />
 
+      {/* Modais de funcionários */}
       <ModaisFuncionarios
         setCard={setCardFuncionario}
         card={cardFuncionario}
@@ -93,6 +89,7 @@ function Empresa() {
         modificado={modificado}
       />
 
+      {/* Confirmação */}
       {confirmacao && (
         <ModalConfirmacao
           texto={textoConfirmacao}
@@ -101,28 +98,34 @@ function Empresa() {
         />
       )}
 
+      {/* Aviso */}
       {aviso && (
         <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
       )}
 
+      {/* Carregando */}
       {carregando && <Loading />}
 
-      {/* <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
-        title="Sair"
-        onClick={voltar}
-      >
-        <Undo2 size={20} />
-      </button> */}
-
+      {/* Header */}
       <Header
         opcaoSelecionada={opcaoSelecionada}
         setOpcaoSelecionada={setOpcaoSelecionada}
         onSair={voltar}
       />
 
-      <main className="flex-1 w-full max-w-6xl mx-auto pt-24">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 h-full overflow-y-auto">
+      {/* Conteúdo principal */}
+      <main
+        className={`flex-1 w-full pt-24 flex justify-center transition-all ${
+          opcaoSelecionada === "home" ? "items-start" : "items-start"
+        }`}
+      >
+        <div
+          className={`w-full transition-all ${
+            opcaoSelecionada === "home"
+              ? "w-full h-[500px] overflow-visible"
+              : "max-w-[92%] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl overflow-y-auto"
+          } px-6 py-6`}
+        >
           <MenuTela
             setCardFuncionario={setCardFuncionario}
             opcaoSelecionada={opcaoSelecionada}
@@ -141,33 +144,6 @@ function Empresa() {
           />
         </div>
       </main>
-
-      {/* <div className="overflow-x-hidden overflow-y-hidden text-white flex flex-col gap-5 items-center justify-center">
-        <div className="min-w-300 min-h-20 w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <MenuOpcoes
-            setOpcaoSelecionada={setOpcaoSelecionada}
-            opcaoSelecionada={opcaoSelecionada}
-          />
-        </div>
-        <div className="overflow-y-auto min-w-300 min-h-140 max-h-140 w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <MenuTela
-            setCardFuncionario={setCardFuncionario}
-            opcaoSelecionada={opcaoSelecionada}
-            setCarregando={setCarregando}
-            setAdicionando={setAdicionandoCargo}
-            setConfirmacao={setConfirmacao}
-            setTextoConfirmacao={setTextoConfirmacao}
-            setOnSimConfirmacao={setOnSimConfirmacao}
-            setAumentoGeral={setAumentoGeral}
-            setAdicionandoFunc={setAdicionandoFunc}
-            setDesc={setDesc}
-            setModificaDesc={setModificaDesc}
-            setModificado={setModificado}
-            modificado={modificado}
-            navigate={navigate}
-          />
-        </div>
-      </div> */}
     </div>
   );
 }

@@ -32,12 +32,10 @@ function Home() {
     setCarregando(true);
     try {
       const empresasData = await getEmpresas();
-      console.log(empresasData);
       setEmpresas(empresasData);
       setCarregando(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
@@ -46,7 +44,7 @@ function Home() {
         }, 1000);
       } else {
         setCarregando(false);
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", err.message, true);
       }
     }
   }

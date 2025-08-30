@@ -50,7 +50,7 @@ function ModalModificaFuncionario({
       setSetores(response.setor);
       setCargos(response.cargo);
     } catch (err) {
-      mostrarAviso("erro", err.message)
+      mostrarAviso("erro", err.message);
       console.error(err.message, err);
     }
   }
@@ -71,17 +71,22 @@ function ModalModificaFuncionario({
       await putFuncionario(id, payload, fotoFile);
       setCarregando(false);
 
-      mostrarAviso("sucesso", "Funcionário modificado com sucesso!");
+      mostrarAviso("sucesso", "Funcionário modificado com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
         limparAviso;
         setModifica(false);
       }, 500);
     } catch (err) {
-      setCarregando(false);
-      mostrarAviso("erro", err.message);
-      console.error(err.message, err);
-      return;
+      if (err.status == 400) {
+        console.error(err);
+        setCarregando(false);
+        mostrarAviso("erro", "Prencher todos os dados", true);
+      } else {
+        setCarregando(false);
+        console.error(err.message, err, true);
+        return;
+      }
     }
   }
 

@@ -36,7 +36,7 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      mostrarAviso("sucesso", "Cargo excluído com sucesso!")
+      mostrarAviso("sucesso", "Cargo excluído com sucesso!", true)
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -55,11 +55,11 @@ export default function ProjecaoSalarial({
         setCarregando(false);
         setConfirmacao(false);
         console.error(err.message, err);
-        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados")
+        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados", true)
       } else {
         setCarregando(false);
         setConfirmacao(false);
-        mostrarAviso("erro", err.message)
+        mostrarAviso("erro", err.message, true)
         console.error( err);
       }
     }

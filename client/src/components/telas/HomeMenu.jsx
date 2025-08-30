@@ -21,14 +21,14 @@ function HomeMenu({ setCarregando, navigate }) {
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", "aaaa", true);
         console.log(err.message);
         setTimeout(() => {
           limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", err.message, true);
         console.error(err.message, err);
       }
     } finally {
@@ -41,8 +41,8 @@ function HomeMenu({ setCarregando, navigate }) {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4 text-white">Bem-vindo ao Menu Principal</h1>
+    <div className="w-full">
+      <h1 className="text-2xl font-bold mb-4 text-center text-white">Bem-vindo ao Menu Principal</h1>
       <div className="relative flex justify-center items-center">
         <div
           className={`absolute top-18 w-75 h-75 rounded-full blur-3xl animate-pulse`}

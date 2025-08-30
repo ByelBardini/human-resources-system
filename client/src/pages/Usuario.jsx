@@ -23,7 +23,7 @@ function Usuario() {
 
   const [carregando, setCarregando] = useState(false);
 
-  const { aviso, corAviso, textoAviso, mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso, limparAviso } = useAviso();
 
   async function buscaUsuarios() {
     try {
@@ -32,19 +32,18 @@ function Usuario() {
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
+        console.erro(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!"
+        );
         setTimeout(() => {
-          setAviso(false);
+          limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setAviso(true);
-        setCorAviso("vermelho");
-        setTextoAviso("Erro ao buscar usuários:", err);
+        mostrarAviso("erro", "Erro ao buscar usuários:", true);
         console.error(err);
       }
     }
@@ -59,9 +58,9 @@ function Usuario() {
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
 
-      {aviso && (
+      {/* {aviso && (
         <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
-      )}
+      )} */}
       {cria && (
         <ModalCriaUsuario
           setCria={setCria}

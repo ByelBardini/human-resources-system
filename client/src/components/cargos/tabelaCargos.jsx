@@ -52,7 +52,7 @@ function TabelaCargos({
             >
               {/* Cargo */}
               <td className="px-4 py-2 align-top min-w-[260px] flex">
-                <div className="flex gap-2 items-center ">
+                <div className="flex gap-2 items-center">
                   {selecionado.linha == cargo.cargo_id && (
                     <div className="w-[88px] flex flex-col gap-2">
                       <IconeBotao
@@ -71,7 +71,7 @@ function TabelaCargos({
               {/* Níveis dinamicamente */}
               {cargo.niveis.map((nivel, index) => (
                 <CampoSalario
-                  key={`${cargo.cargo_id}-${index}`} // 🔑 garante unicidade
+                  key={`${cargo.cargo_id}-${index}`}
                   cargoNiveis={nivel}
                   cargoId={cargo.cargo_id}
                   campoSelecionado={selecionado.campo}

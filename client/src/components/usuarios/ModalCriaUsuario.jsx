@@ -18,7 +18,7 @@ function ModalCriaUsuario({
 
   async function criaUsuario() {
     if (!nome || !login || !role) {
-      mostrarAviso("erro", "Todos os dados são obrigatórios");
+      mostrarAviso("erro", "Todos os dados são obrigatórios", true);
       return;
     }
 
@@ -28,7 +28,8 @@ function ModalCriaUsuario({
 
       mostrarAviso(
         "sucesso",
-        "Usuário cadastrado com sucesso!\nSenha padrão: 12345"
+        "Usuário cadastrado com sucesso!\nSenha padrão: 12345",
+        true
       );
 
       setCadastrado(true);
@@ -36,17 +37,20 @@ function ModalCriaUsuario({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        console.log(err.message, err);
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!"
+        );
+        console.erro(err.message, err);
         setTimeout(() => {
           limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", err.message, true);
       }
       limparAviso;
-      console.error(err.message, err);
+      console.error(err.message, err, true);
     } finally {
       setCarregando(false);
     }

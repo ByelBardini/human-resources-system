@@ -24,10 +24,11 @@ function ModalUsuario({
       await inativaUsuario(usuarioSelecionado.usuario_id);
 
       mostrarAviso(
-        "sucesso",
+        usuarioSelecionado.usuario_ativo == 1 ? "aviso" : "sucesso",
         usuarioSelecionado.usuario_ativo == 1
           ? "Usuário inativado com sucesso!"
-          : "Usuário ativo com sucesso!"
+          : "Usuário ativo com sucesso!",
+        true
       );
       modificou(true);
       setVisualiza(false);
@@ -35,13 +36,16 @@ function ModalUsuario({
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!"
+        );
         setTimeout(() => {
           limparAviso;
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", err.message, true);
         console.error(err.mesage, err);
       }
     } finally {
@@ -54,20 +58,28 @@ function ModalUsuario({
     try {
       await resetaSenha(usuarioSelecionado.usuario_id);
 
-      mostrarAviso("erro", "Senha resetada com sucesso! \nSenha Padrão: 12345");
+      mostrarAviso(
+        "sucesso",
+        "Senha resetada com sucesso! \nSenha Padrão: 12345",
+        true
+      );
       modificou(true);
       setVisualiza(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!",
+          true
+        );
         console.log(err.message, err);
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", err.message, true);
         limparAviso;
         console.error(err);
       }

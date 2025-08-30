@@ -45,7 +45,7 @@ function ModalCriaNotificacao({
     setConfirmacao(false);
     const id = localStorage.getItem("funcionario_id");
     if (tipo == "" || data == "") {
-      mostrarAviso("erro", "Data e tipo são obrigatórios!");
+      mostrarAviso("erro", "Data e tipo são obrigatórios!", true);
       return;
     }
     const payload = {
@@ -61,7 +61,7 @@ function ModalCriaNotificacao({
       await postNotificacao(id, payload, arquivo);
       setCarregando(false);
 
-      mostrarAviso("sucesso", "Notificação criada com sucesso!");
+      mostrarAviso("sucesso", "Notificação criada com sucesso!", true);
       setTimeout(() => {
         limparAviso;
         setAdicionado(true);
@@ -69,7 +69,7 @@ function ModalCriaNotificacao({
       }, 500);
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err)
     }
   }

@@ -40,11 +40,11 @@ function Login() {
       }, 500);
     } catch (err) {
       if (err.message.includes("obrigatórios")) {
-        mostrarAviso("erro", "Você precisa preencher todos os campos");
+        mostrarAviso("erro", "Você precisa preencher todos os campos", true);
       } else if (err.message.includes("incorretos")) {
-        mostrarAviso("erro", "Usuário ou senha inválidos");
+        mostrarAviso("erro", "Usuário ou senha incorretos", true);
       } else {
-        mostrarAviso("erro", err.message);
+        mostrarAviso("erro", "Usuário ou senha incorretos", true);
       }
     } finally {
       setCarregando(false);

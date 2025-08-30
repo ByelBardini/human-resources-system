@@ -18,7 +18,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
 
   async function criarCargo() {
     if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
-      mostrarAviso("aviso", "Por favor, preencha todos os campos.");
+      mostrarAviso("aviso", "Por favor, preencha todos os campos.", true);
       return;
     }
     setCarregando(true);
@@ -27,7 +27,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
       const id_empresa = localStorage.getItem("empresa_id");
       await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
-      mostrarAviso("sucesso", "Cargo criado com sucesso!");
+      mostrarAviso("sucesso", "Cargo criado com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -36,7 +36,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
       return;
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
       return;
     }

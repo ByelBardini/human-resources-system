@@ -15,6 +15,7 @@ export function AvisoProvider({ children }) {
         <ModalAviso
           texto={aviso.textoAviso}
           cor={aviso.corAviso}
+          showButton={aviso.showButton}
           onClick={aviso.limparAviso}
         />
       )}

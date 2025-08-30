@@ -166,7 +166,11 @@ function TabelaFuncionarios({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!",
+          true
+        );
         setTimeout(() => {
           limparAviso;
           navigate("/", { replace: true });
@@ -183,10 +187,10 @@ function TabelaFuncionarios({
   }, [modificado, inativos]);
 
   return (
-    <table className="min-w-[1100px] w-full text-sm text-white/90">
+    <table className="table-fixed w-full text-sm text-white/90">
       <thead className="bg-white/10 text-white/80">
         <tr className="divide-x divide-white/10">
-          <th className="px-4 py-3 text-left font-medium">
+          <th className="px-4 py-3 text-left font-medium w-[250px]">
             <div className="flex items-center justify-between">
               Nome
               <button className="cursor-pointer" onClick={ordenarPorNome}>
@@ -198,12 +202,12 @@ function TabelaFuncionarios({
               </button>
             </div>
           </th>
-          <th className="px-4 py-3 font-medium">Sexo</th>
-          <th className="px-4 py-3 font-medium">Setor</th>
-          <th className="px-4 py-3 font-medium">Função</th>
-          <th className="px-4 py-3 font-medium">Nível</th>
+          <th className="px-4 py-3 font-medium w-[65px]">Sexo</th>
+          <th className="px-4 py-3 font-medium w-[130px]">Setor</th>
+          <th className="px-4 py-3 font-medium w-[150px]">Função</th>
+          <th className="px-4 py-3 font-medium w-[90px]">Nível</th>
           {inativos ? (
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium w-[130px]">
               <div className="flex justify-between">
                 Salário
                 <button className="cursor-pointer" onClick={ordenarPorSalario}>
@@ -216,7 +220,7 @@ function TabelaFuncionarios({
               </div>
             </th>
           ) : (
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium w-[130px]">
               <div className="flex justify-between">
                 Gasto
                 <button className="cursor-pointer" onClick={ordenarPorSalario}>
@@ -230,7 +234,7 @@ function TabelaFuncionarios({
             </th>
           )}
           {inativos && (
-            <th className="px-4 py-3 font-medium">
+            <th className="px-4 py-3 font-medium w-[95px]">
               <div className="flex justify-between">
                 Idade
                 <button
@@ -247,13 +251,13 @@ function TabelaFuncionarios({
             </th>
           )}
           {inativos ? (
-            <th className="px-4 py-3 font-medium">Nascimento</th>
+            <th className="px-4 py-3 font-medium w-[130px]">Nascimento</th>
           ) : (
-            <th className="px-4 py-3 font-medium">Desligamento</th>
+            <th className="px-4 py-3 font-medium w-[130px]">Desligamento</th>
           )}
-          <th className="px-4 py-3 font-medium">
+          <th className="px-4 py-3 font-medium w-[140px]">
             <div className="flex justify-between">
-              Tempo de empresa
+              Admitido hà:
               <button className="cursor-pointer" onClick={ordenarPorAdmissao}>
                 {admissaoSort ? (
                   <ArrowUp10 size={18} strokeWidth={2.2} />
@@ -263,7 +267,7 @@ function TabelaFuncionarios({
               </button>
             </div>
           </th>
-          <th className="px-4 py-3 font-medium">Admissão</th>
+          <th className="px-4 py-3 font-medium w-[130px]">Admissão</th>
         </tr>
       </thead>
       <tbody className="min-w-[1100px] w-full divide-y divide-white/10">
@@ -278,10 +282,10 @@ function TabelaFuncionarios({
                 : "hover:bg-white/3 transition-colors"
             }
           >
-            <td className="px-4 py-2 gap-2 w-[250px]">
+            <td className="px-4 py-2 w-[150px] whitespace-normal break-words">
               {funcionario.funcionario_nome || ""}
             </td>
-            <td className="px-4 py-2 w-[65px] justify-items-center">
+            <td className="px-4 py-2 w-[185px] justify-items-center">
               {funcionario.funcionario_sexo == "masculino" ? (
                 <Mars className="text-blue-600" />
               ) : (

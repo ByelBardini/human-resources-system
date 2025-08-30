@@ -43,7 +43,7 @@ function ModificaDescricaoModal({
       const setores = await getSetores(id);
       setSetores(setores);
     } catch (err) {
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err);
     }
   }
@@ -69,7 +69,7 @@ function ModificaDescricaoModal({
         responsabilidades
       );
       setCarregando(false);
-      mostrarAviso("sucesso", "Descrição modificada com sucesso!")
+      mostrarAviso("sucesso", "Descrição modificada com sucesso!", true)
       setModificado(true);
       setTimeout(() => {
         limparAviso;
@@ -78,7 +78,7 @@ function ModificaDescricaoModal({
       return;
     } catch (err) {
       setCarregando(false);
-      mostrarAviso("erro", err.message);
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
       return;
     }
