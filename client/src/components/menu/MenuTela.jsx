@@ -30,7 +30,7 @@ function MenuTela({
     const timeout = setTimeout(() => {
       setAbaAtual(opcaoSelecionada);
       setFadeIn(true);
-    }, 1000);
+    }, 400);
 
     return () => clearTimeout(timeout);
   }, [opcaoSelecionada]);

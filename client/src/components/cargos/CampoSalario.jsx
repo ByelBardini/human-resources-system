@@ -5,7 +5,7 @@ function CampoSalario({
   selecionaCampo,
 }) {
   return (
-    <td className="px-2 py-2">
+    <td className="px-2 py-2 min-w-[110px]">
       <input
         value={`R$ ${cargoNiveis?.nivel_salario.toLocaleString('pt-br', {minimumFractionDigits: 2}) || ""}`}
         readOnly

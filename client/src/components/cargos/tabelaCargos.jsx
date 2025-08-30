@@ -51,7 +51,7 @@ function TabelaCargos({
               onClick={() => selecionaCampo(cargo.cargo_id, "")}
             >
               {/* Cargo */}
-              <td className="px-4 py-2 align-top min-w-[260px] flex">
+              <td className="px-4 py-2 align-top min-w-[220px] flex">
                 <div className="flex gap-2 items-center">
                   {selecionado.linha == cargo.cargo_id && (
                     <div className="w-[88px] flex flex-col gap-2">

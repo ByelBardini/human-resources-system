@@ -102,7 +102,7 @@ export default function ProjecaoSalarial({
         />
       </div>
 
-      <div className="absolute top-12 left-58 z-50">
+      <div className="absolute top-6 left-46 z-50">
         <FiltroCargos
           cargos={cargos}
           setCargosFiltro={setCargosFiltro}

@@ -123,7 +123,7 @@ function Empresa() {
           className={`w-full transition-all ${
             opcaoSelecionada === "home"
               ? "w-full h-[500px] overflow-visible"
-              : "max-w-[92%] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl overflow-y-auto"
+              : "max-w-[98%] xl:max-w-[98%] 2xl:max-w-[99%] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl overflow-y-auto"
           } px-6 py-6`}
         >
           <MenuTela
