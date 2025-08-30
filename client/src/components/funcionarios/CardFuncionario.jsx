@@ -3,35 +3,22 @@ import { useEffect, useState } from "react";
 import { X, ImageOff, Pen } from "lucide-react";
 import { getFuncionarioFull } from "../../services/api/funcionarioService.js";
 import { getNotificacoes } from "../../services/api/notificacoesServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import Notificacoes from "../notificacoes/Notificacoes.jsx";
-
-const FUNCIONARIO_VAZIO = {
-  funcionario_nome: "",
-  funcionario_cpf: "",
-  funcionario_celular: "",
-  funcionario_sexo: "",
-  funcionario_data_nascimento: "",
-  funcionario_data_admissao: "",
-  setor: { setor_nome: "" },
-  cargo: { cargo_nome: "" },
-  nivel: { nivel_nome: "", nivel_salario: 0 },
-};
 
 export default function CardFuncionario({
   adicionado,
   setAdicionado,
   setCard,
   setNotificacao,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setModifica,
   modificado,
   setModificado,
   setInativando,
 }) {
+  const {mostrarAviso}=useAviso();
   const [openSec, setOpenSec] = useState(null);
-  const [funcionario, setFuncionario] = useState(FUNCIONARIO_VAZIO);
+  const [funcionario, setFuncionario] = useState([]);
   const [notificacoes, setNotificacoes] = useState([]);
 
   const sections = [
@@ -56,13 +43,11 @@ export default function CardFuncionario({
     try {
       const funcionario = await getFuncionarioFull(id);
       const notificacoes = await getNotificacoes(id);
-      console.log("Funcionário:", funcionario);
-      console.log("Notificações:", notificacoes);
-      console.log("ativo", funcionario.funcionario_ativo);
       setFuncionario(funcionario);
       setNotificacoes(notificacoes);
     } catch (err) {
-      console.error("erro ao buscar funcionário:", err);
+      mostrarAviso("erro", err.message)
+      console.error(err.message, err);
     }
   }
 
@@ -162,7 +147,7 @@ export default function CardFuncionario({
                     {funcionario.setor.setor_nome || ""}
                   </div>
 
-                  <div className="mt-3 text-sm text-white/60">CARGO</div>
+                  <div className="mt-3 text-sm text-white/60">FUNÇÃO</div>
                   <div className="font-medium">
                     {funcionario.cargo.cargo_nome || ""} -{" "}
                     {funcionario.nivel.nivel_nome || ""}
@@ -267,9 +252,6 @@ export default function CardFuncionario({
               notificacoes={notificacoes}
               formatarData={formatarData}
               setNotificacao={setNotificacao}
-              setAviso={setAviso}
-              setCorAviso={setCorAviso}
-              setTextoAviso={setTextoAviso}
               ativo={funcionario.funcionario_ativo}
             />
           )}

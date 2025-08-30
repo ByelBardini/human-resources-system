@@ -1,61 +1,56 @@
 import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { postUsuario } from "../../services/api/usuariosServices";
+import { useAviso } from "../../context/AvisoContext";
 
 function ModalCriaUsuario({
   setCria,
   setCarregando,
-  setTextoAviso,
-  setCorAviso,
-  setAviso,
   setCadastrado,
   cadastrado,
   navigate,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
+
   const [nome, setNome] = useState("");
   const [login, setLogin] = useState("");
   const [role, setRole] = useState("");
 
   async function criaUsuario() {
     if (!nome || !login || !role) {
-      setCorAviso("vermelho");
-      setTextoAviso("Todos os dados são obrigatórios");
-      setAviso(true);
+      mostrarAviso("erro", "Todos os dados são obrigatórios");
       return;
     }
 
     setCarregando(true);
     try {
-      const resposta = await postUsuario(nome, login, role);
+      await postUsuario(nome, login, role);
 
-      setCorAviso("verde");
-      setTextoAviso("Usuário cadastrado com sucesso!\nSenha padrão: 12345");
-      setAviso(true);
+      mostrarAviso(
+        "sucesso",
+        "Usuário cadastrado com sucesso!\nSenha padrão: 12345"
+      );
 
       setCadastrado(true);
       setCria(false);
-
-      console.log(resposta);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
+        console.error(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
+        console.error(err);
+        mostrarAviso(
+          "erro",
           `Erro ao cadastrar usuário: ${
             err?.response?.data?.error || err?.message || "tente novamente"
           }`
         );
       }
-      setAviso(true);
       console.error(err);
     } finally {
       setCarregando(false);

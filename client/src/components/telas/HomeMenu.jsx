@@ -3,14 +3,10 @@
 import { getEmpresaImagem } from "../../services/api/empresasService.js";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
-function HomeMenu({
-  setCarregando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
-  navigate,
-}) {
+function HomeMenu({ setCarregando, navigate }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
 
@@ -26,17 +22,13 @@ function HomeMenu({
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setAviso(true);
-        setCorAviso("vermelho");
-        setTextoAviso("Erro ao buscar imagem da empresa.");
+        mostrarAviso("erro", "Erro ao buscar imagem da empresa.");
         console.error("Erro ao buscar imagem da empresa:", err);
       }
     } finally {

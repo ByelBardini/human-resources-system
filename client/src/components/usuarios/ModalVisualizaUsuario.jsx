@@ -3,57 +3,50 @@ import {
   inativaUsuario,
   resetaSenha,
 } from "../../services/api/usuariosServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModalUsuario({
   usuarioSelecionado,
   setVisualiza,
   setCarregando,
-  setTextoAviso,
-  setCorAviso,
-  setAviso,
   modificou,
   navigate,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   async function inativarUsuario() {
     const id = localStorage.getItem("usuario_id");
     if (id == usuarioSelecionado.usuario_id) {
-      setTextoAviso("Você não pode inativar seu própio usuário!");
-      setCorAviso("vermelho");
-      setAviso(true);
+      mostrarAviso("erro", "Você não pode inativar seu própio usuário!");
       return;
     }
     setCarregando(true);
     try {
       await inativaUsuario(usuarioSelecionado.usuario_id);
 
-      setTextoAviso(
+      mostrarAviso(
+        "sucesso",
         usuarioSelecionado.usuario_ativo == 1
           ? "Usuário inativado com sucesso!"
           : "Usuário ativo com sucesso!"
       );
-      setCorAviso("verde");
       modificou(true);
-      setAviso(true);
       setVisualiza(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
+        console.error(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
+        mostrarAviso(
+          "erro",
           `Erro ao inativar usuário: ${
             err?.response?.data?.error || err?.message || "tente novamente"
           }`
         );
-        setAviso(true);
         console.error(err);
       }
     } finally {
@@ -66,30 +59,24 @@ function ModalUsuario({
     try {
       await resetaSenha(usuarioSelecionado.usuario_id);
 
-      setTextoAviso("Senha resetada com sucesso! \nSenha Padrão: 12345");
-      setCorAviso("verde");
+      mostrarAviso("erro", "Senha resetada com sucesso! \nSenha Padrão: 12345");
       modificou(true);
-      setAviso(true);
       setVisualiza(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.log(err);
+        console.error(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(
+        mostrarAviso(
           `Erro ao resetar senha: ${
             err?.response?.data?.error || err?.message || "tente novamente"
           }`
         );
-        setAviso(true);
         console.error(err);
       }
     } finally {

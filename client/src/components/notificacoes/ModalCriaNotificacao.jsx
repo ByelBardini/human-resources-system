@@ -1,18 +1,17 @@
 import { X, UploadCloud, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { postNotificacao } from "../../services/api/notificacoesServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModalCriaNotificacao({
   setNotificacao,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setAdicionado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [tipo, setTipo] = useState("");
   const [data, setData] = useState("");
   const [dataFim, setDataFim] = useState(null);
@@ -46,9 +45,7 @@ function ModalCriaNotificacao({
     setConfirmacao(false);
     const id = localStorage.getItem("funcionario_id");
     if (tipo == "" || data == "") {
-      setCorAviso("vermelho");
-      setTextoAviso("Data e tipo são obrigatórios!");
-      setAviso(true);
+      mostrarAviso("erro", "Data e tipo são obrigatórios!");
       return;
     }
     const payload = {
@@ -61,23 +58,19 @@ function ModalCriaNotificacao({
     };
     setCarregando(true);
     try {
-      const resposta = await postNotificacao(id, payload, arquivo);
+      await postNotificacao(id, payload, arquivo);
       setCarregando(false);
 
-      setCorAviso("verde");
-      setTextoAviso("Notificação criada com sucesso!");
-      setAviso(true);
-      console.log(resposta);
+      mostrarAviso("sucesso", "Notificação criada com sucesso!");
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setAdicionado(true);
         setNotificacao(false);
       }, 500);
     } catch (err) {
       setCarregando(false);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao criar notificação:", err.message);
-      setAviso(true);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err)
     }
   }
 

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
 import FiltroCargos from "../cargos/FiltroCargos.jsx";
 
@@ -9,15 +10,13 @@ export default function ProjecaoSalarial({
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
-  setCorAviso,
-  setTextoAviso,
-  setAviso,
   setAumentoGeral,
   setCarregando,
   navigate,
   setModificado,
   modificado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [cargosFiltro, setCargosFiltro] = useState([]);
 
@@ -26,7 +25,7 @@ export default function ProjecaoSalarial({
   function clicaDeleta(id) {
     setConfirmacao(true);
     setTextoConfirmacao(
-      "Você tem certeza que deseja excluir esse cargo? Essa ação é irreversível"
+      "Você tem certeza que deseja excluir essa função? Essa ação é irreversível"
     );
     setOnSimConfirmacao(() => () => deletaCargo(id));
   }
@@ -37,40 +36,31 @@ export default function ProjecaoSalarial({
       await deleteCargo(id);
       setCarregando(false);
       setConfirmacao(false);
-      setCorAviso("verde");
-      setTextoAviso("Cargo excluído com sucesso!");
-      setAviso(true);
-      setModificado(true);
+      mostrarAviso("sucesso", "Função excluída com sucesso!");
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         buscaCargos();
       }, 500);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
         setCarregando(false);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        setConfirmacao(false);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else if (err.status == 409) {
         setCarregando(false);
         setConfirmacao(false);
-        setCorAviso("vermelho");
-        setTextoAviso(
-          "Impossível excluir um cargo que já possua funcionários vinculados"
-        );
-        setAviso(true);
+        mostrarAviso("erro", "Impossível excluir um cargo que já possua funcionários vinculados");
       } else {
         setCarregando(false);
         setConfirmacao(false);
         console.error("Erro ao deletar cargo:", err);
-        setCorAviso("vermelho");
-        setTextoAviso("Erro ao deletar cargo:", err.message || err);
-        setAviso(true);
+        const texto = `Erro ao deletar cargo: ${err.message}`
+        mostrarAviso("erro", texto);
       }
     }
   }
@@ -88,10 +78,10 @@ export default function ProjecaoSalarial({
 
     try {
       const cargos = await getCargos(empresa_id);
-      console.log(cargos);
       setCargos(cargos);
     } catch (err) {
-      console.error("Erro ao buscar cargos:", err);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
     }
   }
 
@@ -125,7 +115,7 @@ export default function ProjecaoSalarial({
           onClick={() => setAdicionando(true)}
           className="cursor-pointer px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow"
         >
-          Adicionar Cargo
+          Adicionar Função
         </button>
 
         <button

@@ -10,9 +10,6 @@ function Funcionarios({
   modificado,
   setModificado,
   navigate,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
 }) {
   const [funcionarios, setFuncionarios] = useState([]);
   const [funcionariosFiltrados, setFuncionariosFiltrados] = useState([]);
@@ -119,10 +116,10 @@ function Funcionarios({
           </div>
         </div>
       </div>
-      <div className="mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
+      <div className="flex align-middle mt-5 min-w-[1100px] relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
         {filtroAtivo && funcionariosFiltrados.length === 0 ? (
-          <div className="flex justify-center p-2">
-            <div className="inline-flex items-center gap-2 rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/70">
+          <div className="flex justify-center p-2 h-full w-full">
+            <div className="inline-flex text-center items-center gap-2 rounded-lg px-4 py-3 text-white/70">
               <SearchX size={16} className="opacity-80" />
               Nenhum funcionário encontrado
             </div>
@@ -140,9 +137,6 @@ function Funcionarios({
             modificado={modificado}
             inativos={inativos}
             navigate={navigate}
-            setAviso={setAviso}
-            setCorAviso={setCorAviso}
-            setTextoAviso={setTextoAviso}
           />
         )}
       </div>

@@ -1,12 +1,12 @@
+import { handleApiError } from "./handleApiError.js";
 import { api } from "../api.js";
 
 export async function getDescricoes(id) {
   try {
     const response = await api.get(`/descricoes/${id}`);
     return response.data;
-  } catch (error) {
-    console.error("Erro ao buscar descricoes:", error);
-    throw error;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar descricoes:");
   }
 }
 
@@ -31,8 +31,7 @@ export async function putDescricao(
       descricao_responsabilidade,
     });
     return response.data;
-  } catch (error) {
-    console.error("Erro ao buscar descricoes:", error);
-    throw error;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar descricoes:");
   }
 }

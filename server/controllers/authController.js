@@ -30,7 +30,7 @@ export async function login(req, res) {
     const match = await bcrypt.compare(usuario_senha, usuario.usuario_senha);
 
     if (!match) {
-      throw ApiError.unauthorized("Usuário ou senha inválidos.");
+      throw ApiError.unauthorized("Senha incorreta.");
     }
     const userSession = {
       usuario_id: usuario.usuario_id,
@@ -67,6 +67,7 @@ export async function login(req, res) {
       .json(resposta);
   } catch (err) {
     console.error("Erro na consulta:", err);
+    if (err instanceof ApiError) throw err;
     throw ApiError.internal("Erro ao validar usuário");
   }
 }

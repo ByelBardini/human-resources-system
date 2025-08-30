@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { useState } from "react";
 import {
   getFuncionarios,
@@ -22,10 +23,8 @@ function TabelaFuncionarios({
   setModificado,
   inativos,
   navigate,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
 }) {
+  const { mostrarAviso } = useAviso();
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
   const [salarioSort, setSalarioSort] = useState(false);
@@ -163,16 +162,12 @@ function TabelaFuncionarios({
       const funcionarios = inativos
         ? await getFuncionarios(id)
         : await getFuncionariosInativos(id);
-      console.log("funcionariosssss:", funcionarios);
       setFuncionarios(funcionarios);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.log(err);
-        setCorAviso("vermelho");
-        setTextoAviso("Sessão inválida! Realize o Login novamente!");
-        setAviso(true);
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          setAviso(false);
           navigate("/", { replace: true });
         }, 1000);
       } else {

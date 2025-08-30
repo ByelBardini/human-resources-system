@@ -4,16 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { logar } from "../services/auth/authService.js";
 import logoEmpresa from "../assets/logo-empresa.png";
-import ModalAviso from "../components/default/ModalAviso.jsx";
 import Loading from "../components/default/Loading.jsx";
+import { useAviso } from "../context/AvisoContext.jsx";
 
 function Login() {
   const navigate = useNavigate();
   const [carregando, setCarregando] = useState(false);
 
-  const [aviso, setAviso] = useState(false);
-  const [corAviso, setCorAviso] = useState("");
-  const [textoAviso, setTextoAviso] = useState("");
+  const { mostrarAviso, limparAviso } = useAviso();
 
   const [login, setLogin] = useState("");
   const [senha, setSenha] = useState("");
@@ -34,31 +32,26 @@ function Login() {
       localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
 
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Login realizado com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Login realizado com sucesso!");
 
       setTimeout(() => {
-        setAviso(false);
+        limparAviso();
         navigate("/home", { replace: true });
       }, 500);
     } catch (err) {
       if (err.message.includes("obrigatórios")) {
-        setCorAviso("vermelho");
-        setTextoAviso("Você precisa preencher todos os campos.");
-        setAviso(true);
-      } else if (err.message.includes("incorretos")) {
-        setCorAviso("vermelho");
-        setTextoAviso("Usuário ou senha inválidos.");
-        setAviso(true);
-      } else if (err.message.includes("interno")) {
-        setCorAviso("vermelho");
-        setTextoAviso("Ocorreu um erro no servidor. Tente mais tarde.");
-        setAviso(true);
+        mostrarAviso("erro", "Você precisa preencher todos os campos");
+      } else if (err.message.includes("Login incorreto")) {
+        mostrarAviso("erro", "Usuário não encontrado");
+      } else if (err.message.includes("Usuário inativo")) {
+        mostrarAviso(
+          "erro",
+          "Usuário inativo, fale com um responsável do setor"
+        );
+      } else if (err.message.includes("Senha incorreta")) {
+        mostrarAviso("erro", "Senha incorreta, verifique novamente");
       } else {
-        setCorAviso("vermelho");
-        setTextoAviso(err.message);
-        setAviso(true);
+        mostrarAviso("erro", err.message);
       }
     } finally {
       setCarregando(false);
@@ -96,13 +89,6 @@ function Login() {
         </div>
       </div>
 
-      {aviso && (
-        <ModalAviso
-          texto={textoAviso}
-          cor={corAviso}
-          onClick={() => setAviso(false)}
-        />
-      )}
       {carregando && <Loading />}
 
       <div className="absolute -top-0 -left-0 w-[550px] h-screen flex justify-center items-center p-6">

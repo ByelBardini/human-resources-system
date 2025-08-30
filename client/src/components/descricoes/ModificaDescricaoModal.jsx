@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getSetores } from "../../services/api/setorService.js";
 import { putDescricao } from "../../services/api/descricaoService.js";
 import { useEffect } from "react";
+import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModificaDescricaoModal({
   setModificaDesc,
@@ -18,15 +19,13 @@ function ModificaDescricaoModal({
     descricao_experiencia: "",
     descricao_responsabilidades: "",
   },
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setConfirmacao,
   setTextoConfirmacao,
   setOnSimConfirmacao,
   setModificado,
 }) {
+  const { mostrarAviso, limparAviso } = useAviso();
   const [setores, setSetores] = useState([]);
 
   const [descId, setDescId] = useState("");
@@ -44,6 +43,7 @@ function ModificaDescricaoModal({
       const setores = await getSetores(id);
       setSetores(setores);
     } catch (err) {
+      mostrarAviso("erro", err.message);
       console.error(err);
     }
   }
@@ -69,21 +69,17 @@ function ModificaDescricaoModal({
         responsabilidades
       );
       setCarregando(false);
-      setCorAviso("verde");
-      setTextoAviso("Descrição modificada com sucesso!");
-      setAviso(true);
+      mostrarAviso("sucesso", "Descrição modificada com sucesso!");
       setModificado(true);
       setTimeout(() => {
-        setAviso(false);
+        limparAviso;
         setModificaDesc(false);
       }, 500);
       return;
     } catch (err) {
       setCarregando(false);
-      console.error("Erro ao modificar descrição:", err);
-      setCorAviso("vermelho");
-      setTextoAviso("Erro ao modificar descrição:", err.message || err);
-      setAviso(true);
+      mostrarAviso("erro", err.message);
+      console.error(err.message, err);
       return;
     }
   }

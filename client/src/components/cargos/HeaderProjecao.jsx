@@ -7,7 +7,7 @@ function HeaderProjecao() {
           className="min-w-[190px] bg-gradient-to-b from-white/15 to-white/5 text-left px-4 py-3 font-semibold tracking-wide border-b border-white/10"
         >
           <div className="flex place-content-between items-center">
-            Cargo
+            FUNÇÃO
           </div>
         </th>
 

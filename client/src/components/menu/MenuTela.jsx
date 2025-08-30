@@ -7,9 +7,6 @@ function MenuTela({
   setCardFuncionario,
   opcaoSelecionada,
   setCarregando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setAdicionando,
   cargoCriado,
   setConfirmacao,
@@ -26,20 +23,11 @@ function MenuTela({
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       {opcaoSelecionada == "home" && (
-        <HomeMenu
-          setCarregando={setCarregando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
-          navigate={navigate}
-        />
+        <HomeMenu setCarregando={setCarregando} navigate={navigate} />
       )}
       {opcaoSelecionada == "funcionarios" && (
         <Funcionarios
           setAdicionandoFunc={setAdicionandoFunc}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCardFuncionario={setCardFuncionario}
           setModificado={setModificado}
           modificado={modificado}
@@ -53,9 +41,6 @@ function MenuTela({
           setConfirmacao={setConfirmacao}
           setTextoConfirmacao={setTextoConfirmacao}
           setOnSimConfirmacao={setOnSimConfirmacao}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setAumentoGeral={setAumentoGeral}
           setCarregando={setCarregando}
           navigate={navigate}
@@ -68,9 +53,6 @@ function MenuTela({
           setDesc={setDesc}
           setModificaDesc={setModificaDesc}
           navigate={navigate}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setModificado={setModificado}
           modificado={modificado}
         />

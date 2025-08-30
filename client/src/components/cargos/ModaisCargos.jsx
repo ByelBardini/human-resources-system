@@ -5,9 +5,6 @@ function ModaisCargos({
   adicionando,
   aumentoGeral,
   setAdicionando,
-  setAviso,
-  setCorAviso,
-  setTextoAviso,
   setCarregando,
   setConfirmacao,
   setTextoConfirmacao,
@@ -20,9 +17,6 @@ function ModaisCargos({
       {adicionando && (
         <AdicionaCargoModal
           setAdicionando={setAdicionando}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setModificado={setModificado}
         />
@@ -34,9 +28,6 @@ function ModaisCargos({
           setTextoConfirmacao={setTextoConfirmacao}
           setOnSimConfirmacao={setOnSimConfirmacao}
           setAumentoGeral={setAumentoGeral}
-          setAviso={setAviso}
-          setCorAviso={setCorAviso}
-          setTextoAviso={setTextoAviso}
           setCarregando={setCarregando}
           setModificado={setModificado}
         />
