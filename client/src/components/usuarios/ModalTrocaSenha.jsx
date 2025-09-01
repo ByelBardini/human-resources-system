@@ -28,12 +28,12 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
-        limparAviso;
+        limparAviso();
         console.error(err);
       }
     } finally {

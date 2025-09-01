@@ -42,7 +42,7 @@ function ModalInativa({
       setTimeout(() => {
         setCard(false);
         setInativando(false);
-        limparAviso;
+        limparAviso();
       }, 500);
     } catch (err) {
       mostrarAviso("erro", err.message, true);

@@ -74,7 +74,7 @@ function ModalModificaFuncionario({
       mostrarAviso("sucesso", "Funcionário modificado com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setModifica(false);
       }, 500);
     } catch (err) {

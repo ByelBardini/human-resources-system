@@ -36,12 +36,9 @@ function ModalUsuario({
       if (err.status == 401 || err.status == 403) {
         console.error(err);
         setCarregando(false);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!"
-        );
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
@@ -80,7 +77,7 @@ function ModalUsuario({
         }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
-        limparAviso;
+        limparAviso();
         console.error(err);
       }
     } finally {

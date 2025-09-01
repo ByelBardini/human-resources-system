@@ -165,7 +165,7 @@ function AdicionaFuncionarioModal({
       mostrarAviso("sucesso", "Funcionário inserido com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setAdicionandoFunc(false);
       }, 500);
     } catch (err) {

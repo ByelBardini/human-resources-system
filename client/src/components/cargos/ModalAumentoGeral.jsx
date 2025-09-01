@@ -35,7 +35,7 @@ function ModalAumentoGeral({
       mostrarAviso("sucesso", "Aumento aplicado com sucesso!", true)
       setModificado(true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setAumentoGeral(false);
       }, 500);
       return;

@@ -23,9 +23,15 @@ function Login() {
   async function logarSistema() {
     setCarregando(true);
     try {
-      const { usuario_nome, usuario_troca_senha, usuario_role, usuario_id } =
-        await logar(login, senha);
+      const {
+        token,
+        usuario_nome,
+        usuario_troca_senha,
+        usuario_role,
+        usuario_id,
+      } = await logar(login, senha);
 
+      localStorage.setItem("token", token);
       localStorage.setItem("usuario_nome", usuario_nome);
       localStorage.setItem("usuario_id", usuario_id);
       localStorage.setItem("usuario_role", usuario_role);
@@ -52,7 +58,7 @@ function Login() {
       } else if (err.message.includes("Senha incorreta")) {
         mostrarAviso("erro", "Senha incorreta, verifique novamente", true);
       } else {
-        mostrarAviso("erro", "Usuário ou senha incorretos", true);
+        mostrarAviso("erro", err.message, true);
       }
     } finally {
       setCarregando(false);

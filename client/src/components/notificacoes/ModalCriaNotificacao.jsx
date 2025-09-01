@@ -63,7 +63,7 @@ function ModalCriaNotificacao({
 
       mostrarAviso("sucesso", "Notificação criada com sucesso!", true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setAdicionado(true);
         setNotificacao(false);
       }, 500);

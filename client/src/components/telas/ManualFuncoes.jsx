@@ -28,9 +28,13 @@ function ManualFuncoes({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         console.error(err.message, err);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!", true);
+        mostrarAviso(
+          "erro",
+          "Sessão inválida! Realize o Login novamente!",
+          true
+        );
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {

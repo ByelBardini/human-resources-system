@@ -37,19 +37,16 @@ function ModalCriaUsuario({
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!"
-        );
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.erro(err.message, err);
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      limparAviso;
+      limparAviso();
       console.error(err.message, err, true);
     } finally {
       setCarregando(false);

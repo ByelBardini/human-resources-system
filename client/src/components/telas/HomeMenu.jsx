@@ -24,7 +24,7 @@ function HomeMenu({ setCarregando, navigate }) {
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.log(err.message);
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {

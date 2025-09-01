@@ -30,7 +30,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
       mostrarAviso("sucesso", "Cargo criado com sucesso!", true);
       setModificado(true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setAdicionando(false);
       }, 500);
       return;

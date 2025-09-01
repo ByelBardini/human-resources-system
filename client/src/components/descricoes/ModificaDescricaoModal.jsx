@@ -72,7 +72,7 @@ function ModificaDescricaoModal({
       mostrarAviso("sucesso", "Descrição modificada com sucesso!", true)
       setModificado(true);
       setTimeout(() => {
-        limparAviso;
+        limparAviso();
         setModificaDesc(false);
       }, 500);
       return;

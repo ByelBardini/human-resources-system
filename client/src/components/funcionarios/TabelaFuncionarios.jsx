@@ -172,7 +172,7 @@ function TabelaFuncionarios({
           true
         );
         setTimeout(() => {
-          limparAviso;
+        limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {

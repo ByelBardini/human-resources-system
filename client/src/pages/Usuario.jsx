@@ -34,12 +34,9 @@ function Usuario() {
       if (err.status == 401 || err.status == 403) {
         console.erro(err);
         setCarregando(false);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!"
-        );
+        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
-          limparAviso;
+          limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
