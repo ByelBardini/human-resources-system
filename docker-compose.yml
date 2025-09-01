@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./server
+    ports:
+      - "3031:3031"
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - appnet
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "4174:4174"
+    restart: always
+    networks:
+      - appnet
+
+networks:
+  appnet:
