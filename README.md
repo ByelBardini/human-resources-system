@@ -10,7 +10,7 @@ Fornecer uma solução moderna e organizada para o setor de RH, que permita:
 
 ✔️ Eliminar o uso de planilhas manuais  
 ✔️ Centralizar informações de forma segura  
-✔️ Automatizar processos repetitivos
+✔️ Automatizar processos repetitivos  
 ✔️ Aumentar a eficiência da equipe  
 
 ---
@@ -107,5 +107,5 @@ Uso interno. **Todos os direitos reservados.**
 - **Gabryel Bagio Bardini** – Backend completo e grande parte do Frontend  
   [GitHub](https://github.com/gabryelbardini) | [LinkedIn](https://www.linkedin.com/in/gabryelbardini)
 
-- **Victor Oliveira Rodrigues** – Contribuições no Frontend (design, filtros, tratamento de erros e otimizações)
+- **Victor Oliveira Rodrigues** – Contribuições no Frontend (design, filtros, tratamento de erros e otimizações)  
 [GitHub](https://github.com/VictOliRodrigues) | [LinkedIn](https://www.linkedin.com/in/victor-oliveira-rodrigues-452621339/)
