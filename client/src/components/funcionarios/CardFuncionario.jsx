@@ -16,7 +16,7 @@ export default function CardFuncionario({
   setModificado,
   setInativando,
 }) {
-  const {mostrarAviso}=useAviso();
+  const { mostrarAviso } = useAviso();
   const [openSec, setOpenSec] = useState(null);
   const [funcionario, setFuncionario] = useState([]);
   const [notificacoes, setNotificacoes] = useState([]);
@@ -46,7 +46,7 @@ export default function CardFuncionario({
       setFuncionario(funcionario);
       setNotificacoes(notificacoes);
     } catch (err) {
-      mostrarAviso("erro", err.message, true)
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
     }
   }
@@ -72,7 +72,7 @@ export default function CardFuncionario({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-140 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       onClick={() => setCard(false)}
@@ -133,7 +133,9 @@ export default function CardFuncionario({
                 {funcionario.funcionario_imagem_caminho != null ? (
                   <img
                     className="h-full w-full object-cover rounded-2xl"
-                    src={`http://localhost:3030${funcionario.funcionario_imagem_caminho}`}
+                    src={`${
+                      import.meta.env.VITE_API_BASE_URL
+                    }${localStorage.getItem("imagem")}`}
                   ></img>
                 ) : (
                   <ImageOff size={82} />

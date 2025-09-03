@@ -99,7 +99,7 @@ function ModificaDescricaoModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-150 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       onClick={() => setModificaDesc(false)}

@@ -97,6 +97,7 @@ function ModalModificaFuncionario({
   }, [fotoPreview]);
 
   useEffect(() => {
+    console.log(localStorage.getItem("imagem"));
     getCargosSetores();
     setSetor(localStorage.getItem("setor"));
     setCargo(localStorage.getItem("cargo"));
@@ -105,12 +106,14 @@ function ModalModificaFuncionario({
     localStorage.getItem("observacao") != "null" &&
       setObservacao(localStorage.getItem("observacao"));
     localStorage.getItem("imagem") != "null" &&
-      setFotoPreview(`http://localhost:3030${localStorage.getItem("imagem")}`);
+      setFotoPreview(
+        `${import.meta.env.VITE_API_BASE_URL}${localStorage.getItem("imagem")}`
+      );
   }, []);
 
   return (
     <div
-      className="fixed inset-0 z-80 flex items-center justify-center"
+      className="fixed inset-0 z-150 flex items-center justify-center"
       role="dialog"
       aria-modal="true"
       onClick={() => setModifica(false)}

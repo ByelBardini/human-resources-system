@@ -98,7 +98,7 @@ function ModalCriaNotificacao({
 
   return (
     <div
-      className="fixed inset-0 z-51 flex items-center justify-center p-4"
+      className="fixed inset-0 z-151 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       onClick={() => setNotificacao(false)}

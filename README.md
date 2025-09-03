@@ -91,7 +91,7 @@ Fornecer uma solução moderna e organizada para o setor de RH, que permita:
 ---
 
 ## 📌 Status do projeto
-- Versão **1.0.0** estável.  
+- Versão **1.0.1** estável.  
 - Público apenas para **exibição**.  
 - **Não serão aceitas contribuições externas (PRs).**
 

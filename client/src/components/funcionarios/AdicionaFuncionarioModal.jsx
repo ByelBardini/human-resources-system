@@ -178,7 +178,7 @@ function AdicionaFuncionarioModal({
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-150"
       onClick={() => setAdicionandoFunc(false)}
     >
       <div className="absolute inset-0 bg-black/80" />
