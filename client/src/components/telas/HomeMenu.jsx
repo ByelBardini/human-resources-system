@@ -18,6 +18,7 @@ function HomeMenu({ setCarregando, navigate }) {
     try {
       const imagem = await getEmpresaImagem(id);
       setImagem(imagem);
+      console.log(imagem);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);

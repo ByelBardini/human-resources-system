@@ -34,17 +34,17 @@ function CampoNotificacao({
   tipo,
   falta,
 }) {
-  const {mostrarAviso}=useAviso();
+  const { mostrarAviso } = useAviso();
   const [dias, setDias] = useState(0);
   const temDataFinal = tipo == "suspensao" || tipo == "atestado";
 
   async function baixar(caminho) {
-    const url = `http://localhost:3030/download?path=${encodeURIComponent(
-      caminho
-    )}`;
+    const url = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/download?path=${encodeURIComponent(caminho)}`;
     const resp = await fetch(url, { credentials: "include" });
     if (!resp.ok) {
-      mostrarAviso("erro", "Erro ao realizar o download", true)
+      mostrarAviso("erro", "Erro ao realizar o download", true);
       return;
     }
 

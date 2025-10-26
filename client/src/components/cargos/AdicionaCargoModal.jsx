@@ -27,8 +27,8 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
       const id_empresa = localStorage.getItem("empresa_id");
       await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
-      mostrarAviso("sucesso", "Cargo criado com sucesso!", true);
       setModificado(true);
+      mostrarAviso("sucesso", "Cargo criado com sucesso!", true);
       setTimeout(() => {
         limparAviso();
         setAdicionando(false);

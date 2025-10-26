@@ -6,7 +6,7 @@ function Header({ opcaoSelecionada, setOpcaoSelecionada, onSair }) {
   const empresaCor = localStorage.getItem("empresa_cor") || "#0ea5e9";
 
   return (
-    <header className="w-full fixed top-0 left-0 z-50 border-b border-white/10 shadow-md overflow-visible">
+    <header className="w-full fixed top-0 left-0 z-1 border-b border-white/10 shadow-md overflow-visible">
       <div
         className="absolute top-0 left-0 w-full h-12 pointer-events-none z-0"
         style={{
