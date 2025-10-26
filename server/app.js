@@ -13,6 +13,7 @@ import cargoRoutes from "./routes/cargoRoutes.js";
 import descricaoRoutes from "./routes/descricaoRoutes.js";
 import notificacaoRoutes from "./routes/notificacaoRoutes.js";
 import downloadRoute from "./routes/downloadRoute.js";
+import { ApiError } from "./middlewares/ApiError.js";
 
 dotenv.config();
 
@@ -54,5 +55,24 @@ app.use("/", cargoRoutes);
 app.use("/", descricaoRoutes);
 app.use("/", notificacaoRoutes);
 app.use("/", downloadRoute);
+
+app.use((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.status).json({
+      status: err.status,
+      code: err.code,
+      message: err.message,
+      details: err.details || null,
+    });
+  }
+
+  console.error(err);
+
+  res.status(500).json({
+    status: 500,
+    code: "ERR_INTERNAL",
+    message: "Erro interno do servidor",
+  });
+});
 
 export default app;

@@ -32,19 +32,9 @@ export async function login(req, res) {
     if (!match) {
       throw ApiError.unauthorized("Senha incorreta.");
     }
-    const userSession = {
-      usuario_id: usuario.usuario_id,
-      usuario_role: usuario.usuario_role,
-    };
-
-    const resposta = {
-      usuario_id: usuario.usuario_id,
-      usuario_nome: usuario.usuario_nome,
-      usuario_troca_senha: usuario.usuario_troca_senha,
-      usuario_role: usuario.usuario_role,
-    };
 
     const payload = {
+      usuario_id: usuario.usuario_id,
       usuario_id: usuario.usuario_id,
       usuario_role: usuario.usuario_role,
     };
@@ -53,27 +43,18 @@ export async function login(req, res) {
       expiresIn: "8h",
     });
 
-    req.session.user = userSession;
+    const resposta = {
+      usuario_id: usuario.usuario_id,
+      usuario_nome: usuario.usuario_nome,
+      usuario_troca_senha: usuario.usuario_troca_senha,
+      usuario_role: usuario.usuario_role,
+      token: token,
+    };
 
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: false,
-        path: "/",
-        maxAge: 8 * 60 * 60 * 1000,
-      })
-      .status(200)
-      .json(resposta);
+    return res.status(200).json(resposta);
   } catch (err) {
     console.error("Erro na consulta:", err);
     if (err instanceof ApiError) throw err;
     throw ApiError.internal("Erro ao validar usuário");
   }
 }
-
-export const logout = async (req, res) => {
-  if (req.session) req.session.destroy(() => {});
-  res.clearCookie("token");
-  return res.json({ message: "Logout realizado com sucesso" });
-};

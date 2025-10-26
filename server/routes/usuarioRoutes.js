@@ -6,12 +6,10 @@ import {
   inativaUsuario,
 } from "../controllers/usuarioController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { checarLogado } from "../middlewares/checarLogado.js";
 import verificaToken from "../middlewares/verificaToken.js";
 import express from "express";
 
 const router = express.Router();
-router.use(checarLogado);
 
 router.get("/usuario", verificaToken, asyncHandler(getUsuarios));
 router.post("/usuario", verificaToken, asyncHandler(registrarUsuario));

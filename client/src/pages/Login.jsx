@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,13 @@ function Login() {
 
   useEffect(() => {
     document.title = "Login - Sistema RH";
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("sessaoInvalida")) {
+      mostrarAviso("erro", "Sessão inválida, realize o login novamente", true);
+      localStorage.removeItem("sessaoInvalida");
+    }
   }, []);
 
   async function logarSistema() {

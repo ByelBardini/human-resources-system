@@ -1,15 +1,13 @@
 import { api } from "../api.js";
-import { saveToken, clearToken } from "./authStore";
-import { handleApiError } from "../api/handleApiError.js";
 
 export async function logar(usuario_login, usuario_senha) {
   try {
     const response = await api.post(`/login`, {
       usuario_login,
       usuario_senha,
-    });
+    }); 
 
-    if (response.data?.token) await saveToken(response.data.token);
+    localStorage.setItem("token", response.data.token);
 
     return response.data;
   } catch (err) {
@@ -31,19 +29,5 @@ export async function logar(usuario_login, usuario_senha) {
         throw new Error("Erro interno. Tente novamente.");
     }
     throw new Error("Falha de rede. Tente novamente.");
-  }
-}
-
-export async function logout() {
-  try {
-    const response = await api.get(`/logout`);
-
-    if (response) {
-      localStorage.clear();
-      await clearToken();
-    }
-  } catch (err) {
-    const {message} = handleApiError(err, "Erro durante logout.")
-    console.error(message);
   }
 }

@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { LogOut, UsersRound } from "lucide-react";
-import { logout } from "../services/auth/authService.js";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +22,6 @@ function Home() {
   const [empresas, setEmpresas] = useState([]);
 
   async function deslogar() {
-    await logout();
     localStorage.clear();
     navigate("/", { replace: true });
   }

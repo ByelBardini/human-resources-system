@@ -1,19 +1,21 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { ApiError } from "./ApiError.js";
 dotenv.config();
 
 const CHAVE = process.env.SECRET_KEY_LOGIN;
 
 export function verificaToken(req, res, next) {
-  const token = req.cookies.token;
+  const authHeader = req.headers["authorization"];
+
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: "Token não fornecido." });
+    throw ApiError.unauthorized("Token não fornecido.");
   }
 
   jwt.verify(token, CHAVE, (err, decoded) => {
     if (err) {
-      
       if (err.name === "TokenExpiredError") {
         console.log("Token expirado.");
       } else if (err.name === "JsonWebTokenError") {
@@ -21,8 +23,9 @@ export function verificaToken(req, res, next) {
       } else {
         console.error("Erro ao verificar token:", err);
       }
-      return res.status(403).json({ error: "Token inválido ou expirado." });
+      throw ApiError.unauthorized("Token inválido ou expirado.");
     }
+
     req.user = decoded;
     next();
   });

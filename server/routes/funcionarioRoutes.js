@@ -8,7 +8,6 @@ import {
   getCargoSetor,
 } from "./../controllers/funcionarioController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
-import { checarLogado } from "../middlewares/checarLogado.js";
 import express from "express";
 import verificaToken from "../middlewares/verificaToken.js";
 import uploadFotoFuncionario from "../middlewares/uploadFotoFuncionario.js";
@@ -16,7 +15,6 @@ import uploadFotoFuncionario from "../middlewares/uploadFotoFuncionario.js";
 const router = express.Router();
 
 router.use(verificaToken);
-router.use(checarLogado);
 
 router.get("/funcionario/cargo/:id", asyncHandler(getCargoSetor));
 router.get("/funcionario/:id", asyncHandler(getFuncionarios));
