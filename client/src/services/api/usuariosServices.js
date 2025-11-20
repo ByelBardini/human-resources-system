@@ -13,17 +13,32 @@ export async function getUsuario() {
 export async function postUsuario(
   usuario_nome,
   usuario_login,
-  usuario_cargo_id
+  usuario_cargo_id,
+  usuario_funcionario_id = null,
+  perfil_jornada_id = null
 ) {
   try {
     const response = await api.post("/usuario", {
       usuario_nome,
       usuario_login,
       usuario_cargo_id,
+      usuario_funcionario_id,
+      perfil_jornada_id,
     });
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao cadastrar usuário:");
+  }
+}
+
+export async function getFuncionariosSemUsuario(empresa_id) {
+  try {
+    const response = await api.get("/usuario/funcionarios-sem-usuario", {
+      params: { empresa_id },
+    });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar funcionários sem usuário:");
   }
 }
 

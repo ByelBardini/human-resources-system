@@ -7,6 +7,10 @@ import Home from "./pages/Home.jsx";
 import Empresa from "./pages/Empresa.jsx";
 import Usuario from "./pages/Usuario.jsx";
 import CargosUsuarios from "./pages/CargosUsuarios.jsx";
+import Ponto from "./pages/Ponto.jsx";
+import Justificativa from "./pages/Justificativa.jsx";
+import RelatorioMensal from "./pages/RelatorioMensal.jsx";
+import PerfisJornada from "./pages/PerfisJornada.jsx";
 import { AvisoProvider } from "./context/AvisoContext.jsx";
 
 import "./style.css";
@@ -31,6 +35,22 @@ const router = createBrowserRouter([
   {
     path: "/cargos-usuarios",
     element: <CargosUsuarios />,
+  },
+  {
+    path: "/ponto",
+    element: <Ponto />,
+  },
+  {
+    path: "/justificativa",
+    element: <Justificativa />,
+  },
+  {
+    path: "/relatorio-mensal",
+    element: <RelatorioMensal />,
+  },
+  {
+    path: "/perfis-jornada",
+    element: <PerfisJornada />,
   },
 ]);
 

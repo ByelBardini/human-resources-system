@@ -54,7 +54,12 @@ function Login() {
 
       setTimeout(() => {
         limparAviso();
-        navigate("/home", { replace: true });
+        // Redirecionar usuários básicos para a página de ponto
+        if (cargo_nome === "Usuário Básico") {
+          navigate("/ponto", { replace: true });
+        } else {
+          navigate("/home", { replace: true });
+        }
       }, 500);
     } catch (err) {
       if (err.message.includes("obrigatórios")) {

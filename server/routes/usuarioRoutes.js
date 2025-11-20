@@ -5,6 +5,7 @@ import {
   trocaSenhaUsuario,
   inativaUsuario,
   atualizarCargoUsuario,
+  getFuncionariosSemUsuario,
 } from "../controllers/usuarioController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import verificaToken from "../middlewares/verificaToken.js";
@@ -26,5 +27,6 @@ router.put(
 );
 router.put("/usuario/inativa/:id", verificaToken, asyncHandler(inativaUsuario));
 router.put("/usuario/cargo/:id", verificaToken, asyncHandler(atualizarCargoUsuario));
+router.get("/usuario/funcionarios-sem-usuario", verificaToken, asyncHandler(getFuncionariosSemUsuario));
 
 export default router;

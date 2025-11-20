@@ -35,6 +35,16 @@ function CampoUsuario({
           {ativo ? "Ativo" : "Inativo"}
         </span>
 
+        {usuario.funcionario ? (
+          <span className="px-2 py-[2px] text-xs font-medium rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300">
+            Funcionário
+          </span>
+        ) : (
+          <span className="px-2 py-[2px] text-xs font-medium rounded-full bg-gray-500/20 border border-gray-400/30 text-gray-300">
+            Usuário
+          </span>
+        )}
+
         {usuario.cargo && (
           <span className="px-2 py-[2px] text-xs font-medium rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300">
             {usuario.cargo.cargo_usuario_nome}

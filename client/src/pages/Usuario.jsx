@@ -10,7 +10,7 @@ import Background from "../components/default/Background";
 import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
-import { Settings } from "lucide-react";
+import { Settings, Clock } from "lucide-react";
 
 function Usuario() {
   const navigate = useNavigate();
@@ -88,13 +88,22 @@ function Usuario() {
         <Undo2 size={20} />
       </button>
 
-      <button
-        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
-        title="Gerenciar Cargos"
-        onClick={() => navigate("/cargos-usuarios", { replace: true })}
-      >
-        <Settings size={20} />
-      </button>
+      <div className="absolute top-6 right-6 flex gap-2 z-10">
+        <button
+          className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+          title="Gerenciar Perfis de Jornada"
+          onClick={() => navigate("/perfis-jornada", { replace: true })}
+        >
+          <Clock size={20} />
+        </button>
+        <button
+          className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+          title="Gerenciar Cargos"
+          onClick={() => navigate("/cargos-usuarios", { replace: true })}
+        >
+          <Settings size={20} />
+        </button>
+      </div>
 
       <div className="text-white flex flex-col gap-5 items-center justify-center w-full">
         <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">

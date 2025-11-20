@@ -1,6 +1,7 @@
-import { Usuario, CargoUsuario } from "../models/index.js";
+import { Usuario, CargoUsuario, Funcionario, Permissao, CargoPermissao, FuncionarioPerfilJornada } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import bcrypt from "bcrypt";
+import { Op } from "sequelize";
 
 function requireUser(req) {
   const usuario = req.user;
@@ -25,36 +26,118 @@ function requirePermissao(req, codigoPermissao) {
 }
 
 export async function registrarUsuario(req, res) {
-  const { usuario_nome, usuario_login, usuario_cargo_id } = req.body;
+  const { usuario_nome, usuario_login, usuario_cargo_id, usuario_funcionario_id, perfil_jornada_id } = req.body;
   requirePermissao(req, "gerenciar_usuarios");
 
-  if (!usuario_nome || !usuario_login || !usuario_cargo_id) {
-    throw ApiError.badRequest("Todos os campos são obrigatórios.");
+  if (!usuario_nome || !usuario_login) {
+    throw ApiError.badRequest("Nome e login são obrigatórios.");
   }
 
-  // Verificar se o cargo existe e está ativo
-  const cargo = await CargoUsuario.findByPk(usuario_cargo_id);
-  if (!cargo || cargo.cargo_usuario_ativo === 0) {
-    throw ApiError.badRequest("Cargo inválido ou inativo.");
-  }
+  // Se for funcionário, não precisa de cargo, mas precisa de perfil de jornada
+  if (usuario_funcionario_id) {
+    if (!perfil_jornada_id) {
+      throw ApiError.badRequest("Perfil de jornada é obrigatório para funcionários.");
+    }
 
-  const senhaHash = bcrypt.hashSync("12345", 10);
+    // Verificar se funcionário existe e se não está vinculado
+    const funcionario = await Funcionario.findByPk(usuario_funcionario_id);
+    if (!funcionario) {
+      throw ApiError.badRequest("Funcionário não encontrado.");
+    }
 
-  try {
-    await Usuario.create({
-      usuario_nome,
-      usuario_login,
-      usuario_senha: senhaHash,
-      usuario_cargo_id,
+    const usuarioExistente = await Usuario.findOne({
+      where: { usuario_funcionario_id },
+    });
+    if (usuarioExistente) {
+      throw ApiError.badRequest("Este funcionário já possui um usuário vinculado.");
+    }
+
+    // Usar cargo padrão "Usuário Básico" para funcionários
+    const cargoBasico = await CargoUsuario.findOne({
+      where: { cargo_usuario_nome: "Usuário Básico" },
     });
 
-    return res.status(201).json({ message: "Usuário registrado com sucesso!" });
-  } catch (err) {
-    if (err.name === "SequelizeUniqueConstraintError") {
-      throw ApiError.badRequest("Já existe um usuário com este login.");
+    if (!cargoBasico) {
+      throw ApiError.badRequest("Cargo padrão 'Usuário Básico' não encontrado.");
     }
-    console.error("Erro ao registrar usuário:", err);
-    throw ApiError.internal("Erro ao registrar usuário");
+
+    const senhaHash = bcrypt.hashSync("12345", 10);
+
+    try {
+      const novoUsuario = await Usuario.create({
+        usuario_nome,
+        usuario_login,
+        usuario_senha: senhaHash,
+        usuario_cargo_id: cargoBasico.cargo_usuario_id,
+        usuario_funcionario_id,
+      });
+
+      // Vincular funcionário ao perfil de jornada
+      await FuncionarioPerfilJornada.create({
+        funcionario_id: usuario_funcionario_id,
+        perfil_jornada_id,
+      });
+
+      // Garantir que o cargo tenha permissão de registrar ponto
+      const permissaoRegistrarPonto = await Permissao.findOne({
+        where: { permissao_codigo: "registrar_ponto" },
+      });
+
+      if (permissaoRegistrarPonto) {
+        const temPermissao = await CargoPermissao.findOne({
+          where: {
+            cargo_usuario_id: cargoBasico.cargo_usuario_id,
+            permissao_id: permissaoRegistrarPonto.permissao_id,
+          },
+        });
+
+        if (!temPermissao) {
+          await CargoPermissao.create({
+            cargo_usuario_id: cargoBasico.cargo_usuario_id,
+            permissao_id: permissaoRegistrarPonto.permissao_id,
+          });
+        }
+      }
+
+      return res.status(201).json({ message: "Usuário funcionário registrado com sucesso!" });
+    } catch (err) {
+      if (err.name === "SequelizeUniqueConstraintError") {
+        throw ApiError.badRequest("Já existe um usuário com este login.");
+      }
+      console.error("Erro ao registrar usuário:", err);
+      throw ApiError.internal("Erro ao registrar usuário");
+    }
+  } else {
+    // Usuário normal precisa de cargo
+    if (!usuario_cargo_id) {
+      throw ApiError.badRequest("Cargo é obrigatório para usuários do sistema.");
+    }
+
+    // Verificar se o cargo existe e está ativo
+    const cargo = await CargoUsuario.findByPk(usuario_cargo_id);
+    if (!cargo || cargo.cargo_usuario_ativo === 0) {
+      throw ApiError.badRequest("Cargo inválido ou inativo.");
+    }
+
+    const senhaHash = bcrypt.hashSync("12345", 10);
+
+    try {
+      await Usuario.create({
+        usuario_nome,
+        usuario_login,
+        usuario_senha: senhaHash,
+        usuario_cargo_id,
+        usuario_funcionario_id: null,
+      });
+
+      return res.status(201).json({ message: "Usuário registrado com sucesso!" });
+    } catch (err) {
+      if (err.name === "SequelizeUniqueConstraintError") {
+        throw ApiError.badRequest("Já existe um usuário com este login.");
+      }
+      console.error("Erro ao registrar usuário:", err);
+      throw ApiError.internal("Erro ao registrar usuário");
+    }
   }
 }
 
@@ -125,6 +208,12 @@ export async function getUsuarios(req, res) {
           as: "cargo",
           attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
         },
+        {
+          model: Funcionario,
+          as: "funcionario",
+          attributes: ["funcionario_id", "funcionario_nome"],
+          required: false,
+        },
       ],
       order: [["usuario_nome", "ASC"]],
     });
@@ -140,6 +229,52 @@ export async function getUsuarios(req, res) {
     if (err instanceof ApiError) throw err;
     console.error("Erro ao buscar usuários:", err);
     throw ApiError.internal("Erro ao buscar usuários");
+  }
+}
+
+// Buscar funcionários sem usuário vinculado
+export async function getFuncionariosSemUsuario(req, res) {
+  requirePermissao(req, "gerenciar_usuarios");
+
+  try {
+    const { empresa_id } = req.query;
+    
+    if (!empresa_id) {
+      throw ApiError.badRequest("ID da empresa é obrigatório.");
+    }
+
+    // Buscar todos os funcionários da empresa
+    const todosFuncionarios = await Funcionario.findAll({
+      where: {
+        funcionario_empresa_id: empresa_id,
+        funcionario_ativo: 1,
+      },
+      attributes: ["funcionario_id", "funcionario_nome"],
+      order: [["funcionario_nome", "ASC"]],
+    });
+
+    // Buscar funcionários que já têm usuário vinculado
+    const funcionariosComUsuario = await Usuario.findAll({
+      where: {
+        usuario_funcionario_id: { [Op.ne]: null },
+      },
+      attributes: ["usuario_funcionario_id"],
+    });
+
+    const idsComUsuario = funcionariosComUsuario
+      .map((u) => u.usuario_funcionario_id)
+      .filter((id) => id !== null);
+
+    // Filtrar funcionários sem usuário
+    const funcionariosSemUsuario = todosFuncionarios.filter(
+      (f) => !idsComUsuario.includes(f.funcionario_id)
+    );
+
+    return res.status(200).json(funcionariosSemUsuario);
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("Erro ao buscar funcionários sem usuário:", err);
+    throw ApiError.internal("Erro ao buscar funcionários sem usuário");
   }
 }
 

@@ -36,6 +36,11 @@ Usuario.init({
     allowNull: false,
     defaultValue: 1,
   },
+  usuario_funcionario_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
 }, {
   sequelize,
   modelName: "Usuario",

@@ -13,6 +13,10 @@ import notificacaoRoutes from "./routes/notificacaoRoutes.js";
 import downloadRoute from "./routes/downloadRoute.js";
 import cargoUsuarioRoutes from "./routes/cargoUsuarioRoutes.js";
 import permissaoRoutes from "./routes/permissaoRoutes.js";
+import pontoRoutes from "./routes/pontoRoutes.js";
+import justificativaRoutes from "./routes/justificativaRoutes.js";
+import relatorioRoutes from "./routes/relatorioRoutes.js";
+import perfilJornadaRoutes from "./routes/perfilJornadaRoutes.js";
 import { ApiError } from "./middlewares/ApiError.js";
 
 dotenv.config();
@@ -42,6 +46,10 @@ app.use("/", notificacaoRoutes);
 app.use("/", downloadRoute);
 app.use("/", cargoUsuarioRoutes);
 app.use("/", permissaoRoutes);
+app.use("/", pontoRoutes);
+app.use("/", justificativaRoutes);
+app.use("/", relatorioRoutes);
+app.use("/", perfilJornadaRoutes);
 
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {

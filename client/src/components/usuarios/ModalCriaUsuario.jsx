@@ -1,23 +1,32 @@
 import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
-import { postUsuario } from "../../services/api/usuariosServices";
+import { useNavigate } from "react-router-dom";
+import { postUsuario, getFuncionariosSemUsuario } from "../../services/api/usuariosServices";
 import { useAviso } from "../../context/AvisoContext";
 import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
+import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
 
 function ModalCriaUsuario({
   setCria,
   setCarregando,
   setCadastrado,
   cadastrado,
-  navigate,
+  navigate: navigateProp,
 }) {
+  const navigateHook = useNavigate();
+  const navigate = navigateProp || navigateHook;
   const { mostrarAviso, limparAviso } = useAviso();
 
   const [nome, setNome] = useState("");
   const [login, setLogin] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState(""); // "funcionario" ou "usuario"
   const [cargoId, setCargoId] = useState("");
+  const [funcionarioId, setFuncionarioId] = useState("");
+  const [perfilJornadaId, setPerfilJornadaId] = useState("");
   const [cargos, setCargos] = useState([]);
+  const [funcionarios, setFuncionarios] = useState([]);
+  const [perfisJornada, setPerfisJornada] = useState([]);
+  const [carregandoFuncionarios, setCarregandoFuncionarios] = useState(false);
 
   async function criaUsuario() {
     if (!nome || !login || !tipoUsuario) {
@@ -30,18 +39,25 @@ function ModalCriaUsuario({
       return;
     }
 
-    if (tipoUsuario === "funcionario") {
-      mostrarAviso(
-        "aviso",
-        "Funcionários não têm acesso ao sistema por enquanto. Use a tela de Funcionários para cadastrá-los.",
-        true
-      );
+    if (tipoUsuario === "funcionario" && !funcionarioId) {
+      mostrarAviso("erro", "Selecione um funcionário", true);
+      return;
+    }
+
+    if (tipoUsuario === "funcionario" && !perfilJornadaId) {
+      mostrarAviso("erro", "Selecione um perfil de carga horária", true);
       return;
     }
 
     setCarregando(true);
     try {
-      await postUsuario(nome, login, cargoId);
+      await postUsuario(
+        nome,
+        login,
+        tipoUsuario === "funcionario" ? null : cargoId,
+        tipoUsuario === "funcionario" ? funcionarioId : null,
+        tipoUsuario === "funcionario" ? perfilJornadaId : null
+      );
 
       mostrarAviso(
         "sucesso",
@@ -75,6 +91,8 @@ function ModalCriaUsuario({
     setLogin("");
     setTipoUsuario("");
     setCargoId("");
+    setFuncionarioId("");
+    setPerfilJornadaId("");
   }, [cadastrado]);
 
   useEffect(() => {
@@ -88,6 +106,46 @@ function ModalCriaUsuario({
     }
     buscarCargos();
   }, []);
+
+  useEffect(() => {
+    async function buscarFuncionarios() {
+      if (tipoUsuario === "funcionario") {
+        setCarregandoFuncionarios(true);
+        try {
+          const empresa_id = localStorage.getItem("empresa_id");
+          if (empresa_id) {
+            const funcionariosData = await getFuncionariosSemUsuario(empresa_id);
+            setFuncionarios(funcionariosData);
+          }
+        } catch (err) {
+          console.error("Erro ao buscar funcionários:", err);
+        } finally {
+          setCarregandoFuncionarios(false);
+        }
+      } else {
+        setFuncionarios([]);
+        setFuncionarioId("");
+        setPerfilJornadaId("");
+      }
+    }
+    buscarFuncionarios();
+  }, [tipoUsuario]);
+
+  useEffect(() => {
+    async function buscarPerfisJornada() {
+      if (tipoUsuario === "funcionario") {
+        try {
+          const perfisData = await listarPerfisJornadaPublico();
+          setPerfisJornada(perfisData.perfis || []);
+        } catch (err) {
+          console.error("Erro ao buscar perfis de jornada:", err);
+        }
+      } else {
+        setPerfisJornada([]);
+      }
+    }
+    buscarPerfisJornada();
+  }, [tipoUsuario]);
 
   return (
     <div
@@ -192,6 +250,84 @@ function ModalCriaUsuario({
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {tipoUsuario === "funcionario" && (
+            <div>
+              <label className="block text-sm text-white/80 mb-1">
+                Perfil de Carga Horária *
+              </label>
+              {perfisJornada.length === 0 ? (
+                <div>
+                  <p className="text-yellow-400 text-sm mb-2">
+                    Nenhum perfil disponível.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCria(false);
+                      navigate("/perfis-jornada");
+                    }}
+                    className="text-blue-400 hover:text-blue-300 text-sm underline"
+                  >
+                    Criar perfil de jornada
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={perfilJornadaId}
+                  onChange={(e) => setPerfilJornadaId(e.target.value)}
+                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
+                >
+                  <option hidden value="">
+                    Selecione um perfil...
+                  </option>
+                  {perfisJornada.map((perfil) => (
+                    <option
+                      key={perfil.perfil_jornada_id}
+                      className="bg-slate-900"
+                      value={perfil.perfil_jornada_id}
+                    >
+                      {perfil.perfil_jornada_nome}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          {tipoUsuario === "funcionario" && (
+            <div>
+              <label className="block text-sm text-white/80 mb-1">
+                Funcionário *
+              </label>
+              {carregandoFuncionarios ? (
+                <p className="text-white/70 text-sm">Carregando funcionários...</p>
+              ) : funcionarios.length === 0 ? (
+                <p className="text-yellow-400 text-sm">
+                  Nenhum funcionário disponível sem usuário vinculado
+                </p>
+              ) : (
+                <select
+                  value={funcionarioId}
+                  onChange={(e) => setFuncionarioId(e.target.value)}
+                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
+                >
+                  <option hidden value="">
+                    Selecione um funcionário...
+                  </option>
+                  {funcionarios.map((funcionario) => (
+                    <option
+                      key={funcionario.funcionario_id}
+                      className="bg-slate-900"
+                      value={funcionario.funcionario_id}
+                    >
+                      {funcionario.funcionario_nome}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
         </div>

@@ -10,6 +10,12 @@ import Descricao from "./descricoes.js";
 import CargoUsuario from "./cargosUsuarios.js";
 import Permissao from "./permissoes.js";
 import CargoPermissao from "./cargoPermissoes.js";
+import PerfilJornada from "./perfisJornada.js";
+import FuncionarioPerfilJornada from "./funcionarioPerfilJornada.js";
+import BatidaPonto from "./batidasPonto.js";
+import Justificativa from "./justificativas.js";
+import DiaTrabalhado from "./diasTrabalhados.js";
+import BancoHoras from "./bancosHoras.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -170,6 +176,18 @@ Usuario.belongsTo(CargoUsuario, {
   as: "cargo",
 });
 
+//Foreign keys de Usuários e Funcionários
+Funcionario.hasOne(Usuario, {
+  foreignKey: "usuario_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "usuario",
+});
+Usuario.belongsTo(Funcionario, {
+  foreignKey: "usuario_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+});
+
 //Foreign keys de Cargos de Usuários e Permissões (muitos-para-muitos)
 CargoUsuario.belongsToMany(Permissao, {
   through: CargoPermissao,
@@ -182,6 +200,96 @@ Permissao.belongsToMany(CargoUsuario, {
   foreignKey: "permissao_id",
   otherKey: "cargo_usuario_id",
   as: "cargos",
+});
+
+//Foreign keys de Funcionários e Perfis de Jornada (muitos-para-muitos)
+Funcionario.belongsToMany(PerfilJornada, {
+  through: FuncionarioPerfilJornada,
+  foreignKey: "funcionario_id",
+  otherKey: "perfil_jornada_id",
+  as: "perfisJornada",
+});
+PerfilJornada.belongsToMany(Funcionario, {
+  through: FuncionarioPerfilJornada,
+  foreignKey: "perfil_jornada_id",
+  otherKey: "funcionario_id",
+  as: "funcionarios",
+});
+
+//Foreign keys de Funcionários e Batidas de Ponto
+Funcionario.hasMany(BatidaPonto, {
+  foreignKey: "batida_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "batidas",
+});
+BatidaPonto.belongsTo(Funcionario, {
+  foreignKey: "batida_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+  onDelete: "CASCADE",
+});
+
+//Foreign keys de Funcionários e Justificativas
+Funcionario.hasMany(Justificativa, {
+  foreignKey: "justificativa_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "justificativas",
+});
+Justificativa.belongsTo(Funcionario, {
+  foreignKey: "justificativa_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+  onDelete: "CASCADE",
+});
+
+//Foreign keys de Usuários e Justificativas (aprovador)
+Usuario.hasMany(Justificativa, {
+  foreignKey: "justificativa_aprovador_id",
+  sourceKey: "usuario_id",
+  as: "justificativasAprovadas",
+});
+Justificativa.belongsTo(Usuario, {
+  foreignKey: "justificativa_aprovador_id",
+  targetKey: "usuario_id",
+  as: "aprovador",
+});
+
+//Foreign keys de Justificativas e Batidas de Ponto
+Justificativa.hasMany(BatidaPonto, {
+  foreignKey: "batida_justificativa_id",
+  sourceKey: "justificativa_id",
+  as: "batidas",
+});
+BatidaPonto.belongsTo(Justificativa, {
+  foreignKey: "batida_justificativa_id",
+  targetKey: "justificativa_id",
+  as: "justificativa",
+});
+
+//Foreign keys de Funcionários e Dias Trabalhados
+Funcionario.hasMany(DiaTrabalhado, {
+  foreignKey: "dia_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "diasTrabalhados",
+});
+DiaTrabalhado.belongsTo(Funcionario, {
+  foreignKey: "dia_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+  onDelete: "CASCADE",
+});
+
+//Foreign keys de Funcionários e Bancos de Horas
+Funcionario.hasOne(BancoHoras, {
+  foreignKey: "banco_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "bancoHoras",
+});
+BancoHoras.belongsTo(Funcionario, {
+  foreignKey: "banco_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+  onDelete: "CASCADE",
 });
 
 // Logging Funcionário
@@ -314,4 +422,10 @@ export {
   CargoUsuario,
   Permissao,
   CargoPermissao,
+  PerfilJornada,
+  FuncionarioPerfilJornada,
+  BatidaPonto,
+  Justificativa,
+  DiaTrabalhado,
+  BancoHoras,
 };
