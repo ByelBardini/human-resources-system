@@ -35,14 +35,18 @@ function Login() {
         token,
         usuario_nome,
         usuario_troca_senha,
-        usuario_role,
+        usuario_cargo_id,
+        cargo_nome,
+        permissoes,
         usuario_id,
       } = await logar(login, senha);
 
       localStorage.setItem("token", token);
       localStorage.setItem("usuario_nome", usuario_nome);
       localStorage.setItem("usuario_id", usuario_id);
-      localStorage.setItem("usuario_role", usuario_role);
+      localStorage.setItem("usuario_cargo_id", usuario_cargo_id);
+      localStorage.setItem("cargo_nome", cargo_nome);
+      localStorage.setItem("permissoes", JSON.stringify(permissoes));
       localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
 
       setCarregando(false);

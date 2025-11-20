@@ -1,6 +1,6 @@
 import { X, Save, Power, RotateCcw } from "lucide-react";
 import {
-  inativaUsuario,
+  inativaUsuario as inativaUsuarioService,
   resetaSenha,
 } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
@@ -21,7 +21,7 @@ function ModalUsuario({
     }
     setCarregando(true);
     try {
-      await inativaUsuario(usuarioSelecionado.usuario_id);
+      await inativaUsuarioService(usuarioSelecionado.usuario_id);
 
       mostrarAviso(
         usuarioSelecionado.usuario_ativo == 1 ? "aviso" : "sucesso",
@@ -136,18 +136,13 @@ function ModalUsuario({
 
           <div>
             <label className="block text-sm text-white/80 mb-1">
-              Tipo de Usuário
+              Cargo
             </label>
             <input
               type="text"
               className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
-              placeholder="Ex.: maria.silva"
               disabled
-              value={
-                usuarioSelecionado.usuario_role == "adm"
-                  ? "Administrador"
-                  : "Usuário Padrão"
-              }
+              value={usuarioSelecionado.cargo?.cargo_usuario_nome || "Sem cargo"}
             />
           </div>
         </div>

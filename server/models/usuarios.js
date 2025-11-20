@@ -22,8 +22,8 @@ Usuario.init({
     type: DataTypes.STRING(150),
     allowNull: false,
   },
-  usuario_role: {
-    type: DataTypes.ENUM("adm", "usuario"),
+  usuario_cargo_id: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
   usuario_troca_senha: {

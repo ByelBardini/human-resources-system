@@ -5,7 +5,22 @@ function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
 }
 
+function requirePermissao(req, codigoPermissao) {
+  const usuario = req.user;
+  if (!usuario) {
+    throw ApiError.unauthorized("Necessário estar logado para realizar operações.");
+  }
+  const permissoes = usuario.permissoes || [];
+  if (!permissoes.includes(codigoPermissao)) {
+    throw ApiError.forbidden(
+      `Você não tem permissão para realizar esta ação. Permissão necessária: ${codigoPermissao}`
+    );
+  }
+  return usuario;
+}
+
 export async function getDescricoes(req, res) {
+  requirePermissao(req, "visualizar_funcoes");
   const id = req.params.id;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa.");
@@ -34,6 +49,7 @@ export async function getDescricoes(req, res) {
 }
 
 export async function putDescricao(req, res) {
+  requirePermissao(req, "gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;

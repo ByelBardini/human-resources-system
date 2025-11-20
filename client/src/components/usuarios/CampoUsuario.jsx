@@ -35,9 +35,9 @@ function CampoUsuario({
           {ativo ? "Ativo" : "Inativo"}
         </span>
 
-        {usuario.usuario_role == "adm" && (
+        {usuario.cargo && (
           <span className="px-2 py-[2px] text-xs font-medium rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300">
-            Admin
+            {usuario.cargo.cargo_usuario_nome}
           </span>
         )}
 

@@ -13,17 +13,28 @@ export async function getUsuario() {
 export async function postUsuario(
   usuario_nome,
   usuario_login,
-  usuario_cadastrado_role
+  usuario_cargo_id
 ) {
   try {
     const response = await api.post("/usuario", {
       usuario_nome,
       usuario_login,
-      usuario_cadastrado_role,
+      usuario_cargo_id,
     });
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao cadastrar usuário:");
+  }
+}
+
+export async function atualizarCargoUsuario(id, usuario_cargo_id) {
+  try {
+    const response = await api.put(`/usuario/cargo/${id}`, {
+      usuario_cargo_id,
+    });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao atualizar cargo do usuário:");
   }
 }
 

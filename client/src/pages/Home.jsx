@@ -8,13 +8,14 @@ import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import CampoEmpresa from "../components/empresas/CampoEmpresa.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import { usePermissao } from "../hooks/usePermissao.js";
 
 function Home() {
   const { mostrarAviso, limparAviso } = useAviso();
 
   const navigate = useNavigate();
 
-  const role = localStorage.getItem("usuario_role");
+  const { temPermissao } = usePermissao();
 
   const [carregando, setCarregando] = useState(false);
   const [trocaSenha, setTrocaSenha] = useState(false);
@@ -73,10 +74,10 @@ function Home() {
         <LogOut size={20} />
       </button>
 
-      {role == "adm" && (
+      {temPermissao("gerenciar_usuarios") && (
         <button
           className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
-          title="Sair"
+          title="Gerenciar Usuários"
           onClick={() => navigate("/usuario", { replace: true })}
         >
           <UsersRound size={20} />

@@ -1,4 +1,4 @@
-import { Usuario } from "../models/index.js";
+import { Usuario, CargoUsuario } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import bcrypt from "bcrypt";
 
@@ -12,22 +12,30 @@ function requireUser(req) {
   return usuario;
 }
 
-function requireAdmin(req) {
+function requirePermissao(req, codigoPermissao) {
   const usuario = requireUser(req);
-  if (usuario.usuario_role !== "adm") {
+  const permissoes = usuario.permissoes || [];
+  
+  if (!permissoes.includes(codigoPermissao)) {
     throw ApiError.forbidden(
-      "Necessário ser um usuário administrador para realizar essa ação."
+      `Você não tem permissão para realizar esta ação. Permissão necessária: ${codigoPermissao}`
     );
   }
   return usuario;
 }
 
 export async function registrarUsuario(req, res) {
-  const { usuario_nome, usuario_login, usuario_cadastrado_role } = req.body;
-  requireAdmin(req);
+  const { usuario_nome, usuario_login, usuario_cargo_id } = req.body;
+  requirePermissao(req, "gerenciar_usuarios");
 
-  if (!usuario_nome || !usuario_login || !usuario_cadastrado_role) {
+  if (!usuario_nome || !usuario_login || !usuario_cargo_id) {
     throw ApiError.badRequest("Todos os campos são obrigatórios.");
+  }
+
+  // Verificar se o cargo existe e está ativo
+  const cargo = await CargoUsuario.findByPk(usuario_cargo_id);
+  if (!cargo || cargo.cargo_usuario_ativo === 0) {
+    throw ApiError.badRequest("Cargo inválido ou inativo.");
   }
 
   const senhaHash = bcrypt.hashSync("12345", 10);
@@ -37,11 +45,14 @@ export async function registrarUsuario(req, res) {
       usuario_nome,
       usuario_login,
       usuario_senha: senhaHash,
-      usuario_role: usuario_cadastrado_role,
+      usuario_cargo_id,
     });
 
     return res.status(201).json({ message: "Usuário registrado com sucesso!" });
   } catch (err) {
+    if (err.name === "SequelizeUniqueConstraintError") {
+      throw ApiError.badRequest("Já existe um usuário com este login.");
+    }
     console.error("Erro ao registrar usuário:", err);
     throw ApiError.internal("Erro ao registrar usuário");
   }
@@ -49,7 +60,7 @@ export async function registrarUsuario(req, res) {
 
 export async function resetaSenhaUsuario(req, res) {
   const { id } = req.params;
-  requireAdmin(req);
+  requirePermissao(req, "gerenciar_usuarios");
 
   const nova_senha = bcrypt.hashSync("12345", 10);
 
@@ -104,10 +115,17 @@ export async function trocaSenhaUsuario(req, res) {
 }
 
 export async function getUsuarios(req, res) {
-  requireAdmin(req);
+  requirePermissao(req, "gerenciar_usuarios");
 
   try {
     const usuarios = await Usuario.findAll({
+      include: [
+        {
+          model: CargoUsuario,
+          as: "cargo",
+          attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+        },
+      ],
       order: [["usuario_nome", "ASC"]],
     });
 
@@ -127,7 +145,7 @@ export async function getUsuarios(req, res) {
 
 export async function inativaUsuario(req, res) {
   const { id } = req.params;
-  requireAdmin(req);
+  requirePermissao(req, "gerenciar_usuarios");
 
   try {
     const usuario = await Usuario.findByPk(id);
@@ -147,5 +165,38 @@ export async function inativaUsuario(req, res) {
     if (err instanceof ApiError) throw err;
     console.error("Erro ao inativar usuário:", err);
     throw ApiError.internal("Erro ao inativar usuário");
+  }
+}
+
+// Atualizar cargo de um usuário
+export async function atualizarCargoUsuario(req, res) {
+  const { id } = req.params;
+  const { usuario_cargo_id } = req.body;
+  requirePermissao(req, "gerenciar_usuarios");
+
+  if (!usuario_cargo_id) {
+    throw ApiError.badRequest("Cargo é obrigatório.");
+  }
+
+  // Verificar se o cargo existe e está ativo
+  const cargo = await CargoUsuario.findByPk(usuario_cargo_id);
+  if (!cargo || cargo.cargo_usuario_ativo === 0) {
+    throw ApiError.badRequest("Cargo inválido ou inativo.");
+  }
+
+  try {
+    const usuario = await Usuario.findByPk(id);
+    if (!usuario) {
+      throw ApiError.notFound("Usuário não encontrado");
+    }
+
+    usuario.usuario_cargo_id = usuario_cargo_id;
+    await usuario.save();
+
+    return res.status(200).json({ message: "Cargo do usuário atualizado com sucesso!" });
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("Erro ao atualizar cargo do usuário:", err);
+    throw ApiError.internal("Erro ao atualizar cargo do usuário");
   }
 }

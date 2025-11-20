@@ -4,6 +4,7 @@ import {
   resetaSenhaUsuario,
   trocaSenhaUsuario,
   inativaUsuario,
+  atualizarCargoUsuario,
 } from "../controllers/usuarioController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import verificaToken from "../middlewares/verificaToken.js";
@@ -24,5 +25,6 @@ router.put(
   asyncHandler(resetaSenhaUsuario)
 );
 router.put("/usuario/inativa/:id", verificaToken, asyncHandler(inativaUsuario));
+router.put("/usuario/cargo/:id", verificaToken, asyncHandler(atualizarCargoUsuario));
 
 export default router;

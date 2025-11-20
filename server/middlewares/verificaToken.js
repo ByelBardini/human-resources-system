@@ -26,7 +26,12 @@ export function verificaToken(req, res, next) {
       throw ApiError.unauthorized("Token inválido ou expirado.");
     }
 
-    req.user = decoded;
+    req.user = {
+      usuario_id: decoded.usuario_id,
+      usuario_cargo_id: decoded.usuario_cargo_id,
+      cargo_nome: decoded.cargo_nome,
+      permissoes: decoded.permissoes || [],
+    };
     next();
   });
 }

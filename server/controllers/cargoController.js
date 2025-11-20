@@ -6,6 +6,20 @@ function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
 }
 
+function requirePermissao(req, codigoPermissao) {
+  const usuario = req.user;
+  if (!usuario) {
+    throw ApiError.unauthorized("Necessário estar logado para realizar operações.");
+  }
+  const permissoes = usuario.permissoes || [];
+  if (!permissoes.includes(codigoPermissao)) {
+    throw ApiError.forbidden(
+      `Você não tem permissão para realizar esta ação. Permissão necessária: ${codigoPermissao}`
+    );
+  }
+  return usuario;
+}
+
 const transformaEmNumero = (valor) => {
   if (typeof valor === "number") return valor;
   if (typeof valor === "bigint") return Number(valor);
@@ -23,6 +37,7 @@ const duasCasas = (x) =>
   Math.round((transformaEmNumero(x) + Number.EPSILON) * 100) / 100;
 
 export async function postCargo(req, res) {
+  requirePermissao(req, "gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { cargo_empresa_id, cargo_nome, salario_inicial } = req.body;
@@ -129,6 +144,7 @@ export async function postCargo(req, res) {
 }
 
 export async function aumentoGeral(req, res) {
+  requirePermissao(req, "gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { cargo_empresa_id, porcentagem } = req.body;
@@ -228,6 +244,7 @@ export async function aumentoGeral(req, res) {
 }
 
 export async function getCargos(req, res) {
+  requirePermissao(req, "gerenciar_cargos");
   const id = req.params.id;
   if (!id) throw ApiError.badRequest("Necessário informar o ID da empresa.");
 
@@ -250,6 +267,7 @@ export async function getCargos(req, res) {
 }
 
 export async function deleteCargo(req, res) {
+  requirePermissao(req, "gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;

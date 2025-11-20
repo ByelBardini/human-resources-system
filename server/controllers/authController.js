@@ -1,4 +1,4 @@
-import { Usuario } from "../models/index.js";
+import { Usuario, CargoUsuario, Permissao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -17,6 +17,18 @@ export async function login(req, res) {
   try {
     const usuario = await Usuario.findOne({
       where: { usuario_login: usuario_login },
+      include: [
+        {
+          model: CargoUsuario,
+          as: "cargo",
+          include: [
+            {
+              model: Permissao,
+              as: "permissoes",
+            },
+          ],
+        },
+      ],
     });
 
     if (!usuario) {
@@ -27,16 +39,26 @@ export async function login(req, res) {
       throw ApiError.unauthorized("Usuário inativo.");
     }
 
+    if (!usuario.cargo || usuario.cargo.cargo_usuario_ativo === 0) {
+      throw ApiError.unauthorized("Cargo do usuário está inativo.");
+    }
+
     const match = await bcrypt.compare(usuario_senha, usuario.usuario_senha);
 
     if (!match) {
       throw ApiError.unauthorized("Senha incorreta.");
     }
 
+    // Extrair códigos das permissões
+    const permissoes = usuario.cargo.permissoes.map(
+      (p) => p.permissao_codigo
+    );
+
     const payload = {
       usuario_id: usuario.usuario_id,
-      usuario_id: usuario.usuario_id,
-      usuario_role: usuario.usuario_role,
+      usuario_cargo_id: usuario.usuario_cargo_id,
+      cargo_nome: usuario.cargo.cargo_usuario_nome,
+      permissoes: permissoes,
     };
 
     const token = jwt.sign(payload, CHAVE, {
@@ -47,7 +69,9 @@ export async function login(req, res) {
       usuario_id: usuario.usuario_id,
       usuario_nome: usuario.usuario_nome,
       usuario_troca_senha: usuario.usuario_troca_senha,
-      usuario_role: usuario.usuario_role,
+      usuario_cargo_id: usuario.usuario_cargo_id,
+      cargo_nome: usuario.cargo.cargo_usuario_nome,
+      permissoes: permissoes,
       token: token,
     };
 

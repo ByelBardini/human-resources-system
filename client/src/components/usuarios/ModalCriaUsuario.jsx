@@ -2,6 +2,7 @@ import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { postUsuario } from "../../services/api/usuariosServices";
 import { useAviso } from "../../context/AvisoContext";
+import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 
 function ModalCriaUsuario({
   setCria,
@@ -14,17 +15,33 @@ function ModalCriaUsuario({
 
   const [nome, setNome] = useState("");
   const [login, setLogin] = useState("");
-  const [role, setRole] = useState("");
+  const [tipoUsuario, setTipoUsuario] = useState(""); // "funcionario" ou "usuario"
+  const [cargoId, setCargoId] = useState("");
+  const [cargos, setCargos] = useState([]);
 
   async function criaUsuario() {
-    if (!nome || !login || !role) {
+    if (!nome || !login || !tipoUsuario) {
       mostrarAviso("erro", "Todos os dados são obrigatórios", true);
+      return;
+    }
+
+    if (tipoUsuario === "usuario" && !cargoId) {
+      mostrarAviso("erro", "Selecione um cargo para o usuário", true);
+      return;
+    }
+
+    if (tipoUsuario === "funcionario") {
+      mostrarAviso(
+        "aviso",
+        "Funcionários não têm acesso ao sistema por enquanto. Use a tela de Funcionários para cadastrá-los.",
+        true
+      );
       return;
     }
 
     setCarregando(true);
     try {
-      await postUsuario(nome, login, role);
+      await postUsuario(nome, login, cargoId);
 
       mostrarAviso(
         "sucesso",
@@ -56,8 +73,21 @@ function ModalCriaUsuario({
   useEffect(() => {
     setNome("");
     setLogin("");
-    setRole("");
+    setTipoUsuario("");
+    setCargoId("");
   }, [cadastrado]);
+
+  useEffect(() => {
+    async function buscarCargos() {
+      try {
+        const cargosData = await getCargosUsuarios();
+        setCargos(cargosData.filter(c => c.cargo_usuario_ativo === 1));
+      } catch (err) {
+        console.error("Erro ao buscar cargos:", err);
+      }
+    }
+    buscarCargos();
+  }, []);
 
   return (
     <div
@@ -115,24 +145,55 @@ function ModalCriaUsuario({
 
           <div>
             <label className="block text-sm text-white/80 mb-1">
-              Tipo de usuário
+              Tipo de Perfil *
             </label>
             <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              value={tipoUsuario}
+              onChange={(e) => {
+                setTipoUsuario(e.target.value);
+                if (e.target.value !== "usuario") {
+                  setCargoId("");
+                }
+              }}
               className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
             >
               <option hidden value="">
                 Selecione...
               </option>
-              <option className="bg-slate-900" value="adm">
-                Administrador
-              </option>
               <option className="bg-slate-900" value="usuario">
-                Usuário Padrão
+                Usuário do Sistema
+              </option>
+              <option className="bg-slate-900" value="funcionario">
+                Funcionário
               </option>
             </select>
           </div>
+
+          {tipoUsuario === "usuario" && (
+            <div>
+              <label className="block text-sm text-white/80 mb-1">
+                Cargo *
+              </label>
+              <select
+                value={cargoId}
+                onChange={(e) => setCargoId(e.target.value)}
+                className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
+              >
+                <option hidden value="">
+                  Selecione um cargo...
+                </option>
+                {cargos.map((cargo) => (
+                  <option
+                    key={cargo.cargo_usuario_id}
+                    className="bg-slate-900"
+                    value={cargo.cargo_usuario_id}
+                  >
+                    {cargo.cargo_usuario_nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex justify-center">

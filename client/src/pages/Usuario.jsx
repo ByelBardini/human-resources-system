@@ -10,6 +10,7 @@ import Background from "../components/default/Background";
 import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
+import { Settings } from "lucide-react";
 
 function Usuario() {
   const navigate = useNavigate();
@@ -81,10 +82,18 @@ function Usuario() {
 
       <button
         className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
-        title="Sair"
+        title="Voltar"
         onClick={() => navigate("/home", { replace: true })}
       >
         <Undo2 size={20} />
+      </button>
+
+      <button
+        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        title="Gerenciar Cargos"
+        onClick={() => navigate("/cargos-usuarios", { replace: true })}
+      >
+        <Settings size={20} />
       </button>
 
       <div className="text-white flex flex-col gap-5 items-center justify-center w-full">

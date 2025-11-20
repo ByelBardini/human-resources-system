@@ -7,6 +7,9 @@ import Nivel from "./niveis.js";
 import Cargo from "./cargos.js";
 import Notificacao from "./notificacoes.js";
 import Descricao from "./descricoes.js";
+import CargoUsuario from "./cargosUsuarios.js";
+import Permissao from "./permissoes.js";
+import CargoPermissao from "./cargoPermissoes.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -155,6 +158,32 @@ Descricao.belongsTo(Setor, {
   as: "setor",
 });
 
+//Foreign keys de Usuários e Cargos de Usuários
+CargoUsuario.hasMany(Usuario, {
+  foreignKey: "usuario_cargo_id",
+  sourceKey: "cargo_usuario_id",
+  as: "usuarios",
+});
+Usuario.belongsTo(CargoUsuario, {
+  foreignKey: "usuario_cargo_id",
+  targetKey: "cargo_usuario_id",
+  as: "cargo",
+});
+
+//Foreign keys de Cargos de Usuários e Permissões (muitos-para-muitos)
+CargoUsuario.belongsToMany(Permissao, {
+  through: CargoPermissao,
+  foreignKey: "cargo_usuario_id",
+  otherKey: "permissao_id",
+  as: "permissoes",
+});
+Permissao.belongsToMany(CargoUsuario, {
+  through: CargoPermissao,
+  foreignKey: "permissao_id",
+  otherKey: "cargo_usuario_id",
+  as: "cargos",
+});
+
 // Logging Funcionário
 Funcionario.afterCreate(async (instance, options) => {
   try {
@@ -282,4 +311,7 @@ export {
   Cargo,
   Descricao,
   Notificacao,
+  CargoUsuario,
+  Permissao,
+  CargoPermissao,
 };

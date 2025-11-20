@@ -8,6 +8,20 @@ function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
 }
 
+function requirePermissao(req, codigoPermissao) {
+  const usuario = req.user;
+  if (!usuario) {
+    throw ApiError.unauthorized("Necessário estar logado para realizar operações.");
+  }
+  const permissoes = usuario.permissoes || [];
+  if (!permissoes.includes(codigoPermissao)) {
+    throw ApiError.forbidden(
+      `Você não tem permissão para realizar esta ação. Permissão necessária: ${codigoPermissao}`
+    );
+  }
+  return usuario;
+}
+
 export async function getCargoSetor(req, res) {
   const { id } = req.params;
   if (!id) {
@@ -28,6 +42,7 @@ export async function getCargoSetor(req, res) {
 }
 
 export async function getFuncionarios(req, res) {
+  requirePermissao(req, "visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
@@ -58,6 +73,7 @@ export async function getFuncionarios(req, res) {
 }
 
 export async function getFuncionariosInativos(req, res) {
+  requirePermissao(req, "visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
@@ -90,6 +106,7 @@ export async function getFuncionariosInativos(req, res) {
 }
 
 export async function getFuncionarioFull(req, res) {
+  requirePermissao(req, "visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID do funcionário");
@@ -112,6 +129,7 @@ export async function getFuncionarioFull(req, res) {
 }
 
 export async function putFuncionario(req, res) {
+  requirePermissao(req, "gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;
@@ -182,6 +200,7 @@ export async function putFuncionario(req, res) {
 }
 
 export async function postFuncionario(req, res) {
+  requirePermissao(req, "gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const {
@@ -243,6 +262,7 @@ export async function postFuncionario(req, res) {
 }
 
 export async function inativaFuncionario(req, res) {
+  requirePermissao(req, "gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;
