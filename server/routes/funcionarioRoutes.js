@@ -2,6 +2,7 @@ import {
   getFuncionarios,
   getFuncionariosInativos,
   getFuncionarioFull,
+  getFuncionariosComUsuario,
   putFuncionario,
   postFuncionario,
   inativaFuncionario,
@@ -17,6 +18,7 @@ const router = express.Router();
 router.use(verificaToken);
 
 router.get("/funcionario/cargo/:id", asyncHandler(getCargoSetor));
+router.get("/funcionario/com-usuario", asyncHandler(getFuncionariosComUsuario));
 router.get("/funcionario/:id", asyncHandler(getFuncionarios));
 router.get("/funcionario/inativos/:id", asyncHandler(getFuncionariosInativos));
 router.get("/funcionario/full/:id", asyncHandler(getFuncionarioFull));

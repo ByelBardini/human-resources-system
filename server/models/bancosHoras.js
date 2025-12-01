@@ -13,8 +13,11 @@ BancoHoras.init(
     },
     banco_funcionario_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: true,
+      allowNull: true,
+    },
+    banco_usuario_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     banco_saldo: {
       type: DataTypes.INTEGER,

@@ -10,21 +10,22 @@ export async function getUsuario() {
   }
 }
 
-export async function postUsuario(
-  usuario_nome,
-  usuario_login,
-  usuario_cargo_id,
-  usuario_funcionario_id = null,
-  perfil_jornada_id = null
-) {
+export async function getUsuariosFuncionarios(empresa_id = null) {
   try {
-    const response = await api.post("/usuario", {
-      usuario_nome,
-      usuario_login,
-      usuario_cargo_id,
-      usuario_funcionario_id,
-      perfil_jornada_id,
-    });
+    const params = {};
+    if (empresa_id) {
+      params.empresa_id = empresa_id;
+    }
+    const response = await api.get("/usuario/funcionarios", { params });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar funcionários:");
+  }
+}
+
+export async function postUsuario(dados) {
+  try {
+    const response = await api.post("/usuario", dados);
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao cadastrar usuário:");

@@ -1,5 +1,6 @@
 import {
   getUsuarios,
+  getUsuariosFuncionarios,
   registrarUsuario,
   resetaSenhaUsuario,
   trocaSenhaUsuario,
@@ -14,6 +15,7 @@ import express from "express";
 const router = express.Router();
 
 router.get("/usuario", verificaToken, asyncHandler(getUsuarios));
+router.get("/usuario/funcionarios", verificaToken, asyncHandler(getUsuariosFuncionarios));
 router.post("/usuario", verificaToken, asyncHandler(registrarUsuario));
 router.put(
   "/usuario/trocasenha",

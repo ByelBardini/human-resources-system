@@ -1,10 +1,11 @@
 import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { postUsuario, getFuncionariosSemUsuario } from "../../services/api/usuariosServices";
+import { postUsuario } from "../../services/api/usuariosServices";
 import { useAviso } from "../../context/AvisoContext";
 import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
+import { getEmpresas } from "../../services/api/empresasService";
 
 function ModalCriaUsuario({
   setCria,
@@ -21,12 +22,11 @@ function ModalCriaUsuario({
   const [login, setLogin] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState(""); // "funcionario" ou "usuario"
   const [cargoId, setCargoId] = useState("");
-  const [funcionarioId, setFuncionarioId] = useState("");
   const [perfilJornadaId, setPerfilJornadaId] = useState("");
+  const [empresaId, setEmpresaId] = useState("");
   const [cargos, setCargos] = useState([]);
-  const [funcionarios, setFuncionarios] = useState([]);
   const [perfisJornada, setPerfisJornada] = useState([]);
-  const [carregandoFuncionarios, setCarregandoFuncionarios] = useState(false);
+  const [empresas, setEmpresas] = useState([]);
 
   async function criaUsuario() {
     if (!nome || !login || !tipoUsuario) {
@@ -39,25 +39,26 @@ function ModalCriaUsuario({
       return;
     }
 
-    if (tipoUsuario === "funcionario" && !funcionarioId) {
-      mostrarAviso("erro", "Selecione um funcionário", true);
-      return;
-    }
-
     if (tipoUsuario === "funcionario" && !perfilJornadaId) {
       mostrarAviso("erro", "Selecione um perfil de carga horária", true);
       return;
     }
 
+    if (tipoUsuario === "funcionario" && !empresaId) {
+      mostrarAviso("erro", "Selecione uma empresa", true);
+      return;
+    }
+
     setCarregando(true);
     try {
-      await postUsuario(
-        nome,
-        login,
-        tipoUsuario === "funcionario" ? null : cargoId,
-        tipoUsuario === "funcionario" ? funcionarioId : null,
-        tipoUsuario === "funcionario" ? perfilJornadaId : null
-      );
+      await postUsuario({
+        usuario_nome: nome,
+        usuario_login: login,
+        usuario_cargo_id: tipoUsuario === "usuario" ? cargoId : null,
+        perfil_jornada_id: tipoUsuario === "funcionario" ? perfilJornadaId : null,
+        empresa_id: tipoUsuario === "funcionario" ? empresaId : null,
+        tipo_usuario: tipoUsuario,
+      });
 
       mostrarAviso(
         "sucesso",
@@ -71,7 +72,7 @@ function ModalCriaUsuario({
       if (err.status == 401 || err.status == 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        console.erro(err.message, err);
+        console.error(err.message, err);
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
@@ -91,8 +92,8 @@ function ModalCriaUsuario({
     setLogin("");
     setTipoUsuario("");
     setCargoId("");
-    setFuncionarioId("");
     setPerfilJornadaId("");
+    setEmpresaId("");
   }, [cadastrado]);
 
   useEffect(() => {
@@ -108,43 +109,26 @@ function ModalCriaUsuario({
   }, []);
 
   useEffect(() => {
-    async function buscarFuncionarios() {
-      if (tipoUsuario === "funcionario") {
-        setCarregandoFuncionarios(true);
-        try {
-          const empresa_id = localStorage.getItem("empresa_id");
-          if (empresa_id) {
-            const funcionariosData = await getFuncionariosSemUsuario(empresa_id);
-            setFuncionarios(funcionariosData);
-          }
-        } catch (err) {
-          console.error("Erro ao buscar funcionários:", err);
-        } finally {
-          setCarregandoFuncionarios(false);
-        }
-      } else {
-        setFuncionarios([]);
-        setFuncionarioId("");
-        setPerfilJornadaId("");
-      }
-    }
-    buscarFuncionarios();
-  }, [tipoUsuario]);
-
-  useEffect(() => {
-    async function buscarPerfisJornada() {
+    async function buscarDadosFuncionario() {
       if (tipoUsuario === "funcionario") {
         try {
-          const perfisData = await listarPerfisJornadaPublico();
+          const [perfisData, empresasData] = await Promise.all([
+            listarPerfisJornadaPublico(),
+            getEmpresas()
+          ]);
           setPerfisJornada(perfisData.perfis || []);
+          setEmpresas(empresasData || []);
         } catch (err) {
-          console.error("Erro ao buscar perfis de jornada:", err);
+          console.error("Erro ao buscar dados:", err);
         }
       } else {
         setPerfisJornada([]);
+        setPerfilJornadaId("");
+        setEmpresas([]);
+        setEmpresaId("");
       }
     }
-    buscarPerfisJornada();
+    buscarDadosFuncionario();
   }, [tipoUsuario]);
 
   return (
@@ -256,6 +240,38 @@ function ModalCriaUsuario({
           {tipoUsuario === "funcionario" && (
             <div>
               <label className="block text-sm text-white/80 mb-1">
+                Empresa *
+              </label>
+              {empresas.length === 0 ? (
+                <p className="text-yellow-400 text-sm">
+                  Nenhuma empresa disponível.
+                </p>
+              ) : (
+                <select
+                  value={empresaId}
+                  onChange={(e) => setEmpresaId(e.target.value)}
+                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
+                >
+                  <option hidden value="">
+                    Selecione uma empresa...
+                  </option>
+                  {empresas.map((empresa) => (
+                    <option
+                      key={empresa.empresa_id}
+                      className="bg-slate-900"
+                      value={empresa.empresa_id}
+                    >
+                      {empresa.empresa_nome}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          {tipoUsuario === "funcionario" && (
+            <div>
+              <label className="block text-sm text-white/80 mb-1">
                 Perfil de Carga Horária *
               </label>
               {perfisJornada.length === 0 ? (
@@ -290,40 +306,6 @@ function ModalCriaUsuario({
                       value={perfil.perfil_jornada_id}
                     >
                       {perfil.perfil_jornada_nome}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          )}
-
-          {tipoUsuario === "funcionario" && (
-            <div>
-              <label className="block text-sm text-white/80 mb-1">
-                Funcionário *
-              </label>
-              {carregandoFuncionarios ? (
-                <p className="text-white/70 text-sm">Carregando funcionários...</p>
-              ) : funcionarios.length === 0 ? (
-                <p className="text-yellow-400 text-sm">
-                  Nenhum funcionário disponível sem usuário vinculado
-                </p>
-              ) : (
-                <select
-                  value={funcionarioId}
-                  onChange={(e) => setFuncionarioId(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
-                >
-                  <option hidden value="">
-                    Selecione um funcionário...
-                  </option>
-                  {funcionarios.map((funcionario) => (
-                    <option
-                      key={funcionario.funcionario_id}
-                      className="bg-slate-900"
-                      value={funcionario.funcionario_id}
-                    >
-                      {funcionario.funcionario_nome}
                     </option>
                   ))}
                 </select>

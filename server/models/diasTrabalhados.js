@@ -13,7 +13,11 @@ DiaTrabalhado.init(
     },
     dia_funcionario_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+    },
+    dia_usuario_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     dia_data: {
       type: DataTypes.DATEONLY,

@@ -41,6 +41,16 @@ Usuario.init({
     allowNull: true,
     defaultValue: null,
   },
+  usuario_perfil_jornada_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
+  usuario_empresa_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null,
+  },
 }, {
   sequelize,
   modelName: "Usuario",

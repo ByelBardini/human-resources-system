@@ -1,4 +1,4 @@
-import { Usuario, CargoUsuario, Funcionario, Permissao, CargoPermissao, FuncionarioPerfilJornada } from "../models/index.js";
+import { Usuario, CargoUsuario, Funcionario, Permissao, CargoPermissao, PerfilJornada, Empresa } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import bcrypt from "bcrypt";
 import { Op } from "sequelize";
@@ -26,30 +26,33 @@ function requirePermissao(req, codigoPermissao) {
 }
 
 export async function registrarUsuario(req, res) {
-  const { usuario_nome, usuario_login, usuario_cargo_id, usuario_funcionario_id, perfil_jornada_id } = req.body;
+  const { usuario_nome, usuario_login, usuario_cargo_id, perfil_jornada_id, empresa_id, tipo_usuario } = req.body;
   requirePermissao(req, "usuarios.gerenciar");
 
   if (!usuario_nome || !usuario_login) {
     throw ApiError.badRequest("Nome e login são obrigatórios.");
   }
 
-  // Se for funcionário, não precisa de cargo, mas precisa de perfil de jornada
-  if (usuario_funcionario_id) {
+  // Se for usuário do tipo funcionário, precisa de perfil de jornada e empresa
+  if (tipo_usuario === "funcionario") {
     if (!perfil_jornada_id) {
-      throw ApiError.badRequest("Perfil de jornada é obrigatório para funcionários.");
+      throw ApiError.badRequest("Perfil de carga horária é obrigatório para usuários funcionários.");
     }
 
-    // Verificar se funcionário existe e se não está vinculado
-    const funcionario = await Funcionario.findByPk(usuario_funcionario_id);
-    if (!funcionario) {
-      throw ApiError.badRequest("Funcionário não encontrado.");
+    if (!empresa_id) {
+      throw ApiError.badRequest("Empresa é obrigatória para usuários funcionários.");
     }
 
-    const usuarioExistente = await Usuario.findOne({
-      where: { usuario_funcionario_id },
-    });
-    if (usuarioExistente) {
-      throw ApiError.badRequest("Este funcionário já possui um usuário vinculado.");
+    // Verificar se o perfil de jornada existe
+    const perfilJornada = await PerfilJornada.findByPk(perfil_jornada_id);
+    if (!perfilJornada || perfilJornada.perfil_jornada_ativo === 0) {
+      throw ApiError.badRequest("Perfil de carga horária inválido ou inativo.");
+    }
+
+    // Verificar se a empresa existe
+    const empresa = await Empresa.findByPk(empresa_id);
+    if (!empresa) {
+      throw ApiError.badRequest("Empresa não encontrada.");
     }
 
     // Usar cargo padrão "Usuário Básico" para funcionários
@@ -64,18 +67,14 @@ export async function registrarUsuario(req, res) {
     const senhaHash = bcrypt.hashSync("12345", 10);
 
     try {
-      const novoUsuario = await Usuario.create({
+      await Usuario.create({
         usuario_nome,
         usuario_login,
         usuario_senha: senhaHash,
         usuario_cargo_id: cargoBasico.cargo_usuario_id,
-        usuario_funcionario_id,
-      });
-
-      // Vincular funcionário ao perfil de jornada
-      await FuncionarioPerfilJornada.create({
-        funcionario_id: usuario_funcionario_id,
-        perfil_jornada_id,
+        usuario_perfil_jornada_id: perfil_jornada_id,
+        usuario_empresa_id: empresa_id,
+        usuario_funcionario_id: null,
       });
 
       // Garantir que o cargo tenha permissão de registrar ponto
@@ -128,6 +127,8 @@ export async function registrarUsuario(req, res) {
         usuario_senha: senhaHash,
         usuario_cargo_id,
         usuario_funcionario_id: null,
+        usuario_perfil_jornada_id: null,
+        usuario_empresa_id: null,
       });
 
       return res.status(201).json({ message: "Usuário registrado com sucesso!" });
@@ -201,18 +202,16 @@ export async function getUsuarios(req, res) {
   requirePermissao(req, "usuarios.visualizar");
 
   try {
+    // Buscar apenas usuários do sistema (sem perfil de jornada - não são funcionários)
     const usuarios = await Usuario.findAll({
+      where: {
+        usuario_perfil_jornada_id: null,
+      },
       include: [
         {
           model: CargoUsuario,
           as: "cargo",
           attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
-        },
-        {
-          model: Funcionario,
-          as: "funcionario",
-          attributes: ["funcionario_id", "funcionario_nome"],
-          required: false,
         },
       ],
       order: [["usuario_nome", "ASC"]],
@@ -229,6 +228,51 @@ export async function getUsuarios(req, res) {
     if (err instanceof ApiError) throw err;
     console.error("Erro ao buscar usuários:", err);
     throw ApiError.internal("Erro ao buscar usuários");
+  }
+}
+
+// Buscar usuários do tipo funcionário
+export async function getUsuariosFuncionarios(req, res) {
+  requirePermissao(req, "usuarios.visualizar");
+
+  try {
+    const { empresa_id } = req.query;
+
+    const whereClause = {
+      usuario_perfil_jornada_id: { [Op.not]: null },
+    };
+
+    if (empresa_id) {
+      whereClause.usuario_empresa_id = empresa_id;
+    }
+
+    const usuarios = await Usuario.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: CargoUsuario,
+          as: "cargo",
+          attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+        },
+        {
+          model: PerfilJornada,
+          as: "perfilJornada",
+          attributes: ["perfil_jornada_id", "perfil_jornada_nome"],
+        },
+        {
+          model: Empresa,
+          as: "empresa",
+          attributes: ["empresa_id", "empresa_nome"],
+        },
+      ],
+      order: [["usuario_nome", "ASC"]],
+    });
+
+    return res.status(200).json(usuarios);
+  } catch (err) {
+    if (err instanceof ApiError) throw err;
+    console.error("Erro ao buscar funcionários:", err);
+    throw ApiError.internal("Erro ao buscar funcionários");
   }
 }
 

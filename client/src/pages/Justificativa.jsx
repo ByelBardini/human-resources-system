@@ -268,7 +268,7 @@ function Justificativa() {
                 <select
                   value={tipoJustificativa}
                   onChange={(e) => setTipoJustificativa(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white [&>option]:bg-gray-700 [&>option]:text-white"
                 >
                   <option value="">Selecione...</option>
                   {tiposJustificativa.map((tipo) => (

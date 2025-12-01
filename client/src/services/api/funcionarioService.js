@@ -79,3 +79,13 @@ export async function inativarFuncionario(id, data, comentario, preco) {
     throw handleApiError(err, "Erro ao inativar funcionario");
   }
 }
+
+export async function getFuncionariosComUsuario(empresa_id = null) {
+  try {
+    const params = empresa_id ? { empresa_id } : {};
+    const response = await api.get("/funcionario/com-usuario", { params });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar funcionários com usuário:");
+  }
+}

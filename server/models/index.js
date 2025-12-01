@@ -178,7 +178,7 @@ Usuario.belongsTo(CargoUsuario, {
   as: "cargo",
 });
 
-//Foreign keys de Usuários e Funcionários
+//Foreign keys de Usuários e Funcionários (legado - mantido para compatibilidade)
 Funcionario.hasOne(Usuario, {
   foreignKey: "usuario_funcionario_id",
   sourceKey: "funcionario_id",
@@ -188,6 +188,30 @@ Usuario.belongsTo(Funcionario, {
   foreignKey: "usuario_funcionario_id",
   targetKey: "funcionario_id",
   as: "funcionario",
+});
+
+//Foreign keys de Usuários e Perfis de Jornada (para usuários do tipo funcionário)
+PerfilJornada.hasMany(Usuario, {
+  foreignKey: "usuario_perfil_jornada_id",
+  sourceKey: "perfil_jornada_id",
+  as: "usuarios",
+});
+Usuario.belongsTo(PerfilJornada, {
+  foreignKey: "usuario_perfil_jornada_id",
+  targetKey: "perfil_jornada_id",
+  as: "perfilJornada",
+});
+
+//Foreign keys de Usuários e Empresas (para usuários do tipo funcionário)
+Empresa.hasMany(Usuario, {
+  foreignKey: "usuario_empresa_id",
+  sourceKey: "empresa_id",
+  as: "usuariosFuncionarios",
+});
+Usuario.belongsTo(Empresa, {
+  foreignKey: "usuario_empresa_id",
+  targetKey: "empresa_id",
+  as: "empresa",
 });
 
 //Foreign keys de Cargos de Usuários e Permissões (muitos-para-muitos)
@@ -292,6 +316,66 @@ BatidaPonto.belongsTo(Justificativa, {
   foreignKey: "batida_justificativa_id",
   targetKey: "justificativa_id",
   as: "justificativa",
+});
+
+//Foreign keys de Usuários e Batidas de Ponto (aprovador)
+Usuario.hasMany(BatidaPonto, {
+  foreignKey: "batida_aprovador_id",
+  sourceKey: "usuario_id",
+  as: "batidasAprovadas",
+});
+BatidaPonto.belongsTo(Usuario, {
+  foreignKey: "batida_aprovador_id",
+  targetKey: "usuario_id",
+  as: "aprovador",
+});
+
+//Foreign keys de Usuários e Batidas de Ponto (dono da batida)
+Usuario.hasMany(BatidaPonto, {
+  foreignKey: "batida_usuario_id",
+  sourceKey: "usuario_id",
+  as: "batidas",
+});
+BatidaPonto.belongsTo(Usuario, {
+  foreignKey: "batida_usuario_id",
+  targetKey: "usuario_id",
+  as: "usuario",
+});
+
+//Foreign keys de Usuários e Dias Trabalhados
+Usuario.hasMany(DiaTrabalhado, {
+  foreignKey: "dia_usuario_id",
+  sourceKey: "usuario_id",
+  as: "diasTrabalhados",
+});
+DiaTrabalhado.belongsTo(Usuario, {
+  foreignKey: "dia_usuario_id",
+  targetKey: "usuario_id",
+  as: "usuario",
+});
+
+//Foreign keys de Usuários e Bancos de Horas
+Usuario.hasOne(BancoHoras, {
+  foreignKey: "banco_usuario_id",
+  sourceKey: "usuario_id",
+  as: "bancoHoras",
+});
+BancoHoras.belongsTo(Usuario, {
+  foreignKey: "banco_usuario_id",
+  targetKey: "usuario_id",
+  as: "usuario",
+});
+
+//Foreign keys de Usuários e Justificativas (dono da justificativa)
+Usuario.hasMany(Justificativa, {
+  foreignKey: "justificativa_usuario_id",
+  sourceKey: "usuario_id",
+  as: "justificativas",
+});
+Justificativa.belongsTo(Usuario, {
+  foreignKey: "justificativa_usuario_id",
+  targetKey: "usuario_id",
+  as: "usuario",
 });
 
 //Foreign keys de Funcionários e Dias Trabalhados
@@ -407,7 +491,7 @@ Cargo.afterCreate(async (instance, options) => {
   const usuario_id = options.usuario_id || null;
   const salario_inicial = options.salario_inicial || null;
 
-  const dados = instance.toJSON(); 
+  const dados = instance.toJSON();
 
   const cargo = { ...dados, salario_inicial };
 
@@ -424,7 +508,7 @@ Cargo.afterDestroy(async (instance, options) => {
   const usuario_id = options.usuario_id || null;
   const salario_inicial = options.salario_inicial || null;
 
-  const dados = instance.toJSON(); 
+  const dados = instance.toJSON();
 
   const cargo = { ...dados, salario_inicial };
 

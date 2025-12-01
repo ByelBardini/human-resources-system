@@ -13,7 +13,11 @@ BatidaPonto.init(
     },
     batida_funcionario_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+    },
+    batida_usuario_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     batida_data_hora: {
       type: DataTypes.DATE,
@@ -28,6 +32,26 @@ BatidaPonto.init(
       allowNull: true,
       defaultValue: null,
     },
+    batida_status: {
+      type: DataTypes.ENUM("normal", "pendente", "aprovada", "recusada"),
+      allowNull: false,
+      defaultValue: "normal",
+    },
+    batida_aprovador_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+    },
+    batida_data_aprovacao: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+    batida_observacao: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,
@@ -38,4 +62,3 @@ BatidaPonto.init(
 );
 
 export default BatidaPonto;
-

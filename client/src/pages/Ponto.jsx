@@ -1,15 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LogOut, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { LogOut, Clock, CheckCircle, AlertCircle, Wallet } from "lucide-react";
 import { getPontoHoje, registrarBatida } from "../services/api/pontoService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAviso } from "../context/AvisoContext.jsx";
+import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 
 function Ponto() {
   const { mostrarAviso, limparAviso } = useAviso();
   const navigate = useNavigate();
+  const { temPermissao } = usePermissao();
 
   const [carregando, setCarregando] = useState(false);
   const [pontoData, setPontoData] = useState(null);
@@ -56,12 +58,13 @@ function Ponto() {
   }
 
   function formatarData(dataStr) {
-    const data = new Date(dataStr);
+    const data = new Date(dataStr + "T12:00:00");
     return data.toLocaleDateString("pt-BR", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "America/Sao_Paulo",
     });
   }
 
@@ -70,7 +73,16 @@ function Ponto() {
     return data.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
     });
+  }
+
+  function formatarBancoHoras(horas) {
+    const horasAbs = Math.abs(horas);
+    const horasInteiras = Math.floor(horasAbs);
+    const minutos = Math.round((horasAbs - horasInteiras) * 60);
+    const sinal = horas >= 0 ? "+" : "-";
+    return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
   }
 
   useEffect(() => {
@@ -110,6 +122,36 @@ function Ponto() {
             {formatarData(pontoData.dataAtual)}
           </p>
 
+          {/* Card de Banco de Horas em destaque */}
+          <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-white/10 rounded-lg">
+                  <Wallet className="text-indigo-300" size={24} />
+                </div>
+                <div>
+                  <p className="text-white/70 text-sm">Saldo Banco de Horas</p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      pontoData.bancoHoras >= 0
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {formatarBancoHoras(pontoData.bancoHoras)}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-white/50 text-xs">
+                  {pontoData.bancoHoras >= 0
+                    ? "Horas a compensar"
+                    : "Horas devidas"}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-white/5 rounded-lg p-4 border border-white/10">
               <p className="text-white/70 text-sm mb-1">Jornada Prevista</p>
@@ -125,12 +167,16 @@ function Ponto() {
                   {pontoData.resumo.status === "normal" ? (
                     <>
                       <CheckCircle className="text-green-400" size={20} />
-                      <span className="text-green-400 font-semibold">Normal</span>
+                      <span className="text-green-400 font-semibold">
+                        Normal
+                      </span>
                     </>
                   ) : (
                     <>
                       <AlertCircle className="text-yellow-400" size={20} />
-                      <span className="text-yellow-400 font-semibold">Divergente</span>
+                      <span className="text-yellow-400 font-semibold">
+                        Divergente
+                      </span>
                     </>
                   )}
                 </div>
@@ -162,9 +208,13 @@ function Ponto() {
           )}
 
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Batidas Registradas</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Batidas Registradas
+            </h2>
             {pontoData.batidas.length === 0 ? (
-              <p className="text-white/70 text-center py-4">Nenhuma batida registrada hoje</p>
+              <p className="text-white/70 text-center py-4">
+                Nenhuma batida registrada hoje
+              </p>
             ) : (
               <div className="space-y-2">
                 {pontoData.batidas.map((batida, index) => (
@@ -196,7 +246,8 @@ function Ponto() {
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Clock size={20} />
-            Registrar Ponto ({pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
+            Registrar Ponto (
+            {pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
           </button>
 
           <div className="mt-6 flex gap-4">
@@ -210,9 +261,22 @@ function Ponto() {
               onClick={() => navigate("/relatorio-mensal")}
               className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 font-semibold py-3 px-4 rounded-lg transition-colors border border-purple-500/30"
             >
-              Relatório Mensal
+              Histórico
             </button>
           </div>
+
+          {/* Botão de gestão para aprovadores */}
+          {(temPermissao("ponto.aprovar_justificativas") ||
+            temPermissao("ponto.alterar_batidas")) && (
+            <div className="mt-4">
+              <button
+                onClick={() => navigate("/gerenciar-pontos")}
+                className="w-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-semibold py-3 px-4 rounded-lg transition-colors border border-emerald-500/30"
+              >
+                Gerenciar Pontos
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -220,4 +284,3 @@ function Ponto() {
 }
 
 export default Ponto;
-

@@ -1,0 +1,913 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+import {
+  LogOut,
+  X,
+  Users,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  AlertCircle,
+  Building2,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
+import {
+  getGestaoEmpresas,
+  getGestaoFuncionarios,
+  getHistoricoFuncionario,
+  getPendentes,
+  aprovarBatida,
+  reprovarBatida,
+  fecharBancoHoras,
+  recalcularBancoHoras,
+} from "../services/api/pontoService.js";
+import {
+  aprovarJustificativa,
+  recusarJustificativa,
+} from "../services/api/justificativaService.js";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAviso } from "../context/AvisoContext.jsx";
+import { usePermissao } from "../hooks/usePermissao.js";
+import Loading from "../components/default/Loading.jsx";
+import Background from "../components/default/Background.jsx";
+
+function GerenciarPontos() {
+  const { mostrarAviso, limparAviso } = useAviso();
+  const navigate = useNavigate();
+  const { temPermissao } = usePermissao();
+
+  const [carregando, setCarregando] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState("funcionarios");
+
+  // Estados de empresas
+  const [empresas, setEmpresas] = useState([]);
+  const [empresaSelecionada, setEmpresaSelecionada] = useState(null);
+
+  // Estados de pendências
+  const [pendentes, setPendentes] = useState({
+    justificativas: [],
+    batidas: [],
+  });
+
+  // Estados de funcionários
+  const [funcionarios, setFuncionarios] = useState([]);
+  const [funcionarioSelecionado, setFuncionarioSelecionado] = useState(null);
+  const [historicoFuncionario, setHistoricoFuncionario] = useState(null);
+  const [mes, setMes] = useState(new Date().getMonth() + 1);
+  const [ano, setAno] = useState(new Date().getFullYear());
+  const [diaExpandido, setDiaExpandido] = useState(null);
+
+  // Modal de reprovação
+  const [modalReprovar, setModalReprovar] = useState(null);
+  const [motivoReprovar, setMotivoReprovar] = useState("");
+
+  // Modal de fechar banco
+  const [modalFecharBanco, setModalFecharBanco] = useState(false);
+
+  const meses = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+
+  const tiposJustificativa = {
+    esqueceu_bater: "Esqueceu de bater ponto",
+    entrada_atrasada: "Entrada atrasada",
+    saida_cedo: "Saída cedo",
+    falta_justificada: "Falta justificada",
+    consulta_medica: "Consulta médica",
+    horas_extras: "Horas Extras",
+    outros: "Outros",
+    falta_nao_justificada: "Falta não justificada",
+  };
+
+  async function deslogar() {
+    localStorage.clear();
+    navigate("/", { replace: true });
+  }
+
+  async function buscarEmpresas() {
+    try {
+      const data = await getGestaoEmpresas();
+      setEmpresas(data.empresas);
+    } catch (err) {
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function buscarPendentes() {
+    setCarregando(true);
+    try {
+      const data = await getPendentes();
+      setPendentes(data);
+      setCarregando(false);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function buscarFuncionarios(empresaId = null) {
+    setCarregando(true);
+    try {
+      const data = await getGestaoFuncionarios(empresaId);
+      setFuncionarios(data.funcionarios);
+      setCarregando(false);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function buscarHistoricoFuncionario(id) {
+    setCarregando(true);
+    try {
+      const data = await getHistoricoFuncionario(id, mes, ano);
+      setHistoricoFuncionario(data);
+      setCarregando(false);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleAprovarJustificativa(id) {
+    setCarregando(true);
+    try {
+      await aprovarJustificativa(id);
+      mostrarAviso("sucesso", "Justificativa aprovada com sucesso!");
+      setTimeout(() => {
+        limparAviso();
+        buscarPendentes();
+        if (funcionarioSelecionado) {
+          buscarHistoricoFuncionario(funcionarioSelecionado.id);
+        }
+      }, 1000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleRecusarJustificativa(id) {
+    setCarregando(true);
+    try {
+      await recusarJustificativa(id);
+      mostrarAviso("sucesso", "Justificativa recusada!");
+      setTimeout(() => {
+        limparAviso();
+        buscarPendentes();
+        if (funcionarioSelecionado) {
+          buscarHistoricoFuncionario(funcionarioSelecionado.id);
+        }
+      }, 1000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleAprovarBatida(id) {
+    setCarregando(true);
+    try {
+      await aprovarBatida(id);
+      mostrarAviso("sucesso", "Batida aprovada com sucesso!");
+      setTimeout(() => {
+        limparAviso();
+        buscarPendentes();
+        if (funcionarioSelecionado) {
+          buscarHistoricoFuncionario(funcionarioSelecionado.id);
+        }
+      }, 1000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleReprovarBatida() {
+    if (!modalReprovar) return;
+
+    setCarregando(true);
+    try {
+      await reprovarBatida(modalReprovar.id, motivoReprovar);
+      mostrarAviso("sucesso", "Batida reprovada!");
+      setModalReprovar(null);
+      setMotivoReprovar("");
+      setTimeout(() => {
+        limparAviso();
+        buscarPendentes();
+        if (funcionarioSelecionado) {
+          buscarHistoricoFuncionario(funcionarioSelecionado.id);
+        }
+      }, 1000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleFecharBanco() {
+    if (!funcionarioSelecionado) return;
+
+    setCarregando(true);
+    try {
+      const result = await fecharBancoHoras(funcionarioSelecionado.id);
+      mostrarAviso(
+        "sucesso",
+        `Banco de horas fechado! Saldo anterior: ${result.saldoAnterior.toFixed(
+          2
+        )}h`
+      );
+      setModalFecharBanco(false);
+      setTimeout(() => {
+        limparAviso();
+        buscarHistoricoFuncionario(funcionarioSelecionado.id);
+      }, 1500);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleRecalcularBanco() {
+    if (!funcionarioSelecionado) return;
+
+    setCarregando(true);
+    try {
+      const result = await recalcularBancoHoras(funcionarioSelecionado.id);
+      mostrarAviso(
+        "sucesso",
+        `Banco recalculado! Novo saldo: ${result.saldoNovo.toFixed(2)}h`
+      );
+      setTimeout(() => {
+        limparAviso();
+        buscarHistoricoFuncionario(funcionarioSelecionado.id);
+      }, 1500);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  function formatarData(dataStr) {
+    if (!dataStr) return "";
+    const data = new Date(dataStr + "T12:00:00");
+    return data.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "America/Sao_Paulo",
+    });
+  }
+
+  function formatarHora(dataHora) {
+    const data = new Date(dataHora);
+    return data.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    });
+  }
+
+  function formatarDataHora(dataHora) {
+    const data = new Date(dataHora);
+    return data.toLocaleString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    });
+  }
+
+  function formatarBancoHoras(horas) {
+    const horasAbs = Math.abs(horas);
+    const horasInteiras = Math.floor(horasAbs);
+    const minutos = Math.round((horasAbs - horasInteiras) * 60);
+    const sinal = horas >= 0 ? "+" : "-";
+    return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
+  }
+
+  function mudarMes(direcao) {
+    let novoMes = mes + direcao;
+    let novoAno = ano;
+
+    if (novoMes > 12) {
+      novoMes = 1;
+      novoAno++;
+    } else if (novoMes < 1) {
+      novoMes = 12;
+      novoAno--;
+    }
+
+    setMes(novoMes);
+    setAno(novoAno);
+    setDiaExpandido(null);
+  }
+
+  function selecionarFuncionario(func) {
+    setFuncionarioSelecionado(func);
+    setDiaExpandido(null);
+  }
+
+  function selecionarEmpresa(empresaId) {
+    setEmpresaSelecionada(empresaId);
+    setFuncionarioSelecionado(null);
+    setHistoricoFuncionario(null);
+    buscarFuncionarios(empresaId);
+  }
+
+  useEffect(() => {
+    // Verificar permissão
+    if (
+      !temPermissao("ponto.aprovar_justificativas") &&
+      !temPermissao("ponto.alterar_batidas")
+    ) {
+      navigate("/home", { replace: true });
+      return;
+    }
+
+    buscarEmpresas();
+    buscarPendentes();
+    document.title = "Gerenciar Pontos - Sistema RH";
+  }, []);
+
+  useEffect(() => {
+    if (funcionarioSelecionado) {
+      buscarHistoricoFuncionario(funcionarioSelecionado.id);
+    }
+  }, [funcionarioSelecionado, mes, ano]);
+
+  return (
+    <div className="relative min-h-screen w-screen flex justify-center items-start p-6 overflow-hidden">
+      <Background />
+
+      <button
+        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        title="Sair"
+        onClick={deslogar}
+      >
+        <LogOut size={20} />
+      </button>
+
+      <button
+        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        title="Voltar"
+        onClick={() => navigate("/home")}
+      >
+        <X size={20} />
+      </button>
+
+      {carregando && <Loading />}
+
+      <div className="overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
+          <h1 className="text-3xl font-semibold text-white mb-6">
+            Gerenciar Pontos
+          </h1>
+
+          {/* Abas */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setAbaAtiva("funcionarios")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                abaAtiva === "funcionarios"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-white/5 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              <Users size={18} />
+              Funcionários
+            </button>
+            <button
+              onClick={() => {
+                setAbaAtiva("pendentes");
+                buscarPendentes();
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                abaAtiva === "pendentes"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-white/5 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              <AlertCircle size={18} />
+              Pendências
+              {(pendentes.justificativas.length > 0 ||
+                pendentes.batidas.length > 0) && (
+                <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-xs">
+                  {pendentes.justificativas.length + pendentes.batidas.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Aba de Funcionários */}
+          {abaAtiva === "funcionarios" && (
+            <div className="space-y-4">
+              {/* Seleção de Empresa */}
+              <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Building2 size={20} />
+                  Selecione a Empresa
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {empresas.map((emp) => (
+                    <button
+                      key={emp.id}
+                      onClick={() => selecionarEmpresa(emp.id)}
+                      className={`p-3 rounded-lg text-left transition-colors ${
+                        empresaSelecionada === emp.id
+                          ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                          : "bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+                      }`}
+                    >
+                      <p className="font-medium truncate">{emp.nome}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lista de Funcionários e Histórico */}
+              {empresaSelecionada && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Lista de Funcionários */}
+                  <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                    <h2 className="text-lg font-semibold text-white mb-4">
+                      Funcionários
+                    </h2>
+                    {funcionarios.length === 0 ? (
+                      <p className="text-white/50 text-center py-4">
+                        Nenhum funcionário encontrado
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                        {funcionarios.map((func) => (
+                          <button
+                            key={func.id}
+                            onClick={() => selecionarFuncionario(func)}
+                            className={`w-full text-left p-3 rounded-lg transition-colors ${
+                              funcionarioSelecionado?.id === func.id
+                                ? "bg-emerald-500/20 border border-emerald-500/30"
+                                : "bg-white/5 hover:bg-white/10 border border-white/10"
+                            }`}
+                          >
+                            <p className="text-white font-medium">
+                              {func.nome}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Histórico do Funcionário */}
+                  <div className="md:col-span-2 bg-white/5 rounded-lg border border-white/10 p-4">
+                    {!funcionarioSelecionado ? (
+                      <div className="flex items-center justify-center h-full text-white/50 py-8">
+                        Selecione um funcionário para ver o histórico
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-lg font-semibold text-white">
+                            {funcionarioSelecionado.nome}
+                          </h2>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => mudarMes(-1)}
+                              className="p-1 rounded bg-white/5 hover:bg-white/10"
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <span className="text-sm min-w-[120px] text-center">
+                              {meses[mes - 1]} {ano}
+                            </span>
+                            <button
+                              onClick={() => mudarMes(1)}
+                              className="p-1 rounded bg-white/5 hover:bg-white/10"
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {historicoFuncionario && (
+                          <>
+                            {/* Banco de Horas e Ações */}
+                            <div className="flex gap-4 mb-4">
+                              <div className="flex-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg p-3 border border-indigo-500/30">
+                                <p className="text-white/70 text-xs">
+                                  Banco de Horas
+                                </p>
+                                <p
+                                  className={`text-xl font-bold ${
+                                    historicoFuncionario.bancoHoras >= 0
+                                      ? "text-green-400"
+                                      : "text-red-400"
+                                  }`}
+                                >
+                                  {formatarBancoHoras(
+                                    historicoFuncionario.bancoHoras
+                                  )}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={handleRecalcularBanco}
+                                  className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                  title="Recalcular Banco de Horas"
+                                >
+                                  <RefreshCw size={18} />
+                                </button>
+                                <button
+                                  onClick={() => setModalFecharBanco(true)}
+                                  className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                  title="Fechar/Zerar Banco de Horas"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Lista de Dias */}
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                              {historicoFuncionario.dias.map((dia) => {
+                                const isExpanded = diaExpandido === dia.data;
+                                const temBatidas =
+                                  dia.batidas && dia.batidas.length > 0;
+
+                                return (
+                                  <div
+                                    key={dia.data}
+                                    className="bg-white/5 rounded border border-white/10"
+                                  >
+                                    <div
+                                      className="p-2 flex items-center justify-between cursor-pointer hover:bg-white/5"
+                                      onClick={() =>
+                                        setDiaExpandido(
+                                          isExpanded ? null : dia.data
+                                        )
+                                      }
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-white text-sm w-12">
+                                          {formatarData(dia.data).slice(0, 5)}
+                                        </span>
+                                        <span className="text-white/70 text-xs">
+                                          {dia.horasTrabalhadas.toFixed(1)}h
+                                        </span>
+                                        {dia.status === "divergente" && (
+                                          <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
+                                            Div.
+                                          </span>
+                                        )}
+                                      </div>
+                                      {isExpanded ? (
+                                        <ChevronUp
+                                          size={14}
+                                          className="text-white/50"
+                                        />
+                                      ) : (
+                                        <ChevronDown
+                                          size={14}
+                                          className="text-white/50"
+                                        />
+                                      )}
+                                    </div>
+
+                                    {isExpanded && (
+                                      <div className="border-t border-white/10 p-2 bg-white/5">
+                                        <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                                          <div>
+                                            <span className="text-white/50">
+                                              Extras:
+                                            </span>
+                                            <span className="text-green-400 ml-1">
+                                              +{dia.horasExtras.toFixed(2)}h
+                                            </span>
+                                          </div>
+                                          <div>
+                                            <span className="text-white/50">
+                                              Neg.:
+                                            </span>
+                                            <span className="text-red-400 ml-1">
+                                              -{dia.horasNegativas.toFixed(2)}h
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {temBatidas && (
+                                          <div className="flex flex-wrap gap-1 mb-2">
+                                            {dia.batidas.map((b, idx) => (
+                                              <span
+                                                key={idx}
+                                                className={`px-2 py-1 rounded text-xs ${
+                                                  b.batida_status === "pendente"
+                                                    ? "bg-orange-500/20 text-orange-400"
+                                                    : b.batida_status ===
+                                                      "recusada"
+                                                    ? "bg-red-500/20 text-red-400"
+                                                    : "bg-white/10 text-white/70"
+                                                }`}
+                                              >
+                                                {b.batida_tipo === "entrada"
+                                                  ? "E"
+                                                  : "S"}
+                                                :{" "}
+                                                {formatarHora(
+                                                  b.batida_data_hora
+                                                )}
+                                                {b.batida_status ===
+                                                  "pendente" && " (pend.)"}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {dia.justificativas &&
+                                          dia.justificativas.length > 0 && (
+                                            <div className="space-y-1">
+                                              {dia.justificativas.map(
+                                                (j, idx) => (
+                                                  <div
+                                                    key={idx}
+                                                    className={`px-2 py-1 rounded text-xs ${
+                                                      j.justificativa_status ===
+                                                      "pendente"
+                                                        ? "bg-orange-500/20 text-orange-400"
+                                                        : j.justificativa_status ===
+                                                          "aprovada"
+                                                        ? "bg-green-500/20 text-green-400"
+                                                        : "bg-red-500/20 text-red-400"
+                                                    }`}
+                                                  >
+                                                    {tiposJustificativa[
+                                                      j.justificativa_tipo
+                                                    ] || j.justificativa_tipo}
+                                                    {" - "}
+                                                    {j.justificativa_status ===
+                                                    "pendente"
+                                                      ? "Pendente"
+                                                      : j.justificativa_status ===
+                                                        "aprovada"
+                                                      ? "Aprovada"
+                                                      : "Recusada"}
+                                                  </div>
+                                                )
+                                              )}
+                                            </div>
+                                          )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Aba de Pendências */}
+          {abaAtiva === "pendentes" && (
+            <div className="space-y-6">
+              {/* Justificativas Pendentes */}
+              {temPermissao("ponto.aprovar_justificativas") && (
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <FileText size={20} />
+                    Justificativas Pendentes ({pendentes.justificativas.length})
+                  </h2>
+                  {pendentes.justificativas.length === 0 ? (
+                    <p className="text-white/50 text-center py-4">
+                      Nenhuma justificativa pendente
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pendentes.justificativas.map((j) => (
+                        <div
+                          key={j.justificativa_id}
+                          className="bg-white/5 rounded-lg p-4 border border-white/10"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-white font-semibold">
+                                {j.funcionario?.funcionario_nome ||
+                                  "Funcionário"}
+                              </p>
+                              <p className="text-white/70 text-sm">
+                                {formatarData(j.justificativa_data)} -{" "}
+                                {tiposJustificativa[j.justificativa_tipo] ||
+                                  j.justificativa_tipo}
+                              </p>
+                              {j.justificativa_descricao && (
+                                <p className="text-white/50 text-sm mt-1">
+                                  {j.justificativa_descricao}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  handleAprovarJustificativa(j.justificativa_id)
+                                }
+                                className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                                title="Aprovar"
+                              >
+                                <CheckCircle size={18} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleRecusarJustificativa(j.justificativa_id)
+                                }
+                                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                title="Recusar"
+                              >
+                                <XCircle size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Batidas Pendentes */}
+              {temPermissao("ponto.alterar_batidas") && (
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <Clock size={20} />
+                    Batidas Pendentes ({pendentes.batidas.length})
+                  </h2>
+                  {pendentes.batidas.length === 0 ? (
+                    <p className="text-white/50 text-center py-4">
+                      Nenhuma batida pendente
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {pendentes.batidas.map((b) => (
+                        <div
+                          key={b.batida_id}
+                          className="bg-white/5 rounded-lg p-4 border border-white/10"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-white font-semibold">
+                                {b.funcionario?.funcionario_nome ||
+                                  "Funcionário"}
+                              </p>
+                              <p className="text-white/70 text-sm">
+                                {formatarDataHora(b.batida_data_hora)} -{" "}
+                                <span className="capitalize">
+                                  {b.batida_tipo}
+                                </span>
+                              </p>
+                              {b.batida_observacao && (
+                                <p className="text-white/50 text-sm mt-1">
+                                  Motivo: {b.batida_observacao}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleAprovarBatida(b.batida_id)}
+                                className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
+                                title="Aprovar"
+                              >
+                                <CheckCircle size={18} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setModalReprovar({
+                                    id: b.batida_id,
+                                    tipo: "batida",
+                                  })
+                                }
+                                className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                title="Reprovar"
+                              >
+                                <XCircle size={18} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal de Reprovar Batida */}
+      {modalReprovar && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              Reprovar Batida
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Motivo da reprovação (opcional)
+                </label>
+                <textarea
+                  value={motivoReprovar}
+                  onChange={(e) => setMotivoReprovar(e.target.value)}
+                  rows={3}
+                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white"
+                  placeholder="Informe o motivo da reprovação..."
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setModalReprovar(null);
+                    setMotivoReprovar("");
+                  }}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleReprovarBatida}
+                  disabled={carregando}
+                  className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Reprovar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Fechar Banco de Horas */}
+      {modalFecharBanco && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              Fechar Banco de Horas
+            </h2>
+            <p className="text-white/70 mb-4">
+              Tem certeza que deseja zerar o banco de horas de{" "}
+              <strong className="text-white">
+                {funcionarioSelecionado?.nome}
+              </strong>
+              ?
+            </p>
+            <p className="text-yellow-400 text-sm mb-4">
+              ⚠️ Esta ação irá zerar o saldo do banco de horas. Use quando as
+              horas forem compensadas ou pagas.
+            </p>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setModalFecharBanco(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleFecharBanco}
+                disabled={carregando}
+                className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default GerenciarPontos;

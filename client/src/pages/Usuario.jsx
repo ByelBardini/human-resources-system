@@ -1,21 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Undo2 } from "lucide-react";
+import { Undo2, Settings, Clock, Monitor, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getUsuario } from "../services/api/usuariosServices.js";
+import { getUsuario, getUsuariosFuncionarios } from "../services/api/usuariosServices.js";
 import { useAviso } from "../context/AvisoContext.jsx";
-import ModalAviso from "../components/default/ModalAviso.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background";
 import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
-import { Settings, Clock } from "lucide-react";
 
 function Usuario() {
   const navigate = useNavigate();
 
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuariosSistema, setUsuariosSistema] = useState([]);
+  const [usuariosFuncionarios, setUsuariosFuncionarios] = useState([]);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState();
 
   const [visualiza, setVisualiza] = useState(false);
@@ -28,12 +27,16 @@ function Usuario() {
 
   async function buscaUsuarios() {
     try {
-      const usuarios = await getUsuario();
-      setUsuarios(usuarios);
+      const [usuarios, funcionarios] = await Promise.all([
+        getUsuario(),
+        getUsuariosFuncionarios(),
+      ]);
+      setUsuariosSistema(usuarios);
+      setUsuariosFuncionarios(funcionarios);
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.erro(err);
+        console.error(err);
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
@@ -56,9 +59,6 @@ function Usuario() {
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
 
-      {/* {aviso && (
-        <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
-      )} */}
       {cria && (
         <ModalCriaUsuario
           setCria={setCria}
@@ -105,15 +105,25 @@ function Usuario() {
         </button>
       </div>
 
-      <div className="text-white flex flex-col gap-5 items-center justify-center w-full">
-        <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <h1 className="text-2xl font-semibold text-white mb-4 text-center">
-            Usuários disponíveis
-          </h1>
+      <div className="text-white flex flex-row gap-6 items-start justify-center w-full max-w-6xl">
+        {/* Seção: Usuários do Sistema */}
+        <div className="flex-1 max-w-xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
+          <div className="flex items-center gap-3 mb-4 justify-center">
+            <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-400/30">
+              <Monitor size={20} className="text-blue-300" />
+            </div>
+            <h1 className="text-xl font-semibold text-white">
+              Usuários do Sistema
+            </h1>
+          </div>
+          <p className="text-sm text-white/60 text-center mb-4">
+            Usuários com acesso às funcionalidades do sistema
+          </p>
 
-          <div className="max-h-[28rem] overflow-y-auto overflow-x-hidden pr-2 flex flex-col gap-3">
-            {usuarios.map((usuario) => (
+          <div className="max-h-[24rem] overflow-y-auto overflow-x-hidden pr-2 flex flex-col gap-3">
+            {usuariosSistema.map((usuario) => (
               <CampoUsuario
+                key={usuario.usuario_id}
                 ativo={Boolean(usuario.usuario_ativo)}
                 setVisualiza={setVisualiza}
                 usuario={usuario}
@@ -121,9 +131,9 @@ function Usuario() {
               />
             ))}
 
-            {usuarios.length === 0 && (
+            {usuariosSistema.length === 0 && (
               <div className="text-center text-white/60 text-sm py-6">
-                Nenhum usuário encontrado.
+                Nenhum usuário do sistema encontrado.
               </div>
             )}
           </div>
@@ -131,9 +141,52 @@ function Usuario() {
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setCria(true)}
-              className="cursor-pointer px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow"
+              className="cursor-pointer px-4 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-200 shadow"
             >
               Adicionar Usuário
+            </button>
+          </div>
+        </div>
+
+        {/* Seção: Funcionários */}
+        <div className="flex-1 max-w-xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
+          <div className="flex items-center gap-3 mb-4 justify-center">
+            <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30">
+              <User size={20} className="text-emerald-300" />
+            </div>
+            <h1 className="text-xl font-semibold text-white">
+              Funcionários
+            </h1>
+          </div>
+          <p className="text-sm text-white/60 text-center mb-4">
+            Acesso apenas ao registro de ponto e justificativas
+          </p>
+
+          <div className="max-h-[24rem] overflow-y-auto overflow-x-hidden pr-2 flex flex-col gap-3">
+            {usuariosFuncionarios.map((usuario) => (
+              <CampoUsuario
+                key={usuario.usuario_id}
+                ativo={Boolean(usuario.usuario_ativo)}
+                setVisualiza={setVisualiza}
+                usuario={usuario}
+                setUsuarioSelecionado={setUsuarioSelecionado}
+                tipoFuncionario={true}
+              />
+            ))}
+
+            {usuariosFuncionarios.length === 0 && (
+              <div className="text-center text-white/60 text-sm py-6">
+                Nenhum funcionário com acesso ao ponto encontrado.
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => setCria(true)}
+              className="cursor-pointer px-4 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-200 shadow"
+            >
+              Adicionar Funcionário
             </button>
           </div>
         </div>

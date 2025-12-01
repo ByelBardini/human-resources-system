@@ -13,7 +13,11 @@ Justificativa.init(
     },
     justificativa_funcionario_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+    },
+    justificativa_usuario_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
     },
     justificativa_data: {
       type: DataTypes.DATEONLY,

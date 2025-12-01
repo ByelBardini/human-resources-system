@@ -1,4 +1,4 @@
-import { Funcionario, Setor, Cargo, Nivel } from "../models/index.js";
+import { Funcionario, Setor, Cargo, Nivel, Usuario, CargoUsuario } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
 import fs from "fs/promises";
@@ -65,6 +65,19 @@ export async function getFuncionarios(req, res) {
         attributes: ["nivel_nome", "nivel_salario"],
       },
       { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+      {
+        model: Usuario,
+        as: "usuario",
+        required: false,
+        attributes: ["usuario_id", "usuario_nome", "usuario_login", "usuario_ativo"],
+        include: [
+          {
+            model: CargoUsuario,
+            as: "cargo",
+            attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+          },
+        ],
+      },
     ],
     order: [["funcionario_nome", "ASC"]],
   });
@@ -98,6 +111,57 @@ export async function getFuncionariosInativos(req, res) {
         attributes: ["nivel_nome", "nivel_salario"],
       },
       { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+      {
+        model: Usuario,
+        as: "usuario",
+        required: false,
+        attributes: ["usuario_id", "usuario_nome", "usuario_login", "usuario_ativo"],
+        include: [
+          {
+            model: CargoUsuario,
+            as: "cargo",
+            attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+          },
+        ],
+      },
+    ],
+    order: [["funcionario_nome", "ASC"]],
+  });
+
+  return res.status(200).json(funcionarios);
+}
+
+// Retorna funcionários que possuem usuário vinculado (para gerenciamento de usuários)
+export async function getFuncionariosComUsuario(req, res) {
+  requirePermissao(req, "usuarios.visualizar");
+  const { empresa_id } = req.query;
+
+  const whereClause = {};
+  if (empresa_id) {
+    whereClause.funcionario_empresa_id = empresa_id;
+  }
+
+  const funcionarios = await Funcionario.findAll({
+    where: whereClause,
+    attributes: [
+      "funcionario_id",
+      "funcionario_nome",
+      "funcionario_ativo",
+    ],
+    include: [
+      {
+        model: Usuario,
+        as: "usuario",
+        required: true, // Só retorna funcionários que têm usuário
+        attributes: ["usuario_id", "usuario_nome", "usuario_login", "usuario_ativo"],
+        include: [
+          {
+            model: CargoUsuario,
+            as: "cargo",
+            attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+          },
+        ],
+      },
     ],
     order: [["funcionario_nome", "ASC"]],
   });

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LogOut, UsersRound } from "lucide-react";
+import { LogOut, UsersRound, Clock } from "lucide-react";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +54,10 @@ function Home() {
     document.title = "Home - Sistema RH";
   }, []);
 
+  const podeGerenciarPontos =
+    temPermissao("ponto.aprovar_justificativas") ||
+    temPermissao("ponto.alterar_batidas");
+
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
@@ -86,12 +90,25 @@ function Home() {
 
       {carregando && <Loading />}
 
-      <div className="overflow-x-hidden overflow-y-hidden text-white">
+      <div className="overflow-x-hidden overflow-y-auto text-white">
         <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <h1 className="text-2xl font-semibold text-white mb-1 text-center pb-8">
             Selecione a empresa desejada
           </h1>
           <CampoEmpresa empresas={empresas} navigate={navigate} />
+
+          {/* Botão de Gerenciar Pontos dos Funcionários */}
+          {podeGerenciarPontos && (
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <button
+                onClick={() => navigate("/gerenciar-pontos")}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 transition-colors font-semibold"
+              >
+                <Clock size={20} />
+                Pontos dos Funcionários
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
