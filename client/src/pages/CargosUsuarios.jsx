@@ -3,7 +3,7 @@ import { Undo2, Plus, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getCargosUsuarios, deleteCargoUsuario } from "../services/api/cargoUsuarioServices.js";
-import { getPermissoes } from "../services/api/permissaoServices.js";
+import { getPermissoesAgrupadas } from "../services/api/permissaoServices.js";
 import { useAviso } from "../context/AvisoContext.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
@@ -13,7 +13,7 @@ function CargosUsuarios() {
   const navigate = useNavigate();
 
   const [cargos, setCargos] = useState([]);
-  const [permissoes, setPermissoes] = useState([]);
+  const [categoriasPermissoes, setCategoriasPermissoes] = useState([]);
   const [cargoSelecionado, setCargoSelecionado] = useState(null);
   const [modalAberto, setModalAberto] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
@@ -47,8 +47,8 @@ function CargosUsuarios() {
 
   async function buscaPermissoes() {
     try {
-      const permissoesData = await getPermissoes();
-      setPermissoes(permissoesData);
+      const categoriasData = await getPermissoesAgrupadas();
+      setCategoriasPermissoes(categoriasData);
     } catch (err) {
       console.error("Erro ao buscar permissões:", err);
     }
@@ -105,7 +105,7 @@ function CargosUsuarios() {
       {modalAberto && (
         <ModalCargoUsuario
           cargo={cargoSelecionado}
-          permissoes={permissoes}
+          categoriasPermissoes={categoriasPermissoes}
           modoEdicao={modoEdicao}
           setModalAberto={setModalAberto}
           setCarregando={setCarregando}

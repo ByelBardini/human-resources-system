@@ -1,4 +1,4 @@
-import { CargoUsuario, Permissao, Usuario } from "../models/index.js";
+import { CargoUsuario, Permissao, Usuario, Empresa, CategoriaPermissao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 
 function requireUser(req) {
@@ -11,9 +11,21 @@ function requireUser(req) {
   return usuario;
 }
 
+function requirePermissao(req, codigoPermissao) {
+  const usuario = requireUser(req);
+  const permissoes = usuario.permissoes || [];
+  
+  if (!permissoes.includes(codigoPermissao)) {
+    throw ApiError.forbidden(
+      `Você não tem permissão para realizar esta ação. Permissão necessária: ${codigoPermissao}`
+    );
+  }
+  return usuario;
+}
+
 // Listar todos os cargos de usuários
 export async function getCargosUsuarios(req, res) {
-  requireUser(req);
+  requirePermissao(req, "cargos.gerenciar");
 
   try {
     const cargos = await CargoUsuario.findAll({
@@ -22,6 +34,18 @@ export async function getCargosUsuarios(req, res) {
           model: Permissao,
           as: "permissoes",
           attributes: ["permissao_id", "permissao_codigo", "permissao_nome"],
+          include: [
+            {
+              model: CategoriaPermissao,
+              as: "categoria",
+              attributes: ["categoria_id", "categoria_codigo", "categoria_nome", "categoria_ordem"],
+            },
+          ],
+        },
+        {
+          model: Empresa,
+          as: "empresas",
+          attributes: ["empresa_id", "empresa_nome"],
         },
       ],
       order: [["cargo_usuario_nome", "ASC"]],
@@ -36,7 +60,7 @@ export async function getCargosUsuarios(req, res) {
 
 // Obter um cargo específico
 export async function getCargoUsuario(req, res) {
-  requireUser(req);
+  requirePermissao(req, "cargos.gerenciar");
   const { id } = req.params;
 
   try {
@@ -46,6 +70,18 @@ export async function getCargoUsuario(req, res) {
           model: Permissao,
           as: "permissoes",
           attributes: ["permissao_id", "permissao_codigo", "permissao_nome"],
+          include: [
+            {
+              model: CategoriaPermissao,
+              as: "categoria",
+              attributes: ["categoria_id", "categoria_codigo", "categoria_nome", "categoria_ordem"],
+            },
+          ],
+        },
+        {
+          model: Empresa,
+          as: "empresas",
+          attributes: ["empresa_id", "empresa_nome"],
         },
       ],
     });
@@ -64,8 +100,8 @@ export async function getCargoUsuario(req, res) {
 
 // Criar novo cargo
 export async function postCargoUsuario(req, res) {
-  requireUser(req);
-  const { cargo_usuario_nome, cargo_usuario_descricao, permissoes } = req.body;
+  requirePermissao(req, "cargos.gerenciar");
+  const { cargo_usuario_nome, cargo_usuario_descricao, permissoes, empresas } = req.body;
 
   if (!cargo_usuario_nome) {
     throw ApiError.badRequest("Nome do cargo é obrigatório.");
@@ -83,13 +119,23 @@ export async function postCargoUsuario(req, res) {
       await cargo.setPermissoes(permissoes);
     }
 
-    // Buscar cargo com permissões para retornar
+    // Atribuir empresas se fornecidas
+    if (empresas && Array.isArray(empresas) && empresas.length > 0) {
+      await cargo.setEmpresas(empresas);
+    }
+
+    // Buscar cargo com permissões e empresas para retornar
     const cargoCompleto = await CargoUsuario.findByPk(cargo.cargo_usuario_id, {
       include: [
         {
           model: Permissao,
           as: "permissoes",
           attributes: ["permissao_id", "permissao_codigo", "permissao_nome"],
+        },
+        {
+          model: Empresa,
+          as: "empresas",
+          attributes: ["empresa_id", "empresa_nome"],
         },
       ],
     });
@@ -106,9 +152,9 @@ export async function postCargoUsuario(req, res) {
 
 // Atualizar cargo
 export async function putCargoUsuario(req, res) {
-  requireUser(req);
+  requirePermissao(req, "cargos.gerenciar");
   const { id } = req.params;
-  const { cargo_usuario_nome, cargo_usuario_descricao, cargo_usuario_ativo, permissoes } = req.body;
+  const { cargo_usuario_nome, cargo_usuario_descricao, cargo_usuario_ativo, permissoes, empresas } = req.body;
 
   try {
     const cargo = await CargoUsuario.findByPk(id);
@@ -129,13 +175,23 @@ export async function putCargoUsuario(req, res) {
       await cargo.setPermissoes(permissoes);
     }
 
-    // Buscar cargo atualizado com permissões
+    // Atualizar empresas se fornecidas
+    if (empresas !== undefined && Array.isArray(empresas)) {
+      await cargo.setEmpresas(empresas);
+    }
+
+    // Buscar cargo atualizado com permissões e empresas
     const cargoAtualizado = await CargoUsuario.findByPk(id, {
       include: [
         {
           model: Permissao,
           as: "permissoes",
           attributes: ["permissao_id", "permissao_codigo", "permissao_nome"],
+        },
+        {
+          model: Empresa,
+          as: "empresas",
+          attributes: ["empresa_id", "empresa_nome"],
         },
       ],
     });
@@ -153,7 +209,7 @@ export async function putCargoUsuario(req, res) {
 
 // Deletar cargo (soft delete - inativar)
 export async function deleteCargoUsuario(req, res) {
-  requireUser(req);
+  requirePermissao(req, "cargos.gerenciar");
   const { id } = req.params;
 
   try {

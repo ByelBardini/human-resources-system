@@ -38,6 +38,7 @@ function Login() {
         usuario_cargo_id,
         cargo_nome,
         permissoes,
+        empresas,
         usuario_id,
       } = await logar(login, senha);
 
@@ -47,6 +48,7 @@ function Login() {
       localStorage.setItem("usuario_cargo_id", usuario_cargo_id);
       localStorage.setItem("cargo_nome", cargo_nome);
       localStorage.setItem("permissoes", JSON.stringify(permissoes));
+      localStorage.setItem("empresas", JSON.stringify(empresas || []));
       localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
 
       setCarregando(false);

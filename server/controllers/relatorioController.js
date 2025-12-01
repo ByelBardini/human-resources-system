@@ -46,7 +46,7 @@ async function getFuncionarioDoUsuario(usuario_id) {
 
 // Obter relatório mensal
 export async function getRelatorioMensal(req, res) {
-  requirePermissao(req, "visualizar_relatorios_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);
@@ -120,7 +120,7 @@ export async function getRelatorioMensal(req, res) {
 
 // Obter totais mensais
 export async function getTotaisMensais(req, res) {
-  requirePermissao(req, "visualizar_relatorios_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);

@@ -27,7 +27,7 @@ function requirePermissao(req, codigoPermissao) {
 
 export async function registrarUsuario(req, res) {
   const { usuario_nome, usuario_login, usuario_cargo_id, usuario_funcionario_id, perfil_jornada_id } = req.body;
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.gerenciar");
 
   if (!usuario_nome || !usuario_login) {
     throw ApiError.badRequest("Nome e login são obrigatórios.");
@@ -80,7 +80,7 @@ export async function registrarUsuario(req, res) {
 
       // Garantir que o cargo tenha permissão de registrar ponto
       const permissaoRegistrarPonto = await Permissao.findOne({
-        where: { permissao_codigo: "registrar_ponto" },
+        where: { permissao_codigo: "ponto.registrar" },
       });
 
       if (permissaoRegistrarPonto) {
@@ -143,7 +143,7 @@ export async function registrarUsuario(req, res) {
 
 export async function resetaSenhaUsuario(req, res) {
   const { id } = req.params;
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.gerenciar");
 
   const nova_senha = bcrypt.hashSync("12345", 10);
 
@@ -198,7 +198,7 @@ export async function trocaSenhaUsuario(req, res) {
 }
 
 export async function getUsuarios(req, res) {
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.visualizar");
 
   try {
     const usuarios = await Usuario.findAll({
@@ -234,7 +234,7 @@ export async function getUsuarios(req, res) {
 
 // Buscar funcionários sem usuário vinculado
 export async function getFuncionariosSemUsuario(req, res) {
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.gerenciar_funcionarios");
 
   try {
     const { empresa_id } = req.query;
@@ -280,7 +280,7 @@ export async function getFuncionariosSemUsuario(req, res) {
 
 export async function inativaUsuario(req, res) {
   const { id } = req.params;
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.gerenciar");
 
   try {
     const usuario = await Usuario.findByPk(id);
@@ -307,7 +307,7 @@ export async function inativaUsuario(req, res) {
 export async function atualizarCargoUsuario(req, res) {
   const { id } = req.params;
   const { usuario_cargo_id } = req.body;
-  requirePermissao(req, "gerenciar_usuarios");
+  requirePermissao(req, "usuarios.gerenciar");
 
   if (!usuario_cargo_id) {
     throw ApiError.badRequest("Cargo é obrigatório.");

@@ -1,4 +1,4 @@
-import { Permissao, CargoUsuario } from "../models/index.js";
+import { Permissao, CargoUsuario, CategoriaPermissao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 
 function requireUser(req) {
@@ -17,13 +17,49 @@ export async function getPermissoes(req, res) {
 
   try {
     const permissoes = await Permissao.findAll({
-      order: [["permissao_nome", "ASC"]],
+      include: [
+        {
+          model: CategoriaPermissao,
+          as: "categoria",
+          attributes: ["categoria_id", "categoria_codigo", "categoria_nome", "categoria_ordem"],
+        },
+      ],
+      order: [
+        [{ model: CategoriaPermissao, as: "categoria" }, "categoria_ordem", "ASC"],
+        ["permissao_nome", "ASC"],
+      ],
     });
 
     return res.status(200).json(permissoes);
   } catch (err) {
     console.error("Erro ao buscar permissões:", err);
     throw ApiError.internal("Erro ao buscar permissões");
+  }
+}
+
+// Listar permissões agrupadas por categoria
+export async function getPermissoesAgrupadas(req, res) {
+  requireUser(req);
+
+  try {
+    const categorias = await CategoriaPermissao.findAll({
+      include: [
+        {
+          model: Permissao,
+          as: "permissoes",
+          attributes: ["permissao_id", "permissao_codigo", "permissao_nome", "permissao_descricao"],
+        },
+      ],
+      order: [
+        ["categoria_ordem", "ASC"],
+        [{ model: Permissao, as: "permissoes" }, "permissao_nome", "ASC"],
+      ],
+    });
+
+    return res.status(200).json(categorias);
+  } catch (err) {
+    console.error("Erro ao buscar permissões agrupadas:", err);
+    throw ApiError.internal("Erro ao buscar permissões agrupadas");
   }
 }
 
@@ -39,6 +75,11 @@ export async function getPermissao(req, res) {
           model: CargoUsuario,
           as: "cargos",
           attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+        },
+        {
+          model: CategoriaPermissao,
+          as: "categoria",
+          attributes: ["categoria_id", "categoria_codigo", "categoria_nome"],
         },
       ],
     });
@@ -66,6 +107,13 @@ export async function getPermissoesCargo(req, res) {
         {
           model: Permissao,
           as: "permissoes",
+          include: [
+            {
+              model: CategoriaPermissao,
+              as: "categoria",
+              attributes: ["categoria_id", "categoria_codigo", "categoria_nome", "categoria_ordem"],
+            },
+          ],
         },
       ],
     });
@@ -81,4 +129,3 @@ export async function getPermissoesCargo(req, res) {
     throw ApiError.internal("Erro ao buscar permissões do cargo");
   }
 }
-

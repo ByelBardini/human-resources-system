@@ -10,6 +10,8 @@ import Descricao from "./descricoes.js";
 import CargoUsuario from "./cargosUsuarios.js";
 import Permissao from "./permissoes.js";
 import CargoPermissao from "./cargoPermissoes.js";
+import CategoriaPermissao from "./categoriasPermissao.js";
+import CargoEmpresa from "./cargoEmpresas.js";
 import PerfilJornada from "./perfisJornada.js";
 import FuncionarioPerfilJornada from "./funcionarioPerfilJornada.js";
 import BatidaPonto from "./batidasPonto.js";
@@ -200,6 +202,32 @@ Permissao.belongsToMany(CargoUsuario, {
   foreignKey: "permissao_id",
   otherKey: "cargo_usuario_id",
   as: "cargos",
+});
+
+//Foreign keys de Permissões e Categorias
+CategoriaPermissao.hasMany(Permissao, {
+  foreignKey: "permissao_categoria_id",
+  sourceKey: "categoria_id",
+  as: "permissoes",
+});
+Permissao.belongsTo(CategoriaPermissao, {
+  foreignKey: "permissao_categoria_id",
+  targetKey: "categoria_id",
+  as: "categoria",
+});
+
+//Foreign keys de Cargos de Usuários e Empresas (muitos-para-muitos)
+CargoUsuario.belongsToMany(Empresa, {
+  through: CargoEmpresa,
+  foreignKey: "cargo_usuario_id",
+  otherKey: "empresa_id",
+  as: "empresas",
+});
+Empresa.belongsToMany(CargoUsuario, {
+  through: CargoEmpresa,
+  foreignKey: "empresa_id",
+  otherKey: "cargo_usuario_id",
+  as: "cargosUsuarios",
 });
 
 //Foreign keys de Funcionários e Perfis de Jornada (muitos-para-muitos)
@@ -422,6 +450,8 @@ export {
   CargoUsuario,
   Permissao,
   CargoPermissao,
+  CategoriaPermissao,
+  CargoEmpresa,
   PerfilJornada,
   FuncionarioPerfilJornada,
   BatidaPonto,

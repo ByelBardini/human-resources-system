@@ -1,4 +1,4 @@
-import { Usuario, CargoUsuario, Permissao } from "../models/index.js";
+import { Usuario, CargoUsuario, Permissao, Empresa } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -25,6 +25,10 @@ export async function login(req, res) {
             {
               model: Permissao,
               as: "permissoes",
+            },
+            {
+              model: Empresa,
+              as: "empresas",
             },
           ],
         },
@@ -54,11 +58,17 @@ export async function login(req, res) {
       (p) => p.permissao_codigo
     );
 
+    // Extrair IDs das empresas vinculadas ao cargo
+    const empresas = usuario.cargo.empresas?.map(
+      (e) => e.empresa_id
+    ) || [];
+
     const payload = {
       usuario_id: usuario.usuario_id,
       usuario_cargo_id: usuario.usuario_cargo_id,
       cargo_nome: usuario.cargo.cargo_usuario_nome,
       permissoes: permissoes,
+      empresas: empresas,
     };
 
     const token = jwt.sign(payload, CHAVE, {
@@ -72,6 +82,7 @@ export async function login(req, res) {
       usuario_cargo_id: usuario.usuario_cargo_id,
       cargo_nome: usuario.cargo.cargo_usuario_nome,
       permissoes: permissoes,
+      empresas: empresas,
       token: token,
     };
 

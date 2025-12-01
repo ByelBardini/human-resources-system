@@ -37,7 +37,7 @@ const duasCasas = (x) =>
   Math.round((transformaEmNumero(x) + Number.EPSILON) * 100) / 100;
 
 export async function postCargo(req, res) {
-  requirePermissao(req, "gerenciar_cargos");
+  requirePermissao(req, "sistema.gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { cargo_empresa_id, cargo_nome, salario_inicial } = req.body;
@@ -144,7 +144,7 @@ export async function postCargo(req, res) {
 }
 
 export async function aumentoGeral(req, res) {
-  requirePermissao(req, "gerenciar_cargos");
+  requirePermissao(req, "sistema.gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { cargo_empresa_id, porcentagem } = req.body;
@@ -244,7 +244,7 @@ export async function aumentoGeral(req, res) {
 }
 
 export async function getCargos(req, res) {
-  requirePermissao(req, "gerenciar_cargos");
+  requirePermissao(req, "sistema.gerenciar_cargos");
   const id = req.params.id;
   if (!id) throw ApiError.badRequest("Necessário informar o ID da empresa.");
 
@@ -267,7 +267,7 @@ export async function getCargos(req, res) {
 }
 
 export async function deleteCargo(req, res) {
-  requirePermissao(req, "gerenciar_cargos");
+  requirePermissao(req, "sistema.gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;

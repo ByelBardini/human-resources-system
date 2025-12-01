@@ -23,6 +23,10 @@ Permissao.init({
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  permissao_categoria_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
 }, {
   sequelize,
   modelName: "Permissao",

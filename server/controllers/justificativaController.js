@@ -54,7 +54,7 @@ async function getFuncionarioDoUsuario(usuario_id) {
 
 // Criar justificativa
 export async function criarJustificativa(req, res) {
-  requirePermissao(req, "registrar_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);
@@ -106,7 +106,7 @@ export async function criarJustificativa(req, res) {
 
 // Listar justificativas do funcionário
 export async function listarJustificativas(req, res) {
-  requirePermissao(req, "registrar_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);
@@ -142,7 +142,7 @@ export async function listarJustificativas(req, res) {
 
 // Aprovar justificativa
 export async function aprovarJustificativa(req, res) {
-  requirePermissao(req, "gerenciar_justificativas");
+  requirePermissao(req, "ponto.aprovar_justificativas");
 
   const usuario_id = getUsuarioId(req);
   const { id } = req.params;
@@ -180,7 +180,7 @@ export async function aprovarJustificativa(req, res) {
 
 // Recusar justificativa
 export async function recusarJustificativa(req, res) {
-  requirePermissao(req, "gerenciar_justificativas");
+  requirePermissao(req, "ponto.aprovar_justificativas");
 
   const usuario_id = getUsuarioId(req);
   const { id } = req.params;

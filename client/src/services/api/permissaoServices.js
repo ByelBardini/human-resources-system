@@ -27,3 +27,12 @@ export async function getPermissoesCargo(cargoId) {
   }
 }
 
+export async function getPermissoesAgrupadas() {
+  try {
+    const response = await api.get("/permissoes/agrupadas");
+    return response.data;
+  } catch (err) {
+    throw new Error(err.response?.data?.message || "Erro ao buscar permissões agrupadas");
+  }
+}
+

@@ -20,7 +20,7 @@ function requirePermissao(req, codigoPermissao) {
 }
 
 export async function getDescricoes(req, res) {
-  requirePermissao(req, "visualizar_funcoes");
+  requirePermissao(req, "sistema.visualizar_funcoes");
   const id = req.params.id;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa.");
@@ -49,7 +49,7 @@ export async function getDescricoes(req, res) {
 }
 
 export async function putDescricao(req, res) {
-  requirePermissao(req, "gerenciar_cargos");
+  requirePermissao(req, "sistema.gerenciar_cargos");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;

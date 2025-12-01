@@ -74,7 +74,7 @@ function Home() {
         <LogOut size={20} />
       </button>
 
-      {temPermissao("gerenciar_usuarios") && (
+      {temPermissao("usuarios.gerenciar") && (
         <button
           className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
           title="Gerenciar Usuários"

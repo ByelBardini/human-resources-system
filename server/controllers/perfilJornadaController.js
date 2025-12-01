@@ -25,7 +25,7 @@ function requirePermissao(req, codigoPermissao) {
 
 // Criar perfil de jornada
 export async function criarPerfilJornada(req, res) {
-  requirePermissao(req, "gerenciar_perfis_jornada");
+  requirePermissao(req, "ponto.criar_cargas_horarias");
 
   const {
     nome,
@@ -60,7 +60,7 @@ export async function criarPerfilJornada(req, res) {
 
 // Listar perfis de jornada
 export async function listarPerfisJornada(req, res) {
-  requirePermissao(req, "gerenciar_perfis_jornada");
+  requirePermissao(req, "ponto.criar_cargas_horarias");
 
   const perfis = await PerfilJornada.findAll({
     where: { perfil_jornada_ativo: 1 },
@@ -87,7 +87,7 @@ export async function listarPerfisJornadaPublico(req, res) {
 
 // Vincular funcionário a perfil
 export async function vincularFuncionarioPerfil(req, res) {
-  requirePermissao(req, "gerenciar_perfis_jornada");
+  requirePermissao(req, "ponto.criar_cargas_horarias");
 
   const { funcionario_id, perfil_jornada_id } = req.body;
 

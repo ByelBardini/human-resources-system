@@ -281,7 +281,7 @@ export async function calcularESalvarDia(funcionario_id, data, batidas, perfil) 
 
 // Registrar batida de ponto
 export async function registrarBatida(req, res) {
-  requirePermissao(req, "registrar_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);
@@ -332,7 +332,7 @@ export async function registrarBatida(req, res) {
 
 // Obter dados do ponto do dia atual
 export async function getPontoHoje(req, res) {
-  requirePermissao(req, "registrar_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);
@@ -392,7 +392,7 @@ export async function getPontoHoje(req, res) {
 
 // Obter batidas de um dia específico
 export async function getBatidasDia(req, res) {
-  requirePermissao(req, "visualizar_relatorios_ponto");
+  requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
   const funcionario = await getFuncionarioDoUsuario(usuario_id);

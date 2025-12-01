@@ -42,7 +42,7 @@ export async function getCargoSetor(req, res) {
 }
 
 export async function getFuncionarios(req, res) {
-  requirePermissao(req, "visualizar_funcionarios");
+  requirePermissao(req, "sistema.visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
@@ -73,7 +73,7 @@ export async function getFuncionarios(req, res) {
 }
 
 export async function getFuncionariosInativos(req, res) {
-  requirePermissao(req, "visualizar_funcionarios");
+  requirePermissao(req, "sistema.visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
@@ -106,7 +106,7 @@ export async function getFuncionariosInativos(req, res) {
 }
 
 export async function getFuncionarioFull(req, res) {
-  requirePermissao(req, "visualizar_funcionarios");
+  requirePermissao(req, "sistema.visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID do funcionário");
@@ -129,7 +129,7 @@ export async function getFuncionarioFull(req, res) {
 }
 
 export async function putFuncionario(req, res) {
-  requirePermissao(req, "gerenciar_funcionarios");
+  requirePermissao(req, "sistema.gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;
@@ -200,7 +200,7 @@ export async function putFuncionario(req, res) {
 }
 
 export async function postFuncionario(req, res) {
-  requirePermissao(req, "gerenciar_funcionarios");
+  requirePermissao(req, "sistema.gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const {
@@ -262,7 +262,7 @@ export async function postFuncionario(req, res) {
 }
 
 export async function inativaFuncionario(req, res) {
-  requirePermissao(req, "gerenciar_funcionarios");
+  requirePermissao(req, "sistema.gerenciar_funcionarios");
   const usuario_id = getUsuarioId(req);
 
   const { id } = req.params;
