@@ -121,11 +121,33 @@ function getHorasPrevistasDia(perfil, data) {
   return horas;
 }
 
+// Função para obter data/hora atual no fuso horário de Brasília
+function getDataBrasilia(date = new Date()) {
+  const dataBrasiliaStr = date.toLocaleString("en-US", {
+    timeZone: "America/Sao_Paulo",
+  });
+  const dataBrasilia = new Date(dataBrasiliaStr);
+  return new Date(
+    dataBrasilia.getFullYear(),
+    dataBrasilia.getMonth(),
+    dataBrasilia.getDate()
+  );
+}
+
+// Função para converter data DATEONLY (string YYYY-MM-DD) para objeto Date local sem problemas de timezone
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const str = typeof dateStr === 'string' ? dateStr : dateStr.toISOString().split('T')[0];
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Obter relatório mensal
 export async function getRelatorioMensal(req, res) {
   requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
+  const usuario = req.user;
 
   const { mes, ano } = req.query;
 
@@ -133,10 +155,47 @@ export async function getRelatorioMensal(req, res) {
     throw ApiError.badRequest("Mês e ano são obrigatórios");
   }
 
-  const inicioMes = new Date(ano, mes - 1, 1);
-  const fimMes = new Date(ano, mes, 0);
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+  // Obter data de criação do usuário (usando parseDateOnly para evitar problemas de timezone)
+  const usuarioCompleto = await Usuario.findByPk(usuario_id);
+  const dataCriacaoUsuario = usuarioCompleto?.usuario_data_criacao 
+    ? parseDateOnly(usuarioCompleto.usuario_data_criacao)
+    : null;
+
+  const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
+  
+  // Calcular data limite (hoje ou fim do mês, o que for menor)
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const eMesAtual = parseInt(mes) === mesAtual && parseInt(ano) === anoAtual;
+  
+  // Se for mês atual, mostrar só até hoje
+  const dataLimite = eMesAtual ? hoje : fimMes;
+  const ultimoDia = eMesAtual ? hoje.getDate() : fimMes.getDate();
+
+  // Calcular primeiro dia a mostrar (data de criação do usuário ou início do mês)
+  let primeiroDia = 1;
+  if (dataCriacaoUsuario) {
+    const criacaoAno = dataCriacaoUsuario.getFullYear();
+    const criacaoMes = dataCriacaoUsuario.getMonth() + 1;
+    const criacaoDia = dataCriacaoUsuario.getDate();
+
+    // Se a criação foi neste mês/ano, começar a partir do dia de criação
+    if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
+      primeiroDia = criacaoDia;
+    }
+    // Se a criação foi após este mês, não mostrar nada
+    else if (criacaoAno > parseInt(ano) || (criacaoAno === parseInt(ano) && criacaoMes > parseInt(mes))) {
+      return res.status(200).json({ 
+        dias: [],
+        info: {
+          mensagem: "O usuário ainda não existia neste período",
+          dataCriacao: formatarDataStr(dataCriacaoUsuario),
+        }
+      });
+    }
+  }
 
   // Buscar perfil de jornada
   const perfil = await getPerfilJornadaUsuario(usuario_id);
@@ -145,7 +204,7 @@ export async function getRelatorioMensal(req, res) {
     where: {
       dia_usuario_id: usuario_id,
       dia_data: {
-        [Op.between]: [inicioMes, fimMes],
+        [Op.between]: [inicioMes, dataLimite],
       },
     },
     order: [["dia_data", "ASC"]],
@@ -155,16 +214,16 @@ export async function getRelatorioMensal(req, res) {
     where: {
       justificativa_usuario_id: usuario_id,
       justificativa_data: {
-        [Op.between]: [inicioMes, fimMes],
+        [Op.between]: [inicioMes, dataLimite],
       },
     },
     order: [["justificativa_data", "DESC"]],
   });
 
-  // Buscar batidas do mês
+  // Buscar batidas do mês (até a data limite)
   const inicioDiaMes = new Date(inicioMes);
   inicioDiaMes.setHours(0, 0, 0, 0);
-  const fimDiaMes = new Date(fimMes);
+  const fimDiaMes = new Date(dataLimite);
   fimDiaMes.setHours(23, 59, 59, 999);
 
   const batidas = await BatidaPonto.findAll({
@@ -202,9 +261,9 @@ export async function getRelatorioMensal(req, res) {
     justificativasPorData[dataStr].push(j);
   });
 
-  // Criar array com todos os dias do mês
+  // Criar array com os dias do mês (do primeiro dia válido até a data limite)
   const diasDoMes = [];
-  for (let dia = 1; dia <= fimMes.getDate(); dia++) {
+  for (let dia = primeiroDia; dia <= ultimoDia; dia++) {
     const data = new Date(ano, mes - 1, dia);
     const dataStr = data.toISOString().split("T")[0];
 
@@ -254,10 +313,18 @@ export async function getRelatorioMensal(req, res) {
     });
   }
 
-  return res.status(200).json({ dias: diasDoMes });
+  return res.status(200).json({ 
+    dias: diasDoMes,
+    info: {
+      eMesAtual,
+      dataLimite: formatarDataStr(dataLimite),
+      dataCriacao: dataCriacaoUsuario ? formatarDataStr(dataCriacaoUsuario) : null,
+      primeiroDiaExibido: primeiroDia,
+    }
+  });
 }
 
-// Obter totais mensais
+// Obter totais mensais (calculado em tempo real)
 export async function getTotaisMensais(req, res) {
   requirePermissao(req, "ponto.registrar");
 
@@ -269,43 +336,100 @@ export async function getTotaisMensais(req, res) {
     throw ApiError.badRequest("Mês e ano são obrigatórios");
   }
 
-  const inicioMes = new Date(ano, mes - 1, 1);
-  const fimMes = new Date(ano, mes, 0);
+  // Obter data de criação do usuário (usando parseDateOnly para evitar problemas de timezone)
+  const usuarioCompleto = await Usuario.findByPk(usuario_id);
+  const dataCriacaoUsuario = usuarioCompleto?.usuario_data_criacao 
+    ? parseDateOnly(usuarioCompleto.usuario_data_criacao)
+    : null;
 
-  const diasTrabalhados = await DiaTrabalhado.findAll({
-    where: {
-      dia_usuario_id: usuario_id,
-      dia_data: {
-        [Op.between]: [inicioMes, fimMes],
-      },
-    },
-  });
+  const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
+  
+  // Calcular data limite (hoje ou fim do mês, o que for menor)
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const eMesAtual = parseInt(mes) === mesAtual && parseInt(ano) === anoAtual;
+  const dataLimite = eMesAtual ? hoje : fimMes;
+  const ultimoDia = eMesAtual ? hoje.getDate() : fimMes.getDate();
 
+  // Calcular primeiro dia baseado na criação do usuário
+  let primeiroDia = 1;
+  if (dataCriacaoUsuario) {
+    const criacaoAno = dataCriacaoUsuario.getFullYear();
+    const criacaoMes = dataCriacaoUsuario.getMonth() + 1;
+    const criacaoDia = dataCriacaoUsuario.getDate();
+
+    // Se a criação foi neste mês/ano, começar a partir do dia de criação
+    if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
+      primeiroDia = criacaoDia;
+    }
+    // Se a criação foi após este mês, retornar totais zerados
+    else if (criacaoAno > parseInt(ano) || (criacaoAno === parseInt(ano) && criacaoMes > parseInt(mes))) {
+      const bancoHoras = await BancoHoras.findOne({
+        where: { banco_usuario_id: usuario_id },
+      });
+      return res.status(200).json({
+        horasTrabalhadas: 0,
+        horasExtras: 0,
+        horasNegativas: 0,
+        diasDivergentes: 0,
+        justificativasPendentes: 0,
+        justificativasAprovadas: 0,
+        batidasPendentes: 0,
+        bancoHoras: bancoHoras ? bancoHoras.banco_saldo / 60 : 0,
+      });
+    }
+  }
+
+  // Buscar perfil de jornada
+  const perfil = await getPerfilJornadaUsuario(usuario_id);
+
+  // Buscar justificativas do período
   const justificativas = await Justificativa.findAll({
     where: {
       justificativa_usuario_id: usuario_id,
       justificativa_data: {
-        [Op.between]: [inicioMes, fimMes],
+        [Op.between]: [inicioMes, dataLimite],
       },
     },
   });
 
-  // Buscar batidas pendentes do mês
+  // Buscar batidas do mês (até a data limite)
   const inicioDiaMes = new Date(inicioMes);
   inicioDiaMes.setHours(0, 0, 0, 0);
-  const fimDiaMes = new Date(fimMes);
+  const fimDiaMes = new Date(dataLimite);
   fimDiaMes.setHours(23, 59, 59, 999);
 
-  const batidasPendentes = await BatidaPonto.count({
+  const batidas = await BatidaPonto.findAll({
     where: {
       batida_usuario_id: usuario_id,
       batida_data_hora: {
         [Op.between]: [inicioDiaMes, fimDiaMes],
       },
-      batida_status: "pendente",
     },
+    order: [["batida_data_hora", "ASC"]],
   });
 
+  // Organizar batidas por dia
+  const batidasPorDia = {};
+  batidas.forEach((b) => {
+    const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+    if (!batidasPorDia[dataStr]) {
+      batidasPorDia[dataStr] = [];
+    }
+    batidasPorDia[dataStr].push({
+      id: b.batida_id,
+      tipo: b.batida_tipo,
+      dataHora: b.batida_data_hora,
+      status: b.batida_status,
+    });
+  });
+
+  // Contar batidas pendentes
+  const batidasPendentes = batidas.filter(b => b.batida_status === "pendente").length;
+
+  // Calcular totais em tempo real (mesma lógica do getRelatorioMensal)
   const totais = {
     horasTrabalhadas: 0,
     horasExtras: 0,
@@ -316,15 +440,48 @@ export async function getTotaisMensais(req, res) {
     batidasPendentes,
   };
 
-  diasTrabalhados.forEach((dia) => {
-    totais.horasTrabalhadas += parseFloat(dia.dia_horas_trabalhadas || 0);
-    totais.horasExtras += parseFloat(dia.dia_horas_extras || 0);
-    totais.horasNegativas += parseFloat(dia.dia_horas_negativas || 0);
-    if (dia.dia_status === "divergente") {
+  // Iterar por cada dia do período válido
+  for (let dia = primeiroDia; dia <= ultimoDia; dia++) {
+    const data = new Date(parseInt(ano), parseInt(mes) - 1, dia);
+    const dataStr = data.toISOString().split("T")[0];
+
+    const batidasDoDia = batidasPorDia[dataStr] || [];
+    const horasPrevistas = getHorasPrevistasDia(perfil, data);
+
+    // Calcular horas trabalhadas em tempo real baseado nas batidas
+    let horasTrabalhadas = calcularHorasTrabalhadas(batidasDoDia);
+
+    // Calcular extras e negativas
+    let horasExtras = horasPrevistas
+      ? Math.max(0, horasTrabalhadas - horasPrevistas)
+      : 0;
+    let horasNegativas = horasPrevistas
+      ? Math.max(0, horasPrevistas - horasTrabalhadas)
+      : 0;
+
+    // Aplicar tolerância de 10 minutos
+    const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+    horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+    horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+    // Verificar se é uma falta (dia sem batida que deveria ter trabalhado)
+    if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
+      horasNegativas = horasPrevistas;
+    }
+
+    // Determinar status
+    const status = horasExtras > 0 || horasNegativas > 0 ? "divergente" : "normal";
+
+    // Somar aos totais
+    totais.horasTrabalhadas += horasTrabalhadas;
+    totais.horasExtras += horasExtras;
+    totais.horasNegativas += horasNegativas;
+    if (status === "divergente") {
       totais.diasDivergentes++;
     }
-  });
+  }
 
+  // Contar justificativas
   justificativas.forEach((j) => {
     if (j.justificativa_status === "pendente") {
       totais.justificativasPendentes++;
@@ -333,17 +490,120 @@ export async function getTotaisMensais(req, res) {
     }
   });
 
-  // Obter banco de horas
-  const bancoHoras = await BancoHoras.findOne({
+  // Calcular saldo do banco de horas ACUMULADO (desde a data de início até o mês consultado)
+  const bancoHorasRecord = await BancoHoras.findOne({
     where: { banco_usuario_id: usuario_id },
   });
 
-  const bancoHorasSaldo = bancoHoras
-    ? bancoHoras.banco_saldo / 60 // Converter minutos para horas
-    : 0;
+  // Definir data de início do cálculo do banco (última zeragem ou criação do usuário)
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHorasRecord?.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHorasRecord.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  // Calcular o banco de horas acumulado de todos os meses desde dataInicioBanco até o mês consultado
+  let bancoHorasAcumulado = 0;
+
+  // Iterar por todos os meses desde dataInicioBanco até o mês consultado
+  let mesCursor = new Date(dataInicioBanco.getFullYear(), dataInicioBanco.getMonth(), 1);
+  const fimConsulta = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    // Definir período do mês
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+    
+    // Verificar se é o mês atual (para limitar até hoje)
+    const eMesAtualCursor = mesCursorNum === mesAtual && anoCursorNum === anoAtual;
+    const dataLimiteCursor = eMesAtualCursor ? hoje : fimMesCursor;
+    const ultimoDiaCursor = eMesAtualCursor ? hoje.getDate() : fimMesCursor.getDate();
+
+    // Calcular primeiro dia válido deste mês
+    let primeiroDiaCursor = 1;
+    if (dataInicioBanco.getFullYear() === anoCursorNum && dataInicioBanco.getMonth() + 1 === mesCursorNum) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    // Buscar batidas do mês
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: usuario_id,
+        batida_data_hora: {
+          [Op.between]: [inicioMesCursor, new Date(dataLimiteCursor.getFullYear(), dataLimiteCursor.getMonth(), dataLimiteCursor.getDate(), 23, 59, 59, 999)],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    // Organizar batidas por dia
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push({
+        dataHora: b.batida_data_hora,
+        tipo: b.batida_tipo,
+        status: b.batida_status,
+      });
+    });
+
+    // Buscar justificativas do mês para verificar faltas justificadas
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: usuario_id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+      },
+    });
+    const diasJustificados = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+    // Calcular horas do mês
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const data = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = data.toISOString().split("T")[0];
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+      const horasPrevistas = getHorasPrevistasDia(perfil, data);
+      
+      // Se o dia foi justificado como falta, não conta como negativo
+      if (diasJustificados.has(dataStr)) {
+        continue;
+      }
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+
+      let horasExtrasDia = horasPrevistas ? Math.max(0, horasTrabalhadasDia - horasPrevistas) : 0;
+      let horasNegativasDia = horasPrevistas ? Math.max(0, horasPrevistas - horasTrabalhadasDia) : 0;
+
+      // Aplicar tolerância
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+      // Se é falta (sem batida em dia que deveria trabalhar)
+      if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
+        horasNegativasDia = horasPrevistas;
+      }
+
+      bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+    }
+
+    // Avançar para o próximo mês
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
 
   return res.status(200).json({
     ...totais,
-    bancoHoras: bancoHorasSaldo,
+    bancoHoras: bancoHorasAcumulado,
   });
 }

@@ -29,6 +29,11 @@ BancoHoras.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
+    banco_data_inicio: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,

@@ -45,6 +45,8 @@ function RelatorioMensal() {
   const [justificativaData, setJustificativaData] = useState(null);
   const [justificativaTipo, setJustificativaTipo] = useState("");
   const [justificativaDescricao, setJustificativaDescricao] = useState("");
+  const [justificativaAnexo, setJustificativaAnexo] = useState(null);
+  const [diaSelecionado, setDiaSelecionado] = useState(null); // Armazena dados do dia (horasExtras, horasNegativas)
 
   const meses = [
     "Janeiro",
@@ -61,15 +63,10 @@ function RelatorioMensal() {
     "Dezembro",
   ];
 
-  const tiposJustificativa = [
-    { value: "esqueceu_bater", label: "Esqueceu de bater ponto" },
-    { value: "entrada_atrasada", label: "Entrada atrasada" },
-    { value: "saida_cedo", label: "Saída cedo" },
-    { value: "falta_justificada", label: "Falta justificada" },
-    { value: "consulta_medica", label: "Consulta médica" },
-    { value: "horas_extras", label: "Horas Extras" },
-    { value: "outros", label: "Outros" },
-    { value: "falta_nao_justificada", label: "Falta não justificada" },
+  // Tipos de justificativa separados por contexto
+  const tiposHorasNegativas = [
+    { value: "falta_justificada", label: "Falta Justificada" },
+    { value: "falta_nao_justificada", label: "Falta Não Justificada" },
   ];
 
   async function deslogar() {
@@ -104,7 +101,7 @@ function RelatorioMensal() {
 
   async function handleAdicionarBatida() {
     if (!batidaHora || !batidaObservacao.trim()) {
-      mostrarAviso("erro", "Hora e observação são obrigatórios");
+      mostrarAviso("erro", "Hora e observação são obrigatórios", true);
       return;
     }
 
@@ -127,16 +124,24 @@ function RelatorioMensal() {
   }
 
   async function handleCriarJustificativa() {
-    if (!justificativaTipo) {
-      mostrarAviso("erro", "Selecione o tipo de justificativa");
+    // Validações baseadas no tipo de divergência
+    const ehHorasNegativas = diaSelecionado && diaSelecionado.horasNegativas > 0;
+    const ehHorasExtras = diaSelecionado && diaSelecionado.horasExtras > 0;
+
+    if (ehHorasNegativas && !justificativaTipo) {
+      mostrarAviso("erro", "Selecione o tipo de justificativa", true);
       return;
     }
 
-    if (
-      justificativaTipo !== "falta_nao_justificada" &&
-      !justificativaDescricao.trim()
-    ) {
-      mostrarAviso("erro", "Descrição é obrigatória");
+    // Para horas negativas com falta justificada, descrição é obrigatória
+    if (ehHorasNegativas && justificativaTipo === "falta_justificada" && !justificativaDescricao.trim()) {
+      mostrarAviso("erro", "Descrição é obrigatória para falta justificada", true);
+      return;
+    }
+
+    // Para horas extras, descrição é obrigatória
+    if (ehHorasExtras && !justificativaDescricao.trim()) {
+      mostrarAviso("erro", "Descrição é obrigatória para justificar horas extras", true);
       return;
     }
 
@@ -144,22 +149,33 @@ function RelatorioMensal() {
     try {
       const payload = {
         data: justificativaData,
-        tipo: justificativaTipo,
+        tipo: ehHorasExtras ? "horas_extras" : justificativaTipo,
         descricao: justificativaDescricao,
       };
-      await criarJustificativa(payload, null);
-      mostrarAviso("sucesso", "Justificativa criada com sucesso!");
+      await criarJustificativa(payload, justificativaAnexo);
+      
+      const mensagem = justificativaTipo === "falta_nao_justificada" 
+        ? "Falta não justificada registrada!" 
+        : "Justificativa criada com sucesso!";
+      mostrarAviso("sucesso", mensagem);
+      
       setTimeout(() => {
         limparAviso();
-        setModalJustificativa(false);
-        setJustificativaTipo("");
-        setJustificativaDescricao("");
+        fecharModalJustificativa();
         buscarRelatorio();
       }, 1000);
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
     }
+  }
+
+  function fecharModalJustificativa() {
+    setModalJustificativa(false);
+    setJustificativaTipo("");
+    setJustificativaDescricao("");
+    setJustificativaAnexo(null);
+    setDiaSelecionado(null);
   }
 
   function formatarData(dataStr) {
@@ -204,7 +220,39 @@ function RelatorioMensal() {
     return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
   }
 
+  // Verificar se pode navegar para o mês anterior (não pode ir antes da data de criação)
+  function podeMesAnterior() {
+    if (!relatorio?.info?.dataCriacao) return true;
+    
+    const dataCriacao = new Date(relatorio.info.dataCriacao + "T12:00:00");
+    const mesCriacao = dataCriacao.getMonth() + 1;
+    const anoCriacao = dataCriacao.getFullYear();
+    
+    // Não pode ir para antes do mês de criação
+    if (ano < anoCriacao) return false;
+    if (ano === anoCriacao && mes <= mesCriacao) return false;
+    
+    return true;
+  }
+
+  // Verificar se pode navegar para o mês seguinte (não pode ir além do mês atual)
+  function podeMesSeguinte() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    
+    // Não pode ir além do mês atual
+    if (ano > anoAtual) return false;
+    if (ano === anoAtual && mes >= mesAtual) return false;
+    
+    return true;
+  }
+
   function mudarMes(direcao) {
+    // Verificar se pode mudar na direção solicitada
+    if (direcao === -1 && !podeMesAnterior()) return;
+    if (direcao === 1 && !podeMesSeguinte()) return;
+
     let novoMes = mes + direcao;
     let novoAno = ano;
 
@@ -246,6 +294,13 @@ function RelatorioMensal() {
     return "recusada";
   }
 
+  // Verifica se tem hora extra recusada (para mostrar aviso)
+  function temHoraExtraRecusada(dia) {
+    return dia.justificativas.some(
+      (j) => j.justificativa_tipo === "horas_extras" && j.justificativa_status === "recusada"
+    );
+  }
+
   useEffect(() => {
     buscarRelatorio();
     document.title = "Histórico do Ponto - Sistema RH";
@@ -282,7 +337,12 @@ function RelatorioMensal() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => mudarMes(-1)}
-                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10"
+                disabled={!podeMesAnterior()}
+                className={`p-2 rounded-lg border border-white/10 ${
+                  podeMesAnterior()
+                    ? "bg-white/5 hover:bg-white/10 text-white"
+                    : "bg-white/5 text-white/30 cursor-not-allowed"
+                }`}
               >
                 <ChevronLeft size={20} />
               </button>
@@ -291,7 +351,12 @@ function RelatorioMensal() {
               </span>
               <button
                 onClick={() => mudarMes(1)}
-                className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10"
+                disabled={!podeMesSeguinte()}
+                className={`p-2 rounded-lg border border-white/10 ${
+                  podeMesSeguinte()
+                    ? "bg-white/5 hover:bg-white/10 text-white"
+                    : "bg-white/5 text-white/30 cursor-not-allowed"
+                }`}
               >
                 <ChevronRight size={20} />
               </button>
@@ -383,6 +448,7 @@ function RelatorioMensal() {
               {relatorio.dias.map((dia) => {
                 const isExpanded = diaExpandido === dia.data;
                 const statusJust = getStatusJustificativa(dia);
+                const horaExtraRecusada = temHoraExtraRecusada(dia);
 
                 return (
                   <div
@@ -410,21 +476,35 @@ function RelatorioMensal() {
                         >
                           {formatarSaldo(dia.saldoDia)}
                         </span>
-                        {dia.status === "divergente" && (
-                          <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                            Divergente
-                          </span>
-                        )}
-                        {statusJust === "pendente" && (
-                          <span className="px-2 py-1 rounded text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                            Just. Pendente
-                          </span>
-                        )}
-                        {statusJust === "aprovada" && (
-                          <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400 border border-green-500/30">
-                            Justificado
-                          </span>
-                        )}
+                        {(() => {
+                          // Mostrar status baseado nas justificativas
+                          if (statusJust === "pendente") {
+                            return (
+                              <span className="px-2 py-1 rounded text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                Just. Pendente
+                              </span>
+                            );
+                          } else if (statusJust === "aprovada") {
+                            return (
+                              <span className="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400 border border-green-500/30">
+                                Justificado
+                              </span>
+                            );
+                          } else if (statusJust === "recusada") {
+                            return (
+                              <span className="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400 border border-red-500/30">
+                                Justificado
+                              </span>
+                            );
+                          } else if (dia.status === "divergente") {
+                            return (
+                              <span className="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                                Divergente
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-white/50 text-sm">
@@ -444,6 +524,18 @@ function RelatorioMensal() {
                         <p className="text-white/70 text-sm mb-4 capitalize">
                           {formatarDataCompleta(dia.data)}
                         </p>
+
+                        {/* Alerta de hora extra recusada */}
+                        {horaExtraRecusada && (
+                          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                            <p className="text-red-400 text-sm font-medium">
+                              ⚠️ Hora extra não aprovada
+                            </p>
+                            <p className="text-red-400/70 text-xs mt-1">
+                              A justificativa de hora extra deste dia foi recusada. As horas extras continuam computadas, mas não foram aprovadas pelo gestor.
+                            </p>
+                          </div>
+                        )}
 
                         {/* Batidas */}
                         <div className="mb-4">
@@ -531,6 +623,10 @@ function RelatorioMensal() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setJustificativaData(dia.data);
+                                setDiaSelecionado({
+                                  horasExtras: dia.horasExtras,
+                                  horasNegativas: dia.horasNegativas,
+                                });
                                 setModalJustificativa(true);
                               }}
                               className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 transition-colors"
@@ -564,14 +660,26 @@ function RelatorioMensal() {
             <div className="space-y-4">
               <div>
                 <label className="block text-white/70 text-sm mb-2">Tipo</label>
-                <select
-                  value={batidaTipo}
-                  onChange={(e) => setBatidaTipo(e.target.value)}
-                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white [&>option]:bg-gray-700 [&>option]:text-white"
-                >
-                  <option value="entrada">Entrada</option>
-                  <option value="saida">Saída</option>
-                </select>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={batidaTipo === "entrada"}
+                      onChange={() => setBatidaTipo("entrada")}
+                      className="w-5 h-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-white">Entrada</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={batidaTipo === "saida"}
+                      onChange={() => setBatidaTipo("saida")}
+                      className="w-5 h-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-white">Saída</span>
+                  </label>
+                </div>
               </div>
 
               <div>
@@ -626,60 +734,121 @@ function RelatorioMensal() {
       )}
 
       {/* Modal de Justificativa */}
-      {modalJustificativa && (
+      {modalJustificativa && diaSelecionado && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-white mb-4">
-              Criar Justificativa
+              {diaSelecionado.horasNegativas > 0 ? "Justificar Ausência" : "Justificar Horas Extras"}
             </h2>
             <p className="text-white/70 text-sm mb-4">
               Data: {formatarDataCompleta(justificativaData)}
             </p>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-white/70 text-sm mb-2">
-                  Tipo de Justificativa
-                </label>
-                <select
-                  value={justificativaTipo}
-                  onChange={(e) => setJustificativaTipo(e.target.value)}
-                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white [&>option]:bg-gray-700 [&>option]:text-white"
-                >
-                  <option value="">Selecione...</option>
-                  {tiposJustificativa.map((tipo) => (
-                    <option key={tipo.value} value={tipo.value}>
-                      {tipo.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Para horas negativas: mostrar opções de falta */}
+              {diaSelecionado.horasNegativas > 0 && (
+                <>
+                  <div>
+                    <label className="block text-white/70 text-sm mb-3">
+                      Tipo de Justificativa
+                    </label>
+                    <div className="space-y-2">
+                      {tiposHorasNegativas.map((tipo) => (
+                        <label
+                          key={tipo.value}
+                          className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            justificativaTipo === tipo.value
+                              ? "bg-yellow-500/20 border-yellow-500/50"
+                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="tipoJustificativa"
+                            value={tipo.value}
+                            checked={justificativaTipo === tipo.value}
+                            onChange={(e) => setJustificativaTipo(e.target.value)}
+                            className="w-4 h-4 text-yellow-500 focus:ring-yellow-500"
+                          />
+                          <div>
+                            <span className="text-white font-medium">{tipo.label}</span>
+                            {tipo.value === "falta_justificada" && (
+                              <p className="text-white/50 text-xs mt-1">
+                                Será enviado para aprovação. Se aprovado, o dia não será considerado como falta.
+                              </p>
+                            )}
+                            {tipo.value === "falta_nao_justificada" && (
+                              <p className="text-white/50 text-xs mt-1">
+                                As horas negativas serão mantidas no banco de horas.
+                              </p>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
 
-              {justificativaTipo &&
-                justificativaTipo !== "falta_nao_justificada" && (
+                  {justificativaTipo === "falta_justificada" && (
+                    <div>
+                      <label className="block text-white/70 text-sm mb-2">
+                        Descrição (obrigatória)
+                      </label>
+                      <textarea
+                        value={justificativaDescricao}
+                        onChange={(e) => setJustificativaDescricao(e.target.value)}
+                        rows={3}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                        placeholder="Descreva o motivo da ausência..."
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Para horas extras: mostrar campo de justificativa */}
+              {diaSelecionado.horasExtras > 0 && (
+                <>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                    <p className="text-green-400 text-sm">
+                      Você realizou <strong>{diaSelecionado.horasExtras.toFixed(2)}h</strong> extras neste dia.
+                      Descreva o motivo para que seja aprovado.
+                    </p>
+                  </div>
+
                   <div>
                     <label className="block text-white/70 text-sm mb-2">
-                      Descrição
+                      Justificativa das Horas Extras (obrigatória)
                     </label>
                     <textarea
                       value={justificativaDescricao}
-                      onChange={(e) =>
-                        setJustificativaDescricao(e.target.value)
-                      }
+                      onChange={(e) => setJustificativaDescricao(e.target.value)}
                       rows={4}
                       className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                      placeholder="Descreva o motivo da justificativa..."
+                      placeholder="Descreva o motivo das horas extras realizadas..."
                     />
                   </div>
-                )}
+
+                  <div>
+                    <label className="block text-white/70 text-sm mb-2">
+                      Anexo (opcional)
+                    </label>
+                    <input
+                      type="file"
+                      onChange={(e) => setJustificativaAnexo(e.target.files[0] || null)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
+                      accept="image/*,.pdf,.doc,.docx"
+                    />
+                  </div>
+
+                  <p className="text-orange-400 text-sm">
+                    ⚠️ Esta justificativa será enviada para aprovação.
+                  </p>
+                </>
+              )}
 
               <div className="flex gap-4 mt-6">
                 <button
-                  onClick={() => {
-                    setModalJustificativa(false);
-                    setJustificativaTipo("");
-                    setJustificativaDescricao("");
-                  }}
+                  onClick={fecharModalJustificativa}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
                   Cancelar
@@ -689,7 +858,7 @@ function RelatorioMensal() {
                   disabled={carregando}
                   className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  Enviar
+                  {justificativaTipo === "falta_nao_justificada" ? "Registrar" : "Enviar"}
                 </button>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
@@ -16,53 +16,65 @@ import { AvisoProvider } from "./context/AvisoContext.jsx";
 
 import "./style.css";
 
+// Layout wrapper que fornece o contexto do Aviso para todas as rotas
+function RootLayout() {
+  return (
+    <AvisoProvider>
+      <Outlet />
+    </AvisoProvider>
+  );
+}
+
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Login />,
-  },
-  {
-    path: "/home",
-    element: <Home />,
-  },
-  {
-    path: "/empresa",
-    element: <Empresa />,
-  },
-  {
-    path: "/usuario",
-    element: <Usuario />,
-  },
-  {
-    path: "/cargos-usuarios",
-    element: <CargosUsuarios />,
-  },
-  {
-    path: "/ponto",
-    element: <Ponto />,
-  },
-  {
-    path: "/justificativa",
-    element: <Justificativa />,
-  },
-  {
-    path: "/relatorio-mensal",
-    element: <RelatorioMensal />,
-  },
-  {
-    path: "/perfis-jornada",
-    element: <PerfisJornada />,
-  },
-  {
-    path: "/gerenciar-pontos",
-    element: <GerenciarPontos />,
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Login />,
+      },
+      {
+        path: "/home",
+        element: <Home />,
+      },
+      {
+        path: "/empresa",
+        element: <Empresa />,
+      },
+      {
+        path: "/usuario",
+        element: <Usuario />,
+      },
+      {
+        path: "/cargos-usuarios",
+        element: <CargosUsuarios />,
+      },
+      {
+        path: "/ponto",
+        element: <Ponto />,
+      },
+      {
+        path: "/justificativa",
+        element: <Justificativa />,
+      },
+      {
+        path: "/relatorio-mensal",
+        element: <RelatorioMensal />,
+      },
+      {
+        path: "/perfis-jornada",
+        element: <PerfisJornada />,
+      },
+      {
+        path: "/gerenciar-pontos",
+        element: <GerenciarPontos />,
+      },
+    ],
   },
 ]);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AvisoProvider>
-      <RouterProvider router={router} />
-    </AvisoProvider>
+    <RouterProvider router={router} />
   </StrictMode>
 );

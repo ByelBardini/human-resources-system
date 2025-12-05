@@ -26,14 +26,14 @@ function requirePermissao(req, codigoPermissao) {
 }
 
 export async function registrarUsuario(req, res) {
-  const { usuario_nome, usuario_login, usuario_cargo_id, perfil_jornada_id, empresa_id, tipo_usuario } = req.body;
+  const { usuario_nome, usuario_login, usuario_cargo_id, perfil_jornada_id, empresa_id, tipo_usuario, funcionario_id } = req.body;
   requirePermissao(req, "usuarios.gerenciar");
 
   if (!usuario_nome || !usuario_login) {
     throw ApiError.badRequest("Nome e login são obrigatórios.");
   }
 
-  // Se for usuário do tipo funcionário, precisa de perfil de jornada e empresa
+  // Se for usuário do tipo funcionário, precisa de perfil de jornada, empresa e funcionário vinculado
   if (tipo_usuario === "funcionario") {
     if (!perfil_jornada_id) {
       throw ApiError.badRequest("Perfil de carga horária é obrigatório para usuários funcionários.");
@@ -41,6 +41,34 @@ export async function registrarUsuario(req, res) {
 
     if (!empresa_id) {
       throw ApiError.badRequest("Empresa é obrigatória para usuários funcionários.");
+    }
+
+    // Validação obrigatória: funcionário deve estar vinculado
+    if (!funcionario_id) {
+      throw ApiError.badRequest("É obrigatório vincular a um funcionário existente.");
+    }
+
+    // Verificar se o funcionário existe e pertence à empresa selecionada
+    const funcionario = await Funcionario.findByPk(funcionario_id);
+    if (!funcionario) {
+      throw ApiError.badRequest("Funcionário não encontrado.");
+    }
+
+    if (funcionario.funcionario_empresa_id !== parseInt(empresa_id)) {
+      throw ApiError.badRequest("O funcionário selecionado não pertence à empresa escolhida.");
+    }
+
+    if (funcionario.funcionario_ativo === 0) {
+      throw ApiError.badRequest("O funcionário selecionado está inativo.");
+    }
+
+    // Verificar se o funcionário já possui usuário vinculado
+    const usuarioExistente = await Usuario.findOne({
+      where: { usuario_funcionario_id: funcionario_id },
+    });
+
+    if (usuarioExistente) {
+      throw ApiError.badRequest("Este funcionário já possui um usuário vinculado.");
     }
 
     // Verificar se o perfil de jornada existe
@@ -74,7 +102,8 @@ export async function registrarUsuario(req, res) {
         usuario_cargo_id: cargoBasico.cargo_usuario_id,
         usuario_perfil_jornada_id: perfil_jornada_id,
         usuario_empresa_id: empresa_id,
-        usuario_funcionario_id: null,
+        usuario_funcionario_id: funcionario_id,
+        usuario_data_criacao: new Date(),
       });
 
       // Garantir que o cargo tenha permissão de registrar ponto
@@ -129,6 +158,7 @@ export async function registrarUsuario(req, res) {
         usuario_funcionario_id: null,
         usuario_perfil_jornada_id: null,
         usuario_empresa_id: null,
+        usuario_data_criacao: new Date(),
       });
 
       return res.status(201).json({ message: "Usuário registrado com sucesso!" });
@@ -278,7 +308,15 @@ export async function getUsuariosFuncionarios(req, res) {
 
 // Buscar funcionários sem usuário vinculado
 export async function getFuncionariosSemUsuario(req, res) {
-  requirePermissao(req, "usuarios.gerenciar_funcionarios");
+  // Permitir tanto para gerenciar funcionários quanto para gerenciar usuários
+  const usuario = requireUser(req);
+  const permissoes = usuario.permissoes || [];
+  
+  if (!permissoes.includes("usuarios.gerenciar_funcionarios") && !permissoes.includes("usuarios.gerenciar")) {
+    throw ApiError.forbidden(
+      "Você não tem permissão para realizar esta ação."
+    );
+  }
 
   try {
     const { empresa_id } = req.query;

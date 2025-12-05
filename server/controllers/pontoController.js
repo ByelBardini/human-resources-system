@@ -46,6 +46,14 @@ function formatarDataStr(data) {
   return d.toISOString().split("T")[0];
 }
 
+// Função para converter data DATEONLY (string YYYY-MM-DD) para objeto Date local sem problemas de timezone
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const str = typeof dateStr === 'string' ? dateStr : dateStr.toISOString().split('T')[0];
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
 }
@@ -119,7 +127,7 @@ function determinarProximaBatida(batidas) {
 
 // Função para calcular horas trabalhadas (sem intervalo mínimo)
 // Lógica: (saída1 - entrada1) + (saída2 - entrada2) + ...
-function calcularHorasTrabalhadas(batidas) {
+export function calcularHorasTrabalhadas(batidas) {
   if (batidas.length < 2) return 0;
 
   // Garantir que as batidas estão ordenadas por data/hora
@@ -430,11 +438,121 @@ export async function getPontoHoje(req, res) {
 
   const proximaBatida = determinarProximaBatida(batidas);
 
-  // Obter saldo do banco de horas
-  const bancoHoras = await BancoHoras.findOne({
+  // Calcular saldo do banco de horas ACUMULADO (desde a data de início até hoje)
+  const usuarioCompleto = await Usuario.findByPk(usuario_id);
+  const dataCriacaoUsuario = usuarioCompleto?.usuario_data_criacao 
+    ? parseDateOnly(usuarioCompleto.usuario_data_criacao)
+    : null;
+
+  const mesAtual = dataAtual.getMonth() + 1;
+  const anoAtual = dataAtual.getFullYear();
+
+  // Buscar banco de horas para obter data de início
+  const bancoHorasRecord = await BancoHoras.findOne({
     where: { banco_usuario_id: usuario_id },
   });
-  const saldoBancoHoras = bancoHoras ? bancoHoras.banco_saldo / 60 : 0; // Converter minutos para horas
+
+  // Definir data de início do cálculo do banco (última zeragem ou criação do usuário)
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHorasRecord?.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHorasRecord.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  // Calcular o banco de horas acumulado de todos os meses desde dataInicioBanco até hoje
+  let saldoBancoHoras = 0;
+
+  // Iterar por todos os meses desde dataInicioBanco até o mês atual
+  let mesCursor = new Date(dataInicioBanco.getFullYear(), dataInicioBanco.getMonth(), 1);
+  const fimConsulta = new Date(anoAtual, mesAtual - 1, 1);
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    // Definir período do mês
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+    
+    // Verificar se é o mês atual (para limitar até hoje)
+    const eMesAtualCursor = mesCursorNum === mesAtual && anoCursorNum === anoAtual;
+    const dataLimiteCursor = eMesAtualCursor ? dataAtual : fimMesCursor;
+    const ultimoDiaCursor = eMesAtualCursor ? dataAtual.getDate() : fimMesCursor.getDate();
+
+    // Calcular primeiro dia válido deste mês
+    let primeiroDiaCursor = 1;
+    if (dataInicioBanco.getFullYear() === anoCursorNum && dataInicioBanco.getMonth() + 1 === mesCursorNum) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    // Buscar batidas do mês
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: usuario_id,
+        batida_data_hora: {
+          [Op.between]: [inicioMesCursor, new Date(dataLimiteCursor.getFullYear(), dataLimiteCursor.getMonth(), dataLimiteCursor.getDate(), 23, 59, 59, 999)],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    // Organizar batidas por dia
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push(b);
+    });
+
+    // Buscar justificativas aprovadas de falta do mês
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: usuario_id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+      },
+    });
+    const diasJustificados = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+    // Calcular horas do mês
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const dataDia = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = dataDia.toISOString().split("T")[0];
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+      const horasPrevistasDia = getHorasPrevistasDia(perfil, dataDia);
+      
+      // Se o dia foi justificado como falta, não conta como negativo
+      if (diasJustificados.has(dataStr)) {
+        continue;
+      }
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+
+      let horasExtrasDia = horasPrevistasDia ? Math.max(0, horasTrabalhadasDia - horasPrevistasDia) : 0;
+      let horasNegativasDia = horasPrevistasDia ? Math.max(0, horasPrevistasDia - horasTrabalhadasDia) : 0;
+
+      // Aplicar tolerância
+      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+      // Verificar falta (dia sem batida que deveria ter trabalhado)
+      if (dataDia < dataAtual && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativasDia = horasPrevistasDia;
+      }
+
+      saldoBancoHoras += horasExtrasDia - horasNegativasDia;
+    }
+
+    // Avançar para o próximo mês
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
 
   return res.status(200).json({
     funcionario: {
@@ -709,32 +827,52 @@ export async function getHistoricoFuncionario(req, res) {
     throw ApiError.notFound("Usuário não encontrado");
   }
 
-  const inicioMes = new Date(ano, mes - 1, 1);
-  const fimMes = new Date(ano, mes, 0);
+  // Obter data de criação do usuário (para não contar dias anteriores como falta)
+  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao 
+    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
+    : null;
 
-  const diasTrabalhados = await DiaTrabalhado.findAll({
-    where: {
-      dia_usuario_id: id,
-      dia_data: {
-        [Op.between]: [inicioMes, fimMes],
-      },
-    },
-    order: [["dia_data", "ASC"]],
-  });
+  // Verificar se é o mês atual para limitar até a data atual
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const eMesAtual = parseInt(mes) === mesAtual && parseInt(ano) === anoAtual;
+
+  const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
+  
+  // Se for mês atual, limitar até hoje
+  const ultimoDiaConsiderado = eMesAtual ? hoje.getDate() : fimMes.getDate();
+  const dataLimite = eMesAtual ? hoje : fimMes;
+
+  // Calcular primeiro dia válido baseado na data de criação
+  let primeiroDiaValido = 1;
+  if (dataCriacaoUsuario) {
+    const criacaoAno = dataCriacaoUsuario.getFullYear();
+    const criacaoMes = dataCriacaoUsuario.getMonth() + 1;
+    const criacaoDia = dataCriacaoUsuario.getDate();
+
+    if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
+      primeiroDiaValido = criacaoDia;
+    } else if (criacaoAno > parseInt(ano) || (criacaoAno === parseInt(ano) && criacaoMes > parseInt(mes))) {
+      // Usuário foi criado após este mês - nenhum dia é válido
+      primeiroDiaValido = ultimoDiaConsiderado + 1;
+    }
+  }
 
   const justificativas = await Justificativa.findAll({
     where: {
       justificativa_usuario_id: id,
       justificativa_data: {
-        [Op.between]: [inicioMes, fimMes],
+        [Op.between]: [inicioMes, dataLimite],
       },
     },
   });
 
-  // Buscar batidas do mês
+  // Buscar batidas do mês (até a data limite)
   const inicioDiaMes = new Date(inicioMes);
   inicioDiaMes.setHours(0, 0, 0, 0);
-  const fimDiaMes = new Date(fimMes);
+  const fimDiaMes = new Date(dataLimite);
   fimDiaMes.setHours(23, 59, 59, 999);
 
   const batidas = await BatidaPonto.findAll({
@@ -747,14 +885,19 @@ export async function getHistoricoFuncionario(req, res) {
     order: [["batida_data_hora", "ASC"]],
   });
 
-  // Organizar batidas por dia
+  // Organizar batidas por dia (mantendo nomes originais para compatibilidade com frontend)
   const batidasPorDia = {};
   batidas.forEach((b) => {
     const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
     if (!batidasPorDia[dataStr]) {
       batidasPorDia[dataStr] = [];
     }
-    batidasPorDia[dataStr].push(b);
+    batidasPorDia[dataStr].push({
+      batida_id: b.batida_id,
+      batida_tipo: b.batida_tipo,
+      batida_data_hora: b.batida_data_hora,
+      batida_status: b.batida_status,
+    });
   });
 
   // Organizar justificativas por dia
@@ -767,45 +910,209 @@ export async function getHistoricoFuncionario(req, res) {
     justificativasPorDia[dataStr].push(j);
   });
 
-  // Montar resposta
+  // Buscar perfil de jornada para calcular horas previstas
+  const perfil = await getPerfilJornadaUsuario(id);
+
+  // Montar resposta - calcular horas em tempo real
   const diasDoMes = [];
-  for (let dia = 1; dia <= fimMes.getDate(); dia++) {
-    const data = new Date(ano, mes - 1, dia);
+  let totalHorasPrevistas = 0;
+  let totalHorasTrabalhadas = 0;
+  let totalHorasExtras = 0;
+  let totalHorasNegativas = 0;
+
+  for (let dia = 1; dia <= ultimoDiaConsiderado; dia++) {
+    const data = new Date(parseInt(ano), parseInt(mes) - 1, dia);
     const dataStr = data.toISOString().split("T")[0];
-    const diaTrabalhado = diasTrabalhados.find((d) => {
-      const diaDataStr = formatarDataStr(d.dia_data);
-      return diaDataStr === dataStr;
-    });
+    
+    // Verificar se o dia é válido (após data de criação do usuário)
+    const diaValido = dia >= primeiroDiaValido;
+
+    const batidasDoDia = batidasPorDia[dataStr] || [];
+    const horasPrevistasDia = getHorasPrevistasDia(perfil, data) || 0;
+
+    let horasTrabalhadas = 0;
+    let horasExtras = 0;
+    let horasNegativas = 0;
+    let status = "normal";
+
+    if (diaValido) {
+      // Calcular horas trabalhadas em tempo real baseado nas batidas válidas
+      const batidasValidas = batidasDoDia.filter(
+        (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+      );
+      horasTrabalhadas = calcularHorasTrabalhadas(batidasValidas);
+
+      // Calcular extras e negativas
+      horasExtras = horasPrevistasDia
+        ? Math.max(0, horasTrabalhadas - horasPrevistasDia)
+        : 0;
+      horasNegativas = horasPrevistasDia
+        ? Math.max(0, horasPrevistasDia - horasTrabalhadas)
+        : 0;
+
+      // Aplicar tolerância de 10 minutos
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+      horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+      // Verificar se é uma falta (dia que já passou, sem batidas, que deveria ter trabalhado)
+      if (data < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativas = horasPrevistasDia;
+        status = "divergente";
+      } else if (horasExtras > 0 || horasNegativas > 0) {
+        status = "divergente";
+      }
+
+      // Somar aos totais apenas para dias válidos
+      totalHorasPrevistas += horasPrevistasDia;
+      totalHorasTrabalhadas += horasTrabalhadas;
+      totalHorasExtras += horasExtras;
+      totalHorasNegativas += horasNegativas;
+    }
+    // Para dias antes da criação do usuário: manter tudo como 0 e status normal
 
     diasDoMes.push({
       data: dataStr,
-      horasTrabalhadas: diaTrabalhado
-        ? parseFloat(diaTrabalhado.dia_horas_trabalhadas || 0)
-        : 0,
-      horasExtras: diaTrabalhado
-        ? parseFloat(diaTrabalhado.dia_horas_extras || 0)
-        : 0,
-      horasNegativas: diaTrabalhado
-        ? parseFloat(diaTrabalhado.dia_horas_negativas || 0)
-        : 0,
-      status: diaTrabalhado ? diaTrabalhado.dia_status : "normal",
-      batidas: batidasPorDia[dataStr] || [],
+      horasTrabalhadas,
+      horasExtras,
+      horasNegativas,
+      horasPrevistas: diaValido ? horasPrevistasDia : 0,
+      status,
+      batidas: batidasDoDia,
       justificativas: justificativasPorDia[dataStr] || [],
+      diaValido, // Indica se o dia conta para o funcionário
     });
   }
 
-  // Obter banco de horas
-  const bancoHoras = await BancoHoras.findOne({
+  // Calcular horas pendentes (previstas - trabalhadas, se positivo)
+  const horasPendentes = Math.max(0, totalHorasPrevistas - totalHorasTrabalhadas);
+
+  // Calcular banco de horas ACUMULADO (desde a data de início até o mês consultado)
+  const bancoHorasRecord = await BancoHoras.findOne({
     where: { banco_usuario_id: id },
   });
+
+  // Definir data de início do cálculo do banco (última zeragem ou criação do usuário)
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHorasRecord?.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHorasRecord.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  // Calcular o banco de horas acumulado de todos os meses desde dataInicioBanco até o mês consultado
+  let bancoHorasAcumulado = 0;
+
+  // Iterar por todos os meses desde dataInicioBanco até o mês consultado
+  let mesCursor = new Date(dataInicioBanco.getFullYear(), dataInicioBanco.getMonth(), 1);
+  const fimConsulta = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    // Definir período do mês
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+    
+    // Verificar se é o mês atual (para limitar até hoje)
+    const eMesAtualCursor = mesCursorNum === mesAtual && anoCursorNum === anoAtual;
+    const dataLimiteCursor = eMesAtualCursor ? hoje : fimMesCursor;
+    const ultimoDiaCursor = eMesAtualCursor ? hoje.getDate() : fimMesCursor.getDate();
+
+    // Calcular primeiro dia válido deste mês
+    let primeiroDiaCursor = 1;
+    if (dataInicioBanco.getFullYear() === anoCursorNum && dataInicioBanco.getMonth() + 1 === mesCursorNum) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    // Buscar batidas do mês
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: id,
+        batida_data_hora: {
+          [Op.between]: [inicioMesCursor, new Date(dataLimiteCursor.getFullYear(), dataLimiteCursor.getMonth(), dataLimiteCursor.getDate(), 23, 59, 59, 999)],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    // Organizar batidas por dia
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push(b);
+    });
+
+    // Buscar justificativas aprovadas de falta do mês
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+      },
+    });
+    const diasJustificados = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+    // Calcular horas do mês
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const data = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = data.toISOString().split("T")[0];
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+      const horasPrevistasDia = getHorasPrevistasDia(perfil, data);
+      
+      // Se o dia foi justificado como falta, não conta como negativo
+      if (diasJustificados.has(dataStr)) {
+        continue;
+      }
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+
+      let horasExtrasDia = horasPrevistasDia ? Math.max(0, horasTrabalhadasDia - horasPrevistasDia) : 0;
+      let horasNegativasDia = horasPrevistasDia ? Math.max(0, horasPrevistasDia - horasTrabalhadasDia) : 0;
+
+      // Aplicar tolerância
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+      // Se é falta (sem batida em dia que deveria trabalhar)
+      if (data < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativasDia = horasPrevistasDia;
+      }
+
+      bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+    }
+
+    // Avançar para o próximo mês
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
 
   return res.status(200).json({
     funcionario: {
       id: usuarioAlvo.usuario_id,
       nome: usuarioAlvo.usuario_nome,
+      dataCriacao: dataCriacaoUsuario ? formatarDataStr(dataCriacaoUsuario) : null,
     },
     dias: diasDoMes,
-    bancoHoras: bancoHoras ? bancoHoras.banco_saldo / 60 : 0,
+    bancoHoras: bancoHorasAcumulado,
+    resumoMes: {
+      horasPrevistas: totalHorasPrevistas,
+      horasTrabalhadas: totalHorasTrabalhadas,
+      horasExtras: totalHorasExtras,
+      horasNegativas: totalHorasNegativas,
+      horasPendentes: horasPendentes,
+      eMesAtual: eMesAtual,
+      dataLimite: eMesAtual ? hoje.toISOString().split("T")[0] : null,
+      primeiroDiaValido: primeiroDiaValido,
+    },
   });
 }
 
@@ -983,14 +1290,21 @@ export async function fecharBancoHoras(req, res) {
 
   const saldoAnterior = bancoHoras.banco_saldo;
 
-  // Zerar o banco de horas
+  // Calcular o dia 1 do mês atual no fuso de Brasília
+  const hoje = getDataBrasilia();
+  const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const primeiroDiaMesStr = primeiroDiaMes.toISOString().split("T")[0];
+
+  // Zerar o banco de horas e definir data de início como dia 1 do mês atual
   bancoHoras.banco_saldo = 0;
   bancoHoras.banco_ultima_atualizacao = new Date();
+  bancoHoras.banco_data_inicio = primeiroDiaMesStr;
   await bancoHoras.save();
 
   return res.status(200).json({
-    mensagem: "Banco de horas fechado com sucesso",
+    mensagem: "Banco de horas fechado com sucesso. Contagem reiniciada a partir do dia 1 do mês atual.",
     saldoAnterior: saldoAnterior / 60,
+    dataInicio: primeiroDiaMesStr,
     funcionario: {
       id: usuarioAlvo.usuario_id,
       nome: usuarioAlvo.usuario_nome,
@@ -998,7 +1312,7 @@ export async function fecharBancoHoras(req, res) {
   });
 }
 
-// Recalcular banco de horas desde a criação do usuário
+// Recalcular banco de horas desde a data de início (ou desde sempre se não houver data de início)
 export async function recalcularBancoHoras(req, res) {
   requirePermissao(req, "ponto.alterar_batidas");
 
@@ -1009,36 +1323,141 @@ export async function recalcularBancoHoras(req, res) {
     throw ApiError.notFound("Usuário não encontrado");
   }
 
-  // Buscar todos os dias trabalhados do usuário
-  const diasTrabalhados = await DiaTrabalhado.findAll({
-    where: { dia_usuario_id: funcionario_id },
-    order: [["dia_data", "ASC"]],
-  });
+  // Obter data de criação do usuário
+  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao 
+    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
+    : null;
 
-  // Calcular saldo total
-  let saldoTotalMinutos = 0;
-  diasTrabalhados.forEach((dia) => {
-    const extras = parseFloat(dia.dia_horas_extras || 0);
-    const negativas = parseFloat(dia.dia_horas_negativas || 0);
-    saldoTotalMinutos += Math.round((extras - negativas) * 60);
-  });
-
-  // Atualizar banco de horas
+  // Buscar banco de horas para obter data de início
   const [bancoHoras] = await BancoHoras.findOrCreate({
     where: { banco_usuario_id: funcionario_id },
     defaults: { banco_saldo: 0 },
   });
 
+  // Definir data de início do cálculo (última zeragem ou criação do usuário)
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHoras.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHoras.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  // Buscar perfil de jornada
+  const perfil = await getPerfilJornadaUsuario(funcionario_id);
+
+  // Calcular banco de horas em tempo real desde dataInicioBanco até hoje
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+
+  let saldoTotalHoras = 0;
+  let diasProcessados = 0;
+
+  // Iterar por todos os meses desde dataInicioBanco até o mês atual
+  let mesCursor = new Date(dataInicioBanco.getFullYear(), dataInicioBanco.getMonth(), 1);
+  const fimConsulta = new Date(anoAtual, mesAtual - 1, 1);
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    // Definir período do mês
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+    
+    // Verificar se é o mês atual (para limitar até hoje)
+    const eMesAtualCursor = mesCursorNum === mesAtual && anoCursorNum === anoAtual;
+    const dataLimiteCursor = eMesAtualCursor ? hoje : fimMesCursor;
+    const ultimoDiaCursor = eMesAtualCursor ? hoje.getDate() : fimMesCursor.getDate();
+
+    // Calcular primeiro dia válido deste mês
+    let primeiroDiaCursor = 1;
+    if (dataInicioBanco.getFullYear() === anoCursorNum && dataInicioBanco.getMonth() + 1 === mesCursorNum) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    // Buscar batidas do mês
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: funcionario_id,
+        batida_data_hora: {
+          [Op.between]: [inicioMesCursor, new Date(dataLimiteCursor.getFullYear(), dataLimiteCursor.getMonth(), dataLimiteCursor.getDate(), 23, 59, 59, 999)],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    // Organizar batidas por dia
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push(b);
+    });
+
+    // Buscar justificativas aprovadas de falta do mês
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: funcionario_id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+      },
+    });
+    const diasJustificados = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+    // Calcular horas do mês
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const dataDia = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = dataDia.toISOString().split("T")[0];
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+      const horasPrevistasDia = getHorasPrevistasDia(perfil, dataDia);
+      
+      // Se o dia foi justificado como falta, não conta como negativo
+      if (diasJustificados.has(dataStr)) {
+        diasProcessados++;
+        continue;
+      }
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+
+      let horasExtrasDia = horasPrevistasDia ? Math.max(0, horasTrabalhadasDia - horasPrevistasDia) : 0;
+      let horasNegativasDia = horasPrevistasDia ? Math.max(0, horasPrevistasDia - horasTrabalhadasDia) : 0;
+
+      // Aplicar tolerância
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+      // Verificar falta (dia sem batida que deveria ter trabalhado)
+      if (dataDia < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativasDia = horasPrevistasDia;
+      }
+
+      saldoTotalHoras += horasExtrasDia - horasNegativasDia;
+      diasProcessados++;
+    }
+
+    // Avançar para o próximo mês
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
+
   const saldoAnterior = bancoHoras.banco_saldo;
-  bancoHoras.banco_saldo = saldoTotalMinutos;
+  bancoHoras.banco_saldo = Math.round(saldoTotalHoras * 60); // Converter para minutos
   bancoHoras.banco_ultima_atualizacao = new Date();
   await bancoHoras.save();
 
   return res.status(200).json({
     mensagem: "Banco de horas recalculado com sucesso",
     saldoAnterior: saldoAnterior / 60,
-    saldoNovo: saldoTotalMinutos / 60,
-    diasProcessados: diasTrabalhados.length,
+    saldoNovo: saldoTotalHoras,
+    diasProcessados: diasProcessados,
+    dataInicio: bancoHoras.banco_data_inicio || null,
     funcionario: {
       id: usuarioAlvo.usuario_id,
       nome: usuarioAlvo.usuario_nome,
@@ -1160,4 +1579,450 @@ export async function recalcularDia(req, res) {
       status: diaRecalculado?.dia_status || "normal",
     },
   });
+}
+
+// Exportar batidas de ponto para Excel
+export async function exportarPontoExcel(req, res) {
+  requirePermissao(req, "ponto.alterar_batidas");
+
+  const { funcionario_id } = req.params;
+  const { mes, ano } = req.query;
+
+  if (!mes || !ano) {
+    throw ApiError.badRequest("Mês e ano são obrigatórios");
+  }
+
+  const usuarioAlvo = await Usuario.findByPk(funcionario_id, {
+    include: [
+      {
+        model: Empresa,
+        as: "empresa",
+        attributes: ["empresa_id", "empresa_nome"],
+      },
+    ],
+  });
+
+  if (!usuarioAlvo) {
+    throw ApiError.notFound("Usuário não encontrado");
+  }
+
+  const nomeEmpresa = usuarioAlvo.empresa?.empresa_nome || "Empresa não vinculada";
+  const nomeFuncionario = usuarioAlvo.usuario_nome;
+
+  // Obter data de criação do usuário
+  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao 
+    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
+    : null;
+
+  // Verificar se é o mês atual para limitar até a data atual
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const eMesAtual = parseInt(mes) === mesAtual && parseInt(ano) === anoAtual;
+
+  const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
+  
+  const ultimoDiaConsiderado = eMesAtual ? hoje.getDate() : fimMes.getDate();
+
+  // Calcular primeiro dia válido baseado na data de criação
+  let primeiroDiaValido = 1;
+  if (dataCriacaoUsuario) {
+    const criacaoAno = dataCriacaoUsuario.getFullYear();
+    const criacaoMes = dataCriacaoUsuario.getMonth() + 1;
+    const criacaoDia = dataCriacaoUsuario.getDate();
+
+    if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
+      primeiroDiaValido = criacaoDia;
+    }
+  }
+
+  // Buscar todas as batidas do mês
+  const dataLimite = eMesAtual ? hoje : fimMes;
+  const batidas = await BatidaPonto.findAll({
+    where: {
+      batida_usuario_id: funcionario_id,
+      batida_data_hora: {
+        [Op.between]: [inicioMes, new Date(dataLimite.getFullYear(), dataLimite.getMonth(), dataLimite.getDate(), 23, 59, 59, 999)],
+      },
+      batida_status: { [Op.in]: ["normal", "aprovada"] },
+    },
+    order: [["batida_data_hora", "ASC"]],
+  });
+
+  // Buscar justificativas aprovadas de falta
+  const justificativas = await Justificativa.findAll({
+    where: {
+      justificativa_usuario_id: funcionario_id,
+      justificativa_data: {
+        [Op.between]: [inicioMes, dataLimite],
+      },
+      justificativa_status: "aprovada",
+      justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+    },
+  });
+  const diasJustificados = new Set(justificativas.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+  // Organizar batidas por dia
+  const batidasPorDia = {};
+  batidas.forEach((b) => {
+    const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+    if (!batidasPorDia[dataStr]) batidasPorDia[dataStr] = [];
+    batidasPorDia[dataStr].push(b);
+  });
+
+  // Buscar perfil de jornada
+  const perfil = await getPerfilJornadaUsuario(funcionario_id);
+
+  // Calcular o máximo de batidas em um dia para definir colunas
+  let maxBatidas = 0;
+  Object.values(batidasPorDia).forEach((batidasDia) => {
+    if (batidasDia.length > maxBatidas) maxBatidas = batidasDia.length;
+  });
+  // Garantir pelo menos 4 colunas (2 turnos)
+  maxBatidas = Math.max(maxBatidas, 4);
+  // Arredondar para número par
+  if (maxBatidas % 2 !== 0) maxBatidas++;
+
+  // Dias da semana em português
+  const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
+  // Meses em português
+  const mesesPt = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+  // Importar ExcelJS dinamicamente
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(`Ponto ${mesesPt[parseInt(mes) - 1]} ${ano}`);
+
+  // Definir número de colunas: Data + Dia Semana + batidas + Saldo
+  const numColunas = 2 + maxBatidas + 1;
+
+  // Linha 1: Nome da empresa (mesclado)
+  worksheet.mergeCells(1, 1, 1, numColunas);
+  const celulaEmpresa = worksheet.getCell(1, 1);
+  celulaEmpresa.value = nomeEmpresa;
+  celulaEmpresa.font = { bold: true, size: 16 };
+  celulaEmpresa.alignment = { horizontal: "center", vertical: "middle" };
+  celulaEmpresa.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF1E3A5F" },
+  };
+  celulaEmpresa.font = { bold: true, size: 16, color: { argb: "FFFFFFFF" } };
+  worksheet.getRow(1).height = 30;
+
+  // Linha 2: Nome do funcionário (mesclado)
+  worksheet.mergeCells(2, 1, 2, numColunas);
+  const celulaFuncionario = worksheet.getCell(2, 1);
+  celulaFuncionario.value = nomeFuncionario;
+  celulaFuncionario.font = { bold: true, size: 14 };
+  celulaFuncionario.alignment = { horizontal: "center", vertical: "middle" };
+  celulaFuncionario.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF2E5A8F" },
+  };
+  celulaFuncionario.font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+  worksheet.getRow(2).height = 25;
+
+  // Linha 3: Cabeçalhos
+  const cabecalhos = ["Data", "Dia da Semana"];
+  for (let i = 0; i < maxBatidas; i++) {
+    cabecalhos.push(i % 2 === 0 ? `Entrada ${Math.floor(i / 2) + 1}` : `Saída ${Math.floor(i / 2) + 1}`);
+  }
+  cabecalhos.push("Saldo");
+
+  const linhaCabecalho = worksheet.getRow(3);
+  cabecalhos.forEach((cab, index) => {
+    const celula = linhaCabecalho.getCell(index + 1);
+    celula.value = cab;
+    celula.font = { bold: true, size: 11 };
+    celula.alignment = { horizontal: "center", vertical: "middle" };
+    celula.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE0E0E0" },
+    };
+    celula.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" },
+    };
+  });
+  worksheet.getRow(3).height = 22;
+
+  // Definir largura das colunas
+  worksheet.getColumn(1).width = 12; // Data
+  worksheet.getColumn(2).width = 18; // Dia da semana
+  for (let i = 3; i <= 2 + maxBatidas; i++) {
+    worksheet.getColumn(i).width = 10; // Entradas/Saídas
+  }
+  worksheet.getColumn(numColunas).width = 12; // Saldo
+
+  // Processar dias e adicionar linhas
+  let linhaAtual = 4;
+  let saldoMes = 0;
+
+  // Buscar banco de horas para cálculo acumulado
+  const bancoHorasRecord = await BancoHoras.findOne({
+    where: { banco_usuario_id: funcionario_id },
+  });
+
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHorasRecord?.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHorasRecord.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  for (let dia = 1; dia <= ultimoDiaConsiderado; dia++) {
+    const data = new Date(parseInt(ano), parseInt(mes) - 1, dia);
+    const dataStr = data.toISOString().split("T")[0];
+    const diaValido = dia >= primeiroDiaValido;
+
+    // Formatar data dd/mm/yyyy
+    const dataFormatada = `${String(dia).padStart(2, "0")}/${String(parseInt(mes)).padStart(2, "0")}/${ano}`;
+    const diaSemana = diasSemana[data.getDay()];
+
+    const batidasDoDia = batidasPorDia[dataStr] || [];
+    const horasPrevistasDia = getHorasPrevistasDia(perfil, data) || 0;
+
+    let horasTrabalhadas = 0;
+    let horasExtras = 0;
+    let horasNegativas = 0;
+    let saldoDia = 0;
+
+    if (diaValido && !diasJustificados.has(dataStr)) {
+      horasTrabalhadas = calcularHorasTrabalhadas(batidasDoDia);
+
+      horasExtras = horasPrevistasDia ? Math.max(0, horasTrabalhadas - horasPrevistasDia) : 0;
+      horasNegativas = horasPrevistasDia ? Math.max(0, horasPrevistasDia - horasTrabalhadas) : 0;
+
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+      horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+      // Falta sem batida
+      if (data < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativas = horasPrevistasDia;
+      }
+
+      saldoDia = horasExtras - horasNegativas;
+      saldoMes += saldoDia;
+    }
+
+    // Adicionar linha
+    const linha = worksheet.getRow(linhaAtual);
+    linha.getCell(1).value = dataFormatada;
+    linha.getCell(2).value = diaSemana;
+
+    // Adicionar batidas nas colunas corretas
+    for (let i = 0; i < maxBatidas; i++) {
+      const celula = linha.getCell(3 + i);
+      if (batidasDoDia[i]) {
+        const horaBatida = new Date(batidasDoDia[i].batida_data_hora);
+        celula.value = horaBatida.toLocaleTimeString("pt-BR", { 
+          hour: "2-digit", 
+          minute: "2-digit",
+          timeZone: "America/Sao_Paulo"
+        });
+      } else {
+        celula.value = "-";
+      }
+      celula.alignment = { horizontal: "center" };
+    }
+
+    // Adicionar saldo
+    const celulaSaldo = linha.getCell(numColunas);
+    if (diaValido && !diasJustificados.has(dataStr)) {
+      const horasAbs = Math.abs(saldoDia);
+      const horasInt = Math.floor(horasAbs);
+      const minutos = Math.round((horasAbs - horasInt) * 60);
+      const sinal = saldoDia >= 0 ? "+" : "-";
+      celulaSaldo.value = `${sinal}${horasInt}h${String(minutos).padStart(2, "0")}min`;
+      
+      // Cor baseada no saldo
+      if (saldoDia > 0) {
+        celulaSaldo.font = { color: { argb: "FF008000" }, bold: true }; // Verde
+      } else if (saldoDia < 0) {
+        celulaSaldo.font = { color: { argb: "FFFF0000" }, bold: true }; // Vermelho
+      }
+    } else if (diasJustificados.has(dataStr)) {
+      celulaSaldo.value = "Justificado";
+      celulaSaldo.font = { color: { argb: "FF0066CC" }, italic: true };
+    } else {
+      celulaSaldo.value = "-";
+    }
+    celulaSaldo.alignment = { horizontal: "center" };
+
+    // Aplicar bordas
+    for (let col = 1; col <= numColunas; col++) {
+      linha.getCell(col).border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+      linha.getCell(col).alignment = { horizontal: "center", vertical: "middle" };
+    }
+
+    // Alternar cor de fundo
+    if (linhaAtual % 2 === 0) {
+      for (let col = 1; col <= numColunas; col++) {
+        linha.getCell(col).fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF5F5F5" },
+        };
+      }
+    }
+
+    linhaAtual++;
+  }
+
+  // Calcular banco de horas acumulado (mesma lógica das outras funções)
+  let bancoHorasAcumulado = 0;
+  let mesCursor = new Date(dataInicioBanco.getFullYear(), dataInicioBanco.getMonth(), 1);
+  const fimConsulta = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+    
+    const eMesAtualCursor = mesCursorNum === mesAtual && anoCursorNum === anoAtual;
+    const dataLimiteCursor = eMesAtualCursor ? hoje : fimMesCursor;
+    const ultimoDiaCursor = eMesAtualCursor ? hoje.getDate() : fimMesCursor.getDate();
+
+    let primeiroDiaCursor = 1;
+    if (dataInicioBanco.getFullYear() === anoCursorNum && dataInicioBanco.getMonth() + 1 === mesCursorNum) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: funcionario_id,
+        batida_data_hora: {
+          [Op.between]: [inicioMesCursor, new Date(dataLimiteCursor.getFullYear(), dataLimiteCursor.getMonth(), dataLimiteCursor.getDate(), 23, 59, 59, 999)],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push(b);
+    });
+
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: funcionario_id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+      },
+    });
+    const diasJustificadosMes = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const dataDia = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = dataDia.toISOString().split("T")[0];
+
+      if (diasJustificadosMes.has(dataStr)) continue;
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+      const horasPrevistasDia = getHorasPrevistasDia(perfil, dataDia);
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+
+      let horasExtrasDia = horasPrevistasDia ? Math.max(0, horasTrabalhadasDia - horasPrevistasDia) : 0;
+      let horasNegativasDia = horasPrevistasDia ? Math.max(0, horasPrevistasDia - horasTrabalhadasDia) : 0;
+
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+      if (dataDia < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativasDia = horasPrevistasDia;
+      }
+
+      bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+    }
+
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
+
+  // Linha em branco
+  linhaAtual++;
+
+  // Linha de resumo: Saldo do Mês
+  const metadeColunas = Math.floor(numColunas / 2);
+  worksheet.mergeCells(linhaAtual, 1, linhaAtual, metadeColunas);
+  const celulaSaldoMesLabel = worksheet.getCell(linhaAtual, 1);
+  celulaSaldoMesLabel.value = "Saldo do Mês:";
+  celulaSaldoMesLabel.font = { bold: true, size: 12 };
+  celulaSaldoMesLabel.alignment = { horizontal: "right", vertical: "middle" };
+
+  worksheet.mergeCells(linhaAtual, metadeColunas + 1, linhaAtual, numColunas);
+  const celulaSaldoMesValor = worksheet.getCell(linhaAtual, metadeColunas + 1);
+  const saldoMesAbs = Math.abs(saldoMes);
+  const saldoMesHoras = Math.floor(saldoMesAbs);
+  const saldoMesMin = Math.round((saldoMesAbs - saldoMesHoras) * 60);
+  const saldoMesSinal = saldoMes >= 0 ? "+" : "-";
+  celulaSaldoMesValor.value = `${saldoMesSinal}${saldoMesHoras}h${String(saldoMesMin).padStart(2, "0")}min`;
+  celulaSaldoMesValor.font = { 
+    bold: true, 
+    size: 12, 
+    color: { argb: saldoMes >= 0 ? "FF008000" : "FFFF0000" } 
+  };
+  celulaSaldoMesValor.alignment = { horizontal: "left", vertical: "middle" };
+  worksheet.getRow(linhaAtual).height = 25;
+
+  linhaAtual++;
+
+  // Linha de resumo: Saldo do Banco de Horas
+  worksheet.mergeCells(linhaAtual, 1, linhaAtual, metadeColunas);
+  const celulaBancoLabel = worksheet.getCell(linhaAtual, 1);
+  celulaBancoLabel.value = "Saldo do Banco de Horas:";
+  celulaBancoLabel.font = { bold: true, size: 12 };
+  celulaBancoLabel.alignment = { horizontal: "right", vertical: "middle" };
+
+  worksheet.mergeCells(linhaAtual, metadeColunas + 1, linhaAtual, numColunas);
+  const celulaBancoValor = worksheet.getCell(linhaAtual, metadeColunas + 1);
+  const bancoAbs = Math.abs(bancoHorasAcumulado);
+  const bancoHoras = Math.floor(bancoAbs);
+  const bancoMin = Math.round((bancoAbs - bancoHoras) * 60);
+  const bancoSinal = bancoHorasAcumulado >= 0 ? "+" : "-";
+  celulaBancoValor.value = `${bancoSinal}${bancoHoras}h${String(bancoMin).padStart(2, "0")}min`;
+  celulaBancoValor.font = { 
+    bold: true, 
+    size: 12, 
+    color: { argb: bancoHorasAcumulado >= 0 ? "FF008000" : "FFFF0000" } 
+  };
+  celulaBancoValor.alignment = { horizontal: "left", vertical: "middle" };
+  worksheet.getRow(linhaAtual).height = 25;
+
+  // Configurar resposta
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=Ponto_${nomeFuncionario.replace(/\s+/g, "_")}_${mesesPt[parseInt(mes) - 1]}_${ano}.xlsx`
+  );
+
+  // Enviar arquivo
+  await workbook.xlsx.write(res);
+  res.end();
 }

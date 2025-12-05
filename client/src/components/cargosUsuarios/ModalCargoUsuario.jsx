@@ -1,10 +1,17 @@
-import { X, Save } from "lucide-react";
+import { X, Save, Building2, ChevronDown, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   postCargoUsuario,
   putCargoUsuario,
 } from "../../services/api/cargoUsuarioServices.js";
+import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+
+// Permissões que suportam filtro por empresa
+const PERMISSOES_COM_EMPRESA = [
+  "sistema.visualizar_funcionarios",
+  "sistema.gerenciar_cargos",
+];
 
 function ModalCargoUsuario({
   cargo,
@@ -21,6 +28,21 @@ function ModalCargoUsuario({
   const [descricao, setDescricao] = useState("");
   const [permissoesSelecionadas, setPermissoesSelecionadas] = useState([]);
   const [ativo, setAtivo] = useState(true);
+  const [empresas, setEmpresas] = useState([]);
+  const [permissoesEmpresas, setPermissoesEmpresas] = useState({});
+  const [permissaoExpandida, setPermissaoExpandida] = useState(null);
+
+  useEffect(() => {
+    async function carregarEmpresas() {
+      try {
+        const data = await getEmpresas();
+        setEmpresas(data || []);
+      } catch (err) {
+        console.error("Erro ao carregar empresas:", err);
+      }
+    }
+    carregarEmpresas();
+  }, []);
 
   useEffect(() => {
     if (modoEdicao && cargo) {
@@ -32,22 +54,72 @@ function ModalCargoUsuario({
           ? cargo.permissoes.map((p) => p.permissao_id)
           : []
       );
+      // Carregar empresas por permissão se existirem
+      if (cargo.permissoesEmpresas) {
+        const pe = {};
+        for (const [permId, empresasList] of Object.entries(cargo.permissoesEmpresas)) {
+          pe[permId] = empresasList.map(e => e.empresa_id);
+        }
+        setPermissoesEmpresas(pe);
+      } else {
+        setPermissoesEmpresas({});
+      }
     } else {
       setNome("");
       setDescricao("");
       setPermissoesSelecionadas([]);
       setAtivo(true);
+      setPermissoesEmpresas({});
     }
   }, [modoEdicao, cargo]);
 
   function togglePermissao(permissaoId) {
     setPermissoesSelecionadas((prev) => {
       if (prev.includes(permissaoId)) {
+        // Ao desmarcar, remover também as empresas configuradas
+        setPermissoesEmpresas((prevPE) => {
+          const newPE = { ...prevPE };
+          delete newPE[permissaoId];
+          return newPE;
+        });
         return prev.filter((id) => id !== permissaoId);
       } else {
         return [...prev, permissaoId];
       }
     });
+  }
+
+  function toggleEmpresaPermissao(permissaoId, empresaId) {
+    setPermissoesEmpresas((prev) => {
+      const empresasAtuais = prev[permissaoId] || [];
+      if (empresasAtuais.includes(empresaId)) {
+        return {
+          ...prev,
+          [permissaoId]: empresasAtuais.filter((id) => id !== empresaId),
+        };
+      } else {
+        return {
+          ...prev,
+          [permissaoId]: [...empresasAtuais, empresaId],
+        };
+      }
+    });
+  }
+
+  function getPermissaoCodigo(permissaoId) {
+    for (const cat of categoriasPermissoes || []) {
+      for (const perm of cat.permissoes || []) {
+        if (perm.permissao_id === permissaoId) {
+          return perm.permissao_codigo;
+        }
+      }
+    }
+    return null;
+  }
+
+  function permissaoSuportaEmpresa(permissaoId) {
+    const codigo = getPermissaoCodigo(permissaoId);
+    return PERMISSOES_COM_EMPRESA.includes(codigo);
   }
 
   async function salvarCargo() {
@@ -63,6 +135,7 @@ function ModalCargoUsuario({
         cargo_usuario_descricao: descricao.trim() || null,
         cargo_usuario_ativo: ativo ? 1 : 0,
         permissoes: permissoesSelecionadas,
+        permissoesEmpresas: permissoesEmpresas,
       };
 
       if (modoEdicao) {
@@ -182,31 +255,94 @@ function ModalCargoUsuario({
                   </div>
                   <div className="space-y-1.5">
                     {categoria.permissoes && categoria.permissoes.length > 0 ? (
-                      categoria.permissoes.map((permissao) => (
-                        <label
-                          key={permissao.permissao_id}
-                          className="flex items-start gap-2 cursor-pointer p-1.5 rounded hover:bg-white/5 transition"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={permissoesSelecionadas.includes(
-                              permissao.permissao_id
-                            )}
-                            onChange={() => togglePermissao(permissao.permissao_id)}
-                            className="mt-0.5 rounded bg-white/5 border-white/15"
-                          />
-                          <div className="flex-1">
-                            <div className="text-xs font-medium text-white">
-                              {permissao.permissao_nome}
-                            </div>
-                            {permissao.permissao_descricao && (
-                              <div className="text-[10px] text-white/60 mt-0.5">
-                                {permissao.permissao_descricao}
+                      categoria.permissoes.map((permissao) => {
+                        const selecionada = permissoesSelecionadas.includes(permissao.permissao_id);
+                        const suportaEmpresa = permissaoSuportaEmpresa(permissao.permissao_id);
+                        const expandida = permissaoExpandida === permissao.permissao_id;
+                        const empresasSelecionadas = permissoesEmpresas[permissao.permissao_id] || [];
+
+                        return (
+                          <div key={permissao.permissao_id} className="rounded bg-white/5">
+                            <label
+                              className="flex items-start gap-2 cursor-pointer p-1.5 hover:bg-white/5 transition"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selecionada}
+                                onChange={() => togglePermissao(permissao.permissao_id)}
+                                className="mt-0.5 rounded bg-white/5 border-white/15"
+                              />
+                              <div className="flex-1">
+                                <div className="text-xs font-medium text-white flex items-center gap-1">
+                                  {permissao.permissao_nome}
+                                  {suportaEmpresa && selecionada && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setPermissaoExpandida(expandida ? null : permissao.permissao_id);
+                                      }}
+                                      className="p-0.5 rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30"
+                                      title="Configurar empresas"
+                                    >
+                                      <Building2 size={12} />
+                                    </button>
+                                  )}
+                                </div>
+                                {permissao.permissao_descricao && (
+                                  <div className="text-[10px] text-white/60 mt-0.5">
+                                    {permissao.permissao_descricao}
+                                  </div>
+                                )}
+                                {suportaEmpresa && selecionada && empresasSelecionadas.length > 0 && (
+                                  <div className="text-[10px] text-blue-300 mt-0.5">
+                                    Restrito a {empresasSelecionadas.length} empresa(s)
+                                  </div>
+                                )}
+                              </div>
+                              {suportaEmpresa && selecionada && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setPermissaoExpandida(expandida ? null : permissao.permissao_id);
+                                  }}
+                                  className="p-1"
+                                >
+                                  {expandida ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                </button>
+                              )}
+                            </label>
+                            
+                            {/* Seleção de empresas */}
+                            {suportaEmpresa && selecionada && expandida && (
+                              <div className="border-t border-white/10 p-2 bg-white/5">
+                                <p className="text-[10px] text-white/60 mb-1.5">
+                                  Selecione as empresas permitidas (vazio = todas):
+                                </p>
+                                <div className="grid grid-cols-2 gap-1">
+                                  {empresas.map((empresa) => (
+                                    <label
+                                      key={empresa.empresa_id}
+                                      className="flex items-center gap-1.5 cursor-pointer p-1 rounded hover:bg-white/10"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={empresasSelecionadas.includes(empresa.empresa_id)}
+                                        onChange={() => toggleEmpresaPermissao(permissao.permissao_id, empresa.empresa_id)}
+                                        className="rounded bg-white/5 border-white/15"
+                                      />
+                                      <span className="text-[10px] text-white truncate">
+                                        {empresa.empresa_nome}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>
-                        </label>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="text-[10px] text-white/50 pl-2 py-1">
                         Nenhuma permissão nesta categoria

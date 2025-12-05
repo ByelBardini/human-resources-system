@@ -1,6 +1,40 @@
-import { Cargo, Nivel, Descricao, Log, Funcionario } from "../models/index.js";
+import { Cargo, Nivel, Descricao, Log, Funcionario, CargoPermissao, CargoPermissaoEmpresa, Permissao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
+
+// Função para obter empresas permitidas para uma permissão específica
+async function getEmpresasPermitidasParaPermissao(usuario, codigoPermissao) {
+  // Buscar a permissão pelo código
+  const permissao = await Permissao.findOne({
+    where: { permissao_codigo: codigoPermissao },
+  });
+
+  if (!permissao) return null; // Permissão não existe
+
+  // Buscar cargo_permissoes do cargo do usuário
+  const cargoPermissao = await CargoPermissao.findOne({
+    where: {
+      cargo_usuario_id: usuario.usuario_cargo_id,
+      permissao_id: permissao.permissao_id,
+    },
+    include: [
+      {
+        model: CargoPermissaoEmpresa,
+        as: "empresasConfiguradas",
+      },
+    ],
+  });
+
+  if (!cargoPermissao) return null; // Usuário não tem essa permissão
+
+  // Se não há empresas configuradas, retornar null (acesso a todas)
+  if (!cargoPermissao.empresasConfiguradas || cargoPermissao.empresasConfiguradas.length === 0) {
+    return null;
+  }
+
+  // Retornar lista de IDs de empresas permitidas
+  return cargoPermissao.empresasConfiguradas.map((ec) => ec.empresa_id);
+}
 
 function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
@@ -244,9 +278,17 @@ export async function aumentoGeral(req, res) {
 }
 
 export async function getCargos(req, res) {
-  requirePermissao(req, "sistema.gerenciar_cargos");
+  const usuario = requirePermissao(req, "sistema.gerenciar_cargos");
   const id = req.params.id;
   if (!id) throw ApiError.badRequest("Necessário informar o ID da empresa.");
+
+  // Verificar se o usuário tem restrição de empresas para visualizar cargos
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.gerenciar_cargos");
+  
+  // Se há restrição e a empresa solicitada não está na lista, negar acesso
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(parseInt(id))) {
+    throw ApiError.forbidden("Você não tem permissão para visualizar cargos desta empresa.");
+  }
 
   const cargos = await Cargo.findAll({
     attributes: ["cargo_id", "cargo_nome"],

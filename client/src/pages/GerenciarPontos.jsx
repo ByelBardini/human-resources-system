@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Building2,
   RefreshCw,
-  Trash2,
+  Download,
 } from "lucide-react";
 import {
   getGestaoEmpresas,
@@ -25,6 +25,7 @@ import {
   reprovarBatida,
   fecharBancoHoras,
   recalcularBancoHoras,
+  exportarPontoExcel,
 } from "../services/api/pontoService.js";
 import {
   aprovarJustificativa,
@@ -265,6 +266,23 @@ function GerenciarPontos() {
     }
   }
 
+  async function handleExportarExcel() {
+    if (!funcionarioSelecionado) return;
+
+    setCarregando(true);
+    try {
+      await exportarPontoExcel(funcionarioSelecionado.id, mes, ano);
+      setCarregando(false);
+      mostrarAviso("sucesso", "Planilha exportada com sucesso!");
+      setTimeout(() => {
+        limparAviso();
+      }, 2000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
   function formatarData(dataStr) {
     if (!dataStr) return "";
     const data = new Date(dataStr + "T12:00:00");
@@ -304,7 +322,39 @@ function GerenciarPontos() {
     return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
   }
 
+  // Verificar se pode navegar para o mês anterior (não pode ir antes da data de criação do usuário)
+  function podeMesAnterior() {
+    if (!historicoFuncionario?.funcionario?.dataCriacao) return true;
+    
+    const dataCriacao = new Date(historicoFuncionario.funcionario.dataCriacao + "T12:00:00");
+    const mesCriacao = dataCriacao.getMonth() + 1;
+    const anoCriacao = dataCriacao.getFullYear();
+    
+    // Não pode ir para antes do mês de criação
+    if (ano < anoCriacao) return false;
+    if (ano === anoCriacao && mes <= mesCriacao) return false;
+    
+    return true;
+  }
+
+  // Verificar se pode navegar para o mês seguinte (não pode ir além do mês atual)
+  function podeMesSeguinte() {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    
+    // Não pode ir além do mês atual
+    if (ano > anoAtual) return false;
+    if (ano === anoAtual && mes >= mesAtual) return false;
+    
+    return true;
+  }
+
   function mudarMes(direcao) {
+    // Verificar se pode mudar na direção solicitada
+    if (direcao === -1 && !podeMesAnterior()) return;
+    if (direcao === 1 && !podeMesSeguinte()) return;
+
     let novoMes = mes + direcao;
     let novoAno = ano;
 
@@ -491,7 +541,12 @@ function GerenciarPontos() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => mudarMes(-1)}
-                              className="p-1 rounded bg-white/5 hover:bg-white/10"
+                              disabled={!podeMesAnterior()}
+                              className={`p-1 rounded ${
+                                podeMesAnterior()
+                                  ? "bg-white/5 hover:bg-white/10 text-white"
+                                  : "bg-white/5 text-white/30 cursor-not-allowed"
+                              }`}
                             >
                               <ChevronLeft size={16} />
                             </button>
@@ -500,7 +555,12 @@ function GerenciarPontos() {
                             </span>
                             <button
                               onClick={() => mudarMes(1)}
-                              className="p-1 rounded bg-white/5 hover:bg-white/10"
+                              disabled={!podeMesSeguinte()}
+                              className={`p-1 rounded ${
+                                podeMesSeguinte()
+                                  ? "bg-white/5 hover:bg-white/10 text-white"
+                                  : "bg-white/5 text-white/30 cursor-not-allowed"
+                              }`}
                             >
                               <ChevronRight size={16} />
                             </button>
@@ -529,18 +589,27 @@ function GerenciarPontos() {
                               </div>
                               <div className="flex gap-2">
                                 <button
+                                  onClick={handleExportarExcel}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 text-sm"
+                                  title="Exportar para Excel"
+                                >
+                                  <Download size={14} />
+                                  Exportar
+                                </button>
+                                <button
                                   onClick={handleRecalcularBanco}
-                                  className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 text-sm"
                                   title="Recalcular Banco de Horas"
                                 >
-                                  <RefreshCw size={18} />
+                                  <RefreshCw size={14} />
+                                  Recalcular
                                 </button>
                                 <button
                                   onClick={() => setModalFecharBanco(true)}
-                                  className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
-                                  title="Fechar/Zerar Banco de Horas"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-sm"
+                                  title="Zerar Banco de Horas"
                                 >
-                                  <Trash2 size={18} />
+                                  Zerar Banco
                                 </button>
                               </div>
                             </div>
@@ -572,11 +641,33 @@ function GerenciarPontos() {
                                         <span className="text-white/70 text-xs">
                                           {dia.horasTrabalhadas.toFixed(1)}h
                                         </span>
-                                        {dia.status === "divergente" && (
-                                          <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
-                                            Div.
-                                          </span>
-                                        )}
+                                        {(() => {
+                                          // Verificar status das justificativas
+                                          const temJustAprovada = dia.justificativas?.some(j => j.justificativa_status === "aprovada");
+                                          const temJustPendente = dia.justificativas?.some(j => j.justificativa_status === "pendente");
+                                          const temJustRecusada = dia.justificativas?.some(j => j.justificativa_status === "recusada") && !temJustAprovada && !temJustPendente;
+                                          
+                                          if (temJustAprovada || temJustPendente) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
+                                                Justificado
+                                              </span>
+                                            );
+                                          } else if (temJustRecusada) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                                                Justificado
+                                              </span>
+                                            );
+                                          } else if (dia.status === "divergente" || dia.horasExtras > 0 || dia.horasNegativas > 0) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
+                                                Div.
+                                              </span>
+                                            );
+                                          }
+                                          return null;
+                                        })()}
                                       </div>
                                       {isExpanded ? (
                                         <ChevronUp

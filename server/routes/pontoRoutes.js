@@ -14,6 +14,7 @@ import {
   recalcularBancoHoras,
   aprovarBatidasDia,
   recalcularDia,
+  exportarPontoExcel,
 } from "../controllers/pontoController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import express from "express";
@@ -55,6 +56,10 @@ router.post(
 router.post(
   "/ponto/gestao/funcionario/:funcionario_id/recalcular-dia",
   asyncHandler(recalcularDia)
+);
+router.get(
+  "/ponto/gestao/funcionario/:funcionario_id/exportar",
+  asyncHandler(exportarPontoExcel)
 );
 
 export default router;

@@ -18,6 +18,7 @@ import BatidaPonto from "./batidasPonto.js";
 import Justificativa from "./justificativas.js";
 import DiaTrabalhado from "./diasTrabalhados.js";
 import BancoHoras from "./bancosHoras.js";
+import CargoPermissaoEmpresa from "./cargoPermissaoEmpresas.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -226,6 +227,16 @@ Permissao.belongsToMany(CargoUsuario, {
   foreignKey: "permissao_id",
   otherKey: "cargo_usuario_id",
   as: "cargos",
+});
+
+// Relacionamento direto CargoPermissao <-> Permissao
+CargoPermissao.belongsTo(Permissao, {
+  foreignKey: "permissao_id",
+  as: "permissao",
+});
+Permissao.hasMany(CargoPermissao, {
+  foreignKey: "permissao_id",
+  as: "cargoPermissoes",
 });
 
 //Foreign keys de Permissões e Categorias
@@ -521,6 +532,34 @@ Cargo.afterDestroy(async (instance, options) => {
   });
 });
 
+// Foreign keys de CargoPermissao e Empresas (para permissões específicas por empresa)
+CargoPermissao.belongsToMany(Empresa, {
+  through: CargoPermissaoEmpresa,
+  foreignKey: "cargo_permissoes_id",
+  otherKey: "empresa_id",
+  as: "empresasPermitidas",
+});
+Empresa.belongsToMany(CargoPermissao, {
+  through: CargoPermissaoEmpresa,
+  foreignKey: "empresa_id",
+  otherKey: "cargo_permissoes_id",
+  as: "permissoesEspecificas",
+});
+
+// Relacionamento direto para acessar CargoPermissaoEmpresa
+CargoPermissao.hasMany(CargoPermissaoEmpresa, {
+  foreignKey: "cargo_permissoes_id",
+  as: "empresasConfiguradas",
+});
+CargoPermissaoEmpresa.belongsTo(CargoPermissao, {
+  foreignKey: "cargo_permissoes_id",
+  as: "cargoPermissao",
+});
+CargoPermissaoEmpresa.belongsTo(Empresa, {
+  foreignKey: "empresa_id",
+  as: "empresa",
+});
+
 export {
   Empresa,
   Funcionario,
@@ -542,4 +581,5 @@ export {
   Justificativa,
   DiaTrabalhado,
   BancoHoras,
+  CargoPermissaoEmpresa,
 };

@@ -10,6 +10,15 @@ body,
   overflow-x: hidden;
 }
 
+/* Cursor pointer para todos os botões */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Chrome, Safari e Edge */
 ::-webkit-scrollbar {
   display: none;

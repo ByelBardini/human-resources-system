@@ -24,5 +24,9 @@ export function AvisoProvider({ children }) {
 }
 
 export function useAviso() {
-  return useContext(AvisoContext);
+  const context = useContext(AvisoContext);
+  if (context === undefined) {
+    throw new Error("useAviso deve ser usado dentro de um AvisoProvider");
+  }
+  return context;
 }

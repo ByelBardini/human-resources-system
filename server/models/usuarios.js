@@ -51,6 +51,11 @@ Usuario.init({
     allowNull: true,
     defaultValue: null,
   },
+  usuario_data_criacao: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    defaultValue: DataTypes.NOW,
+  },
 }, {
   sequelize,
   modelName: "Usuario",

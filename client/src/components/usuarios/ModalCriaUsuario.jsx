@@ -1,7 +1,7 @@
 import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { postUsuario } from "../../services/api/usuariosServices";
+import { postUsuario, getFuncionariosSemUsuario } from "../../services/api/usuariosServices";
 import { useAviso } from "../../context/AvisoContext";
 import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
@@ -24,9 +24,11 @@ function ModalCriaUsuario({
   const [cargoId, setCargoId] = useState("");
   const [perfilJornadaId, setPerfilJornadaId] = useState("");
   const [empresaId, setEmpresaId] = useState("");
+  const [funcionarioId, setFuncionarioId] = useState("");
   const [cargos, setCargos] = useState([]);
   const [perfisJornada, setPerfisJornada] = useState([]);
   const [empresas, setEmpresas] = useState([]);
+  const [funcionariosSemUsuario, setFuncionariosSemUsuario] = useState([]);
 
   async function criaUsuario() {
     if (!nome || !login || !tipoUsuario) {
@@ -49,6 +51,11 @@ function ModalCriaUsuario({
       return;
     }
 
+    if (tipoUsuario === "funcionario" && !funcionarioId) {
+      mostrarAviso("erro", "Selecione um funcionário para vincular", true);
+      return;
+    }
+
     setCarregando(true);
     try {
       await postUsuario({
@@ -57,6 +64,7 @@ function ModalCriaUsuario({
         usuario_cargo_id: tipoUsuario === "usuario" ? cargoId : null,
         perfil_jornada_id: tipoUsuario === "funcionario" ? perfilJornadaId : null,
         empresa_id: tipoUsuario === "funcionario" ? empresaId : null,
+        funcionario_id: tipoUsuario === "funcionario" ? funcionarioId : null,
         tipo_usuario: tipoUsuario,
       });
 
@@ -94,6 +102,8 @@ function ModalCriaUsuario({
     setCargoId("");
     setPerfilJornadaId("");
     setEmpresaId("");
+    setFuncionarioId("");
+    setFuncionariosSemUsuario([]);
   }, [cadastrado]);
 
   useEffect(() => {
@@ -126,10 +136,32 @@ function ModalCriaUsuario({
         setPerfilJornadaId("");
         setEmpresas([]);
         setEmpresaId("");
+        setFuncionariosSemUsuario([]);
+        setFuncionarioId("");
       }
     }
     buscarDadosFuncionario();
   }, [tipoUsuario]);
+
+  // Buscar funcionários sem usuário quando empresa for selecionada
+  useEffect(() => {
+    async function buscarFuncionariosSemUsuario() {
+      if (tipoUsuario === "funcionario" && empresaId) {
+        try {
+          const funcionariosData = await getFuncionariosSemUsuario(empresaId);
+          setFuncionariosSemUsuario(funcionariosData || []);
+          setFuncionarioId(""); // Reset funcionário selecionado
+        } catch (err) {
+          console.error("Erro ao buscar funcionários sem usuário:", err);
+          setFuncionariosSemUsuario([]);
+        }
+      } else {
+        setFuncionariosSemUsuario([]);
+        setFuncionarioId("");
+      }
+    }
+    buscarFuncionariosSemUsuario();
+  }, [empresaId, tipoUsuario]);
 
   return (
     <div
@@ -262,6 +294,47 @@ function ModalCriaUsuario({
                       value={empresa.empresa_id}
                     >
                       {empresa.empresa_nome}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          {tipoUsuario === "funcionario" && empresaId && (
+            <div>
+              <label className="block text-sm text-white/80 mb-1">
+                Funcionário *
+              </label>
+              {funcionariosSemUsuario.length === 0 ? (
+                <p className="text-yellow-400 text-sm">
+                  Nenhum funcionário disponível nesta empresa.
+                </p>
+              ) : (
+                <select
+                  value={funcionarioId}
+                  onChange={(e) => {
+                    setFuncionarioId(e.target.value);
+                    // Auto-preencher nome se funcionário selecionado
+                    const funcSelecionado = funcionariosSemUsuario.find(
+                      f => f.funcionario_id === parseInt(e.target.value)
+                    );
+                    if (funcSelecionado && !nome) {
+                      setNome(funcSelecionado.funcionario_nome);
+                    }
+                  }}
+                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
+                >
+                  <option hidden value="">
+                    Selecione um funcionário...
+                  </option>
+                  {funcionariosSemUsuario.map((func) => (
+                    <option
+                      key={func.funcionario_id}
+                      className="bg-slate-900"
+                      value={func.funcionario_id}
+                    >
+                      {func.funcionario_nome}
                     </option>
                   ))}
                 </select>

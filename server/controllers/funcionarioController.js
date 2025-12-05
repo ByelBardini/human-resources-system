@@ -1,8 +1,43 @@
-import { Funcionario, Setor, Cargo, Nivel, Usuario, CargoUsuario } from "../models/index.js";
+import { Funcionario, Setor, Cargo, Nivel, Usuario, CargoUsuario, CargoPermissao, CargoPermissaoEmpresa, Permissao } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
 import fs from "fs/promises";
 import path from "path";
+import { Op } from "sequelize";
+
+// Função para obter empresas permitidas para uma permissão específica
+async function getEmpresasPermitidasParaPermissao(usuario, codigoPermissao) {
+  // Buscar a permissão pelo código
+  const permissao = await Permissao.findOne({
+    where: { permissao_codigo: codigoPermissao },
+  });
+
+  if (!permissao) return null; // Permissão não existe
+
+  // Buscar cargo_permissoes do cargo do usuário
+  const cargoPermissao = await CargoPermissao.findOne({
+    where: {
+      cargo_usuario_id: usuario.usuario_cargo_id,
+      permissao_id: permissao.permissao_id,
+    },
+    include: [
+      {
+        model: CargoPermissaoEmpresa,
+        as: "empresasConfiguradas",
+      },
+    ],
+  });
+
+  if (!cargoPermissao) return null; // Usuário não tem essa permissão
+
+  // Se não há empresas configuradas, retornar null (acesso a todas)
+  if (!cargoPermissao.empresasConfiguradas || cargoPermissao.empresasConfiguradas.length === 0) {
+    return null;
+  }
+
+  // Retornar lista de IDs de empresas permitidas
+  return cargoPermissao.empresasConfiguradas.map((ec) => ec.empresa_id);
+}
 
 function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
@@ -42,10 +77,18 @@ export async function getCargoSetor(req, res) {
 }
 
 export async function getFuncionarios(req, res) {
-  requirePermissao(req, "sistema.visualizar_funcionarios");
+  const usuario = requirePermissao(req, "sistema.visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
+  }
+
+  // Verificar se o usuário tem restrição de empresas para esta permissão
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.visualizar_funcionarios");
+  
+  // Se há restrição e a empresa solicitada não está na lista, negar acesso
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(parseInt(id))) {
+    throw ApiError.forbidden("Você não tem permissão para visualizar funcionários desta empresa.");
   }
 
   const funcionarios = await Funcionario.findAll({
@@ -86,10 +129,18 @@ export async function getFuncionarios(req, res) {
 }
 
 export async function getFuncionariosInativos(req, res) {
-  requirePermissao(req, "sistema.visualizar_funcionarios");
+  const usuario = requirePermissao(req, "sistema.visualizar_funcionarios");
   const { id } = req.params;
   if (!id) {
     throw ApiError.badRequest("Necessário ID da empresa");
+  }
+
+  // Verificar se o usuário tem restrição de empresas para esta permissão
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.visualizar_funcionarios");
+  
+  // Se há restrição e a empresa solicitada não está na lista, negar acesso
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(parseInt(id))) {
+    throw ApiError.forbidden("Você não tem permissão para visualizar funcionários desta empresa.");
   }
 
   const funcionarios = await Funcionario.findAll({

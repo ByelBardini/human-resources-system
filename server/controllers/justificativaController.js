@@ -5,6 +5,7 @@ import {
   DiaTrabalhado,
   PerfilJornada,
   BancoHoras,
+  Notificacao,
 } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
@@ -12,7 +13,11 @@ import {
   calcularESalvarDia,
   getPerfilJornadaUsuario,
   getHorasPrevistasDia,
+  calcularHorasTrabalhadas,
 } from "./pontoController.js";
+
+// Constante para tolerância em minutos
+const TOLERANCIA_MINUTOS = 10;
 
 // Função para obter data/hora atual no fuso horário de Brasília
 function getDataHoraBrasilia() {
@@ -21,6 +26,56 @@ function getDataHoraBrasilia() {
     timeZone: "America/Sao_Paulo",
   });
   return new Date(dataBrasiliaStr);
+}
+
+// Função para converter data DATEONLY (string YYYY-MM-DD) para objeto Date local sem problemas de timezone
+function parseDateOnly(dateStr) {
+  if (!dateStr) return null;
+  const str = typeof dateStr === 'string' ? dateStr : dateStr.toISOString().split('T')[0];
+  const [year, month, day] = str.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+// Função para atualizar o status do dia após uma justificativa ser processada
+// tipo: tipo da justificativa
+// aprovada: se foi aprovada (true) ou recusada (false)
+async function atualizarDiaAposJustificativa(diaTrabalhado, tipo, aprovada) {
+  if (!diaTrabalhado) return;
+
+  switch (tipo) {
+    case "falta_justificada":
+    case "consulta_medica":
+      if (aprovada) {
+        // Falta justificada aprovada: zerar horas (dia considera como 0, não conta negativo)
+        diaTrabalhado.dia_horas_trabalhadas = 0;
+        diaTrabalhado.dia_horas_extras = 0;
+        diaTrabalhado.dia_horas_negativas = 0;
+        diaTrabalhado.dia_status = "normal";
+      } else {
+        // Falta justificada recusada: manter horas negativas, mas não é mais divergente
+        diaTrabalhado.dia_status = "normal";
+      }
+      break;
+
+    case "falta_nao_justificada":
+      // Falta não justificada: manter horas negativas, não é mais divergente
+      diaTrabalhado.dia_status = "normal";
+      break;
+
+    case "horas_extras":
+      // Horas extras (aprovada ou recusada): manter horas, não é mais divergente
+      // Se recusada, as horas extras continuam contando mas terá aviso visual
+      diaTrabalhado.dia_status = "normal";
+      break;
+
+    default:
+      // Para outros tipos, apenas marcar como normal após processamento
+      diaTrabalhado.dia_status = "normal";
+      break;
+  }
+
+  diaTrabalhado.dia_ultima_atualizacao = getDataHoraBrasilia();
+  await diaTrabalhado.save();
 }
 
 function getUsuarioId(req) {
@@ -48,6 +103,7 @@ export async function criarJustificativa(req, res) {
   requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
+  const usuario = req.user;
 
   const { data, tipo, descricao } = req.body;
   const anexoCaminho = req.file ? req.file.path : null;
@@ -56,16 +112,54 @@ export async function criarJustificativa(req, res) {
     throw ApiError.badRequest("Data e tipo são obrigatórios");
   }
 
-  // Verificar se o dia é divergente
-  const dataJustificativa = new Date(data);
-  const diaTrabalhado = await DiaTrabalhado.findOne({
+  // Verificar se o dia é divergente (calcular em tempo real)
+  const dataJustificativa = parseDateOnly(data);
+  
+  // Buscar batidas do dia
+  const inicioDia = new Date(dataJustificativa);
+  inicioDia.setHours(0, 0, 0, 0);
+  const fimDia = new Date(dataJustificativa);
+  fimDia.setHours(23, 59, 59, 999);
+
+  const batidas = await BatidaPonto.findAll({
     where: {
-      dia_usuario_id: usuario_id,
-      dia_data: dataJustificativa,
+      batida_usuario_id: usuario_id,
+      batida_data_hora: {
+        [Op.between]: [inicioDia, fimDia],
+      },
+      batida_status: {
+        [Op.in]: ["normal", "aprovada"],
+      },
     },
+    order: [["batida_data_hora", "ASC"]],
   });
 
-  if (!diaTrabalhado || diaTrabalhado.dia_status !== "divergente") {
+  // Buscar perfil de jornada
+  const perfil = await getPerfilJornadaUsuario(usuario_id);
+  const horasPrevistas = getHorasPrevistasDia(perfil, dataJustificativa) || 0;
+
+  // Calcular horas trabalhadas
+  const horasTrabalhadas = calcularHorasTrabalhadas(batidas);
+
+  // Calcular extras e negativas
+  let horasExtras = horasPrevistas ? Math.max(0, horasTrabalhadas - horasPrevistas) : 0;
+  let horasNegativas = horasPrevistas ? Math.max(0, horasPrevistas - horasTrabalhadas) : 0;
+
+  // Aplicar tolerância
+  const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+  horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+  horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+  // Verificar se é falta (dia sem batida)
+  const hoje = getDataHoraBrasilia();
+  if (dataJustificativa < hoje && horasPrevistas > 0 && batidas.length === 0) {
+    horasNegativas = horasPrevistas;
+  }
+
+  // Determinar se é divergente
+  const eDivergente = horasExtras > 0 || horasNegativas > 0;
+
+  if (!eDivergente) {
     throw ApiError.badRequest("Apenas dias divergentes podem ser justificados");
   }
 
@@ -84,14 +178,62 @@ export async function criarJustificativa(req, res) {
     );
   }
 
+  // Para falta não justificada: auto-aprovar e atualizar dia
+  const ehFaltaNaoJustificada = tipo === "falta_nao_justificada";
+  const statusInicial = ehFaltaNaoJustificada ? "aprovada" : "pendente";
+
   const justificativa = await Justificativa.create({
     justificativa_usuario_id: usuario_id,
     justificativa_data: dataJustificativa,
     justificativa_tipo: tipo,
-    justificativa_descricao: descricao,
+    justificativa_descricao: descricao || (ehFaltaNaoJustificada ? "Falta não justificada registrada pelo funcionário" : null),
     justificativa_anexo_caminho: anexoCaminho,
-    justificativa_status: "pendente",
+    justificativa_status: statusInicial,
+    justificativa_aprovador_id: ehFaltaNaoJustificada ? usuario_id : null,
+    justificativa_data_aprovacao: ehFaltaNaoJustificada ? getDataHoraBrasilia() : null,
   });
+
+  // Se for falta não justificada, atualizar o dia para "normal" mantendo as horas negativas
+  if (ehFaltaNaoJustificada) {
+    // Buscar ou criar registro na tabela DiaTrabalhado
+    const [diaTrabalhado] = await DiaTrabalhado.findOrCreate({
+      where: {
+        dia_usuario_id: usuario_id,
+        dia_data: dataJustificativa,
+      },
+      defaults: {
+        dia_horas_trabalhadas: horasTrabalhadas,
+        dia_horas_extras: horasExtras,
+        dia_horas_negativas: horasNegativas,
+        dia_status: "divergente",
+      },
+    });
+    await atualizarDiaAposJustificativa(diaTrabalhado, tipo, true);
+  }
+
+  // Registrar automaticamente atestado em notificações se:
+  // - Tipo for consulta_medica ou falta_justificada
+  // - Tiver anexo
+  // - Usuário tiver funcionario_id vinculado
+  const tiposAtestado = ["consulta_medica", "falta_justificada"];
+  if (tiposAtestado.includes(tipo) && anexoCaminho && usuario.usuario_funcionario_id) {
+    try {
+      // Formatar caminho para o padrão de notificações
+      const notificacaoAnexo = anexoCaminho.replace("uploads\\justificativas\\", "/uploads/justificativas/")
+        .replace("uploads/justificativas/", "/uploads/justificativas/");
+      
+      await Notificacao.create({
+        notificacao_funcionario_id: usuario.usuario_funcionario_id,
+        notificacao_tipo: "atestado",
+        notificacao_data: dataJustificativa,
+        notificacao_descricao: descricao || `Atestado anexado via justificativa de ponto (${tipo === "consulta_medica" ? "Consulta Médica" : "Falta Justificada"})`,
+        notificacao_imagem_caminho: notificacaoAnexo,
+      });
+    } catch (err) {
+      // Log do erro mas não falhar a criação da justificativa
+      console.error("Erro ao registrar atestado automaticamente:", err);
+    }
+  }
 
   return res.status(201).json({ justificativa });
 }
@@ -162,8 +304,21 @@ export async function aprovarJustificativa(req, res) {
   justificativa.justificativa_data_aprovacao = getDataHoraBrasilia();
   await justificativa.save();
 
-  // Processar justificativa aprovada
-  await processarJustificativaAprovada(justificativa, usuario_id);
+  // Buscar o dia trabalhado para atualizar
+  const diaTrabalhado = await DiaTrabalhado.findOne({
+    where: {
+      dia_usuario_id: justificativa.justificativa_usuario_id,
+      dia_data: justificativa.justificativa_data,
+    },
+  });
+
+  // Atualizar status do dia conforme o tipo de justificativa
+  await atualizarDiaAposJustificativa(diaTrabalhado, justificativa.justificativa_tipo, true);
+
+  // Processar justificativa aprovada (para tipos que precisam criar batidas, etc.)
+  if (!["falta_justificada", "consulta_medica", "falta_nao_justificada", "horas_extras"].includes(justificativa.justificativa_tipo)) {
+    await processarJustificativaAprovada(justificativa, usuario_id);
+  }
 
   return res.status(200).json({
     justificativa,
@@ -194,6 +349,17 @@ export async function recusarJustificativa(req, res) {
   justificativa.justificativa_aprovador_id = usuario_id;
   justificativa.justificativa_data_aprovacao = getDataHoraBrasilia();
   await justificativa.save();
+
+  // Buscar o dia trabalhado para atualizar
+  const diaTrabalhado = await DiaTrabalhado.findOne({
+    where: {
+      dia_usuario_id: justificativa.justificativa_usuario_id,
+      dia_data: justificativa.justificativa_data,
+    },
+  });
+
+  // Atualizar status do dia (não é mais divergente, mas mantém as horas)
+  await atualizarDiaAposJustificativa(diaTrabalhado, justificativa.justificativa_tipo, false);
 
   return res.status(200).json({
     justificativa,

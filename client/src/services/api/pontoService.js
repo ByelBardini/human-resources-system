@@ -185,3 +185,41 @@ export async function adicionarBatidaParaUsuario(
     throw handleApiError(err, "Erro ao adicionar batida:");
   }
 }
+
+// Exportar ponto para Excel
+export async function exportarPontoExcel(funcionarioId, mes, ano) {
+  try {
+    const response = await api.get(
+      `/ponto/gestao/funcionario/${funcionarioId}/exportar`,
+      {
+        params: { mes, ano },
+        responseType: "blob",
+      }
+    );
+    
+    // Criar link para download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    
+    // Extrair nome do arquivo do header ou usar padrão
+    const contentDisposition = response.headers["content-disposition"];
+    let filename = `Ponto_${mes}_${ano}.xlsx`;
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename=([^;]+)/);
+      if (filenameMatch) {
+        filename = filenameMatch[1].replace(/"/g, "").trim();
+      }
+    }
+    
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return { success: true };
+  } catch (err) {
+    throw handleApiError(err, "Erro ao exportar ponto:");
+  }
+}
