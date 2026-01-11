@@ -42,6 +42,15 @@ function parseDateOnly(dateStr) {
 async function atualizarDiaAposJustificativa(diaTrabalhado, tipo, aprovada) {
   if (!diaTrabalhado) return;
 
+  // Tipos que NÃO devem zerar horas negativas mesmo quando aprovadas
+  const tiposQueNaoZeramHorasNegativas = ["falta_nao_justificada", "horas_extras"];
+
+  // Se a justificativa foi aprovada e não é um tipo que mantém horas negativas, zerar as horas negativas
+  if (aprovada && !tiposQueNaoZeramHorasNegativas.includes(tipo)) {
+    // Qualquer justificativa aprovada (exceto falta_nao_justificada e horas_extras) zera as horas negativas
+    diaTrabalhado.dia_horas_negativas = 0;
+  }
+
   switch (tipo) {
     case "falta_justificada":
     case "consulta_medica":
@@ -69,8 +78,13 @@ async function atualizarDiaAposJustificativa(diaTrabalhado, tipo, aprovada) {
       break;
 
     default:
-      // Para outros tipos, apenas marcar como normal após processamento
-      diaTrabalhado.dia_status = "normal";
+      // Para outros tipos aprovados, zerar horas negativas e marcar como normal
+      if (aprovada) {
+        diaTrabalhado.dia_status = "normal";
+      } else {
+        // Se recusada, apenas marcar como normal
+        diaTrabalhado.dia_status = "normal";
+      }
       break;
   }
 

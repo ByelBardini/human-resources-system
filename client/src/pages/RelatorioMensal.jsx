@@ -21,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useAviso } from "../context/AvisoContext.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import { formatarHorasParaHHMM, formatarHorasComSinal } from "../utils/formatarHoras.js";
 
 function RelatorioMensal() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -207,9 +208,7 @@ function RelatorioMensal() {
   }
 
   function formatarSaldo(saldo) {
-    const sinalStr = saldo >= 0 ? "+" : "-";
-    const saldoAbs = Math.abs(saldo);
-    return `${sinalStr}${saldoAbs.toFixed(2)}h`;
+    return formatarHorasComSinal(saldo);
   }
 
   function formatarBancoHoras(horas) {
@@ -391,19 +390,19 @@ function RelatorioMensal() {
                     Total Trabalhadas
                   </p>
                   <p className="text-2xl font-semibold text-white">
-                    {totais.horasTrabalhadas.toFixed(2)}h
+                    {formatarHorasParaHHMM(totais.horasTrabalhadas)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <p className="text-white/70 text-sm mb-1">Total Extras</p>
                   <p className="text-2xl font-semibold text-green-400">
-                    {totais.horasExtras.toFixed(2)}h
+                    {formatarHorasParaHHMM(totais.horasExtras)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <p className="text-white/70 text-sm mb-1">Total Negativas</p>
                   <p className="text-2xl font-semibold text-red-400">
-                    {totais.horasNegativas.toFixed(2)}h
+                    {formatarHorasParaHHMM(totais.horasNegativas)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
@@ -465,7 +464,7 @@ function RelatorioMensal() {
                           {formatarData(dia.data)}
                         </span>
                         <span className="text-white/70 w-24">
-                          {dia.horasTrabalhadas.toFixed(2)}h trab.
+                          {formatarHorasParaHHMM(dia.horasTrabalhadas)} trab.
                         </span>
                         <span
                           className={`w-20 font-semibold ${
@@ -580,13 +579,13 @@ function RelatorioMensal() {
                           <div className="text-center">
                             <p className="text-white/50 text-xs">Extras</p>
                             <p className="text-green-400 font-semibold">
-                              +{dia.horasExtras.toFixed(2)}h
+                              +{formatarHorasParaHHMM(dia.horasExtras)}
                             </p>
                           </div>
                           <div className="text-center">
                             <p className="text-white/50 text-xs">Negativas</p>
                             <p className="text-red-400 font-semibold">
-                              -{dia.horasNegativas.toFixed(2)}h
+                              -{formatarHorasParaHHMM(dia.horasNegativas)}
                             </p>
                           </div>
                           <div className="text-center">
@@ -810,7 +809,7 @@ function RelatorioMensal() {
                 <>
                   <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
                     <p className="text-green-400 text-sm">
-                      Você realizou <strong>{diaSelecionado.horasExtras.toFixed(2)}h</strong> extras neste dia.
+                      Você realizou <strong>{formatarHorasParaHHMM(diaSelecionado.horasExtras)}</strong> extras neste dia.
                       Descreva o motivo para que seja aprovado.
                     </p>
                   </div>

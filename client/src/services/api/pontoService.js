@@ -189,37 +189,129 @@ export async function adicionarBatidaParaUsuario(
 // Exportar ponto para Excel
 export async function exportarPontoExcel(funcionarioId, mes, ano) {
   try {
-    const response = await api.get(
-      `/ponto/gestao/funcionario/${funcionarioId}/exportar`,
-      {
-        params: { mes, ano },
-        responseType: "blob",
-      }
-    );
+    // Usar fetch diretamente para ter controle total sobre os headers
+    const token = localStorage.getItem("token");
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
+    const url = `${baseURL}/ponto/gestao/funcionario/${funcionarioId}/exportar?mes=${mes}&ano=${ano}`;
     
-    // Criar link para download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
     
-    // Extrair nome do arquivo do header ou usar padrão
-    const contentDisposition = response.headers["content-disposition"];
-    let filename = `Ponto_${mes}_${ano}.xlsx`;
+    if (!response.ok) {
+      throw new Error(`Erro ao exportar: ${response.status}`);
+    }
+    
+    // Extrair nome do arquivo do header Content-Disposition
+    const contentDisposition = response.headers.get("content-disposition") || 
+                                response.headers.get("Content-Disposition");
+    
+    let filename = `ponto_${ano}_${String(mes).padStart(2, "0")}_funcionario.xlsx`;
+    
     if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename=([^;]+)/);
-      if (filenameMatch) {
-        filename = filenameMatch[1].replace(/"/g, "").trim();
+      // Tentar extrair o nome do arquivo do header
+      // Pode vir como: filename="ponto_2024_01_joao.xlsx" ou filename*=UTF-8''ponto_2024_01_joao.xlsx
+      
+      // Primeiro tentar filename* (UTF-8 encoded) - formato preferido
+      let filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+      
+      if (filenameMatch && filenameMatch[1]) {
+        try {
+          filename = decodeURIComponent(filenameMatch[1]);
+        } catch (e) {
+          console.error("Erro ao decodificar UTF-8:", e);
+          filename = filenameMatch[1];
+        }
+      } else {
+        // Tentar filename normal (com ou sem aspas)
+        filenameMatch = contentDisposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].trim();
+        }
       }
     }
     
+    // Converter resposta para blob
+    const blob = await response.blob();
+    
+    // Criar link para download
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
     link.setAttribute("download", filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.URL.revokeObjectURL(url);
+    window.URL.revokeObjectURL(blobUrl);
     
     return { success: true };
   } catch (err) {
     throw handleApiError(err, "Erro ao exportar ponto:");
+  }
+}
+
+// Exportar todos os pontos de todas as empresas em ZIP
+export async function exportarTodosPontosZip(mes, ano) {
+  try {
+    const token = localStorage.getItem("token");
+    const baseURL = import.meta.env.VITE_API_BASE_URL;
+    const url = `${baseURL}/ponto/gestao/exportar-todos?mes=${mes}&ano=${ano}`;
+    
+    const response = await fetch(url, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro ao exportar: ${response.status}`);
+    }
+    
+    // Extrair nome do arquivo do header Content-Disposition
+    const contentDisposition = response.headers.get("content-disposition") || 
+                                response.headers.get("Content-Disposition");
+    
+    let filename = `pontos_todas_empresas_${ano}_${String(mes).padStart(2, "0")}.zip`;
+    
+    if (contentDisposition) {
+      let filenameMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+      
+      if (filenameMatch && filenameMatch[1]) {
+        try {
+          filename = decodeURIComponent(filenameMatch[1]);
+        } catch (e) {
+          console.error("Erro ao decodificar UTF-8:", e);
+          filename = filenameMatch[1];
+        }
+      } else {
+        filenameMatch = contentDisposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].trim();
+        }
+      }
+    }
+    
+    // Converter resposta para blob
+    const blob = await response.blob();
+    
+    // Criar link para download
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+    
+    return { success: true };
+  } catch (err) {
+    throw handleApiError(err, "Erro ao exportar todos os pontos:");
   }
 }

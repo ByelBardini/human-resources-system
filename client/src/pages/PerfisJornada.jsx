@@ -7,6 +7,7 @@ import { useAviso } from "../context/AvisoContext.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import ModalCriaPerfilJornada from "../components/perfisJornada/ModalCriaPerfilJornada.jsx";
+import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function PerfisJornada() {
   const navigate = useNavigate();
@@ -45,13 +46,6 @@ function PerfisJornada() {
     document.title = "Perfis de Jornada - Sistema RH";
   }, [atualizado]);
 
-  function formatarHoras(horas) {
-    if (!horas || horas === 0) return "-";
-    const h = Math.floor(horas);
-    const m = Math.round((horas - h) * 60);
-    if (m === 0) return `${h}h`;
-    return `${h}h${m}m`;
-  }
 
   const diasSemana = [
     { nome: "Segunda", campo: "perfil_jornada_segunda" },
@@ -117,7 +111,7 @@ function PerfisJornada() {
                     >
                       <p className="text-white/70 text-xs mb-1">{dia.nome}</p>
                       <p className="text-white font-semibold text-sm">
-                        {formatarHoras(parseFloat(perfil[dia.campo] || 0))}
+                        {formatarHorasParaHHMM(parseFloat(perfil[dia.campo] || 0))}
                       </p>
                     </div>
                   ))}

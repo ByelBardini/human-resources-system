@@ -15,6 +15,7 @@ import {
   aprovarBatidasDia,
   recalcularDia,
   exportarPontoExcel,
+  exportarTodosPontosZip,
 } from "../controllers/pontoController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import express from "express";
@@ -60,6 +61,10 @@ router.post(
 router.get(
   "/ponto/gestao/funcionario/:funcionario_id/exportar",
   asyncHandler(exportarPontoExcel)
+);
+router.get(
+  "/ponto/gestao/exportar-todos",
+  asyncHandler(exportarTodosPontosZip)
 );
 
 export default router;

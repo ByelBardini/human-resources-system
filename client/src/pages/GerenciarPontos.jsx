@@ -26,6 +26,7 @@ import {
   fecharBancoHoras,
   recalcularBancoHoras,
   exportarPontoExcel,
+  exportarTodosPontosZip,
 } from "../services/api/pontoService.js";
 import {
   aprovarJustificativa,
@@ -37,6 +38,7 @@ import { useAviso } from "../context/AvisoContext.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function GerenciarPontos() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -231,9 +233,7 @@ function GerenciarPontos() {
       const result = await fecharBancoHoras(funcionarioSelecionado.id);
       mostrarAviso(
         "sucesso",
-        `Banco de horas fechado! Saldo anterior: ${result.saldoAnterior.toFixed(
-          2
-        )}h`
+        `Banco de horas fechado! Saldo anterior: ${formatarHorasParaHHMM(result.saldoAnterior)}`
       );
       setModalFecharBanco(false);
       setTimeout(() => {
@@ -254,7 +254,7 @@ function GerenciarPontos() {
       const result = await recalcularBancoHoras(funcionarioSelecionado.id);
       mostrarAviso(
         "sucesso",
-        `Banco recalculado! Novo saldo: ${result.saldoNovo.toFixed(2)}h`
+        `Banco recalculado! Novo saldo: ${formatarHorasParaHHMM(result.saldoNovo)}`
       );
       setTimeout(() => {
         limparAviso();
@@ -274,6 +274,21 @@ function GerenciarPontos() {
       await exportarPontoExcel(funcionarioSelecionado.id, mes, ano);
       setCarregando(false);
       mostrarAviso("sucesso", "Planilha exportada com sucesso!");
+      setTimeout(() => {
+        limparAviso();
+      }, 2000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleExportarTodosPontos() {
+    setCarregando(true);
+    try {
+      await exportarTodosPontosZip(mes, ano);
+      setCarregando(false);
+      mostrarAviso("sucesso", "Arquivo ZIP com todos os pontos exportado com sucesso!");
       setTimeout(() => {
         limparAviso();
       }, 2000);
@@ -428,9 +443,19 @@ function GerenciarPontos() {
 
       <div className="overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
-          <h1 className="text-3xl font-semibold text-white mb-6">
-            Gerenciar Pontos
-          </h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-semibold text-white">
+              Gerenciar Pontos
+            </h1>
+            <button
+              onClick={handleExportarTodosPontos}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border border-indigo-500/30 transition-colors"
+              title="Baixar todos os pontos de todas as empresas"
+            >
+              <Download size={18} />
+              Baixar Todos os Pontos
+            </button>
+          </div>
 
           {/* Abas */}
           <div className="flex gap-2 mb-6">
@@ -639,7 +664,7 @@ function GerenciarPontos() {
                                           {formatarData(dia.data).slice(0, 5)}
                                         </span>
                                         <span className="text-white/70 text-xs">
-                                          {dia.horasTrabalhadas.toFixed(1)}h
+                                          {formatarHorasParaHHMM(dia.horasTrabalhadas)}
                                         </span>
                                         {(() => {
                                           // Verificar status das justificativas
@@ -690,7 +715,7 @@ function GerenciarPontos() {
                                               Extras:
                                             </span>
                                             <span className="text-green-400 ml-1">
-                                              +{dia.horasExtras.toFixed(2)}h
+                                              +{formatarHorasParaHHMM(dia.horasExtras)}
                                             </span>
                                           </div>
                                           <div>
@@ -698,7 +723,7 @@ function GerenciarPontos() {
                                               Neg.:
                                             </span>
                                             <span className="text-red-400 ml-1">
-                                              -{dia.horasNegativas.toFixed(2)}h
+                                              -{formatarHorasParaHHMM(dia.horasNegativas)}
                                             </span>
                                           </div>
                                         </div>

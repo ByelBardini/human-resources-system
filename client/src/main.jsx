@@ -12,6 +12,7 @@ import Justificativa from "./pages/Justificativa.jsx";
 import RelatorioMensal from "./pages/RelatorioMensal.jsx";
 import PerfisJornada from "./pages/PerfisJornada.jsx";
 import GerenciarPontos from "./pages/GerenciarPontos.jsx";
+import GerenciarEmpresas from "./pages/GerenciarEmpresas.jsx";
 import { AvisoProvider } from "./context/AvisoContext.jsx";
 
 import "./style.css";
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
       {
         path: "/gerenciar-pontos",
         element: <GerenciarPontos />,
+      },
+      {
+        path: "/gerenciar-empresas",
+        element: <GerenciarEmpresas />,
       },
     ],
   },

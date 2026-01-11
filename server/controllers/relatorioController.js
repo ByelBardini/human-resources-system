@@ -299,6 +299,17 @@ export async function getRelatorioMensal(req, res) {
       status = "divergente";
     }
 
+    // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
+    const justificativasDoDia = justificativasPorData[dataStr] || [];
+    const temJustificativaAprovada = justificativasDoDia.some(
+      (j) => 
+        j.justificativa_status === "aprovada" &&
+        !["falta_nao_justificada", "horas_extras"].includes(j.justificativa_tipo)
+    );
+    if (temJustificativaAprovada) {
+      horasNegativas = 0;
+    }
+
     const saldoDia = horasExtras - horasNegativas;
 
     diasDoMes.push({
@@ -429,6 +440,16 @@ export async function getTotaisMensais(req, res) {
   // Contar batidas pendentes
   const batidasPendentes = batidas.filter(b => b.batida_status === "pendente").length;
 
+  // Organizar justificativas por data
+  const justificativasPorData = {};
+  justificativas.forEach((j) => {
+    const dataStr = formatarDataStr(j.justificativa_data);
+    if (!justificativasPorData[dataStr]) {
+      justificativasPorData[dataStr] = [];
+    }
+    justificativasPorData[dataStr].push(j);
+  });
+
   // Calcular totais em tempo real (mesma lógica do getRelatorioMensal)
   const totais = {
     horasTrabalhadas: 0,
@@ -469,15 +490,42 @@ export async function getTotaisMensais(req, res) {
       horasNegativas = horasPrevistas;
     }
 
+    // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
+    const justificativasDoDia = justificativasPorData[dataStr] || [];
+    const temJustificativaAprovada = justificativasDoDia.some(
+      (j) => 
+        j.justificativa_status === "aprovada" &&
+        !["falta_nao_justificada", "horas_extras"].includes(j.justificativa_tipo)
+    );
+    if (temJustificativaAprovada) {
+      horasNegativas = 0;
+    }
+
+    // Verificar se é o dia atual e se deve incluir nos totais
+    const hojeStr = hoje.toISOString().split("T")[0];
+    const eDiaAtual = dataStr === hojeStr;
+    
+    // Se for o dia atual, só incluir nos totais se houver pelo menos 2 saídas válidas
+    let deveIncluirNosTotais = true;
+    if (eDiaAtual) {
+      const batidasValidasDoDia = batidasDoDia.filter(
+        (b) => b.status !== "recusada" && b.status !== "pendente"
+      );
+      const saidasDoDia = batidasValidasDoDia.filter((b) => b.tipo === "saida");
+      deveIncluirNosTotais = saidasDoDia.length >= 2;
+    }
+
     // Determinar status
     const status = horasExtras > 0 || horasNegativas > 0 ? "divergente" : "normal";
 
-    // Somar aos totais
-    totais.horasTrabalhadas += horasTrabalhadas;
-    totais.horasExtras += horasExtras;
-    totais.horasNegativas += horasNegativas;
-    if (status === "divergente") {
-      totais.diasDivergentes++;
+    // Somar aos totais apenas se atender os critérios
+    if (deveIncluirNosTotais) {
+      totais.horasTrabalhadas += horasTrabalhadas;
+      totais.horasExtras += horasExtras;
+      totais.horasNegativas += horasNegativas;
+      if (status === "divergente") {
+        totais.diasDivergentes++;
+      }
     }
   }
 
@@ -554,7 +602,7 @@ export async function getTotaisMensais(req, res) {
       });
     });
 
-    // Buscar justificativas do mês para verificar faltas justificadas
+    // Buscar justificativas aprovadas do mês (exceto falta_nao_justificada e horas_extras)
     const justificativasMes = await Justificativa.findAll({
       where: {
         justificativa_usuario_id: usuario_id,
@@ -562,10 +610,14 @@ export async function getTotaisMensais(req, res) {
           [Op.between]: [inicioMesCursor, dataLimiteCursor],
         },
         justificativa_status: "aprovada",
-        justificativa_tipo: { [Op.in]: ["falta_justificada", "consulta_medica"] },
+        justificativa_tipo: { [Op.notIn]: ["falta_nao_justificada", "horas_extras"] },
       },
     });
-    const diasJustificados = new Set(justificativasMes.map(j => j.justificativa_data.toISOString().split("T")[0]));
+    const diasJustificados = new Set(justificativasMes.map(j => {
+      const data = j.justificativa_data;
+      // DATEONLY retorna string 'YYYY-MM-DD', não um objeto Date
+      return typeof data === 'string' ? data : new Date(data).toISOString().split("T")[0];
+    }));
 
     // Calcular horas do mês
     for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
@@ -575,7 +627,7 @@ export async function getTotaisMensais(req, res) {
       const batidasDoDia = batidasPorDiaMes[dataStr] || [];
       const horasPrevistas = getHorasPrevistasDia(perfil, data);
       
-      // Se o dia foi justificado como falta, não conta como negativo
+      // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), não conta horas negativas
       if (diasJustificados.has(dataStr)) {
         continue;
       }
@@ -595,7 +647,24 @@ export async function getTotaisMensais(req, res) {
         horasNegativasDia = horasPrevistas;
       }
 
-      bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+      // Verificar se é o dia atual e se deve incluir no banco de horas
+      const hojeStr = hoje.toISOString().split("T")[0];
+      const eDiaAtual = dataStr === hojeStr;
+      
+      // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
+      let deveIncluirNoBanco = true;
+      if (eDiaAtual) {
+        const batidasValidasDoDia = batidasDoDia.filter(
+          (b) => b.status !== "recusada" && b.status !== "pendente"
+        );
+        const saidasDoDia = batidasValidasDoDia.filter((b) => b.tipo === "saida");
+        deveIncluirNoBanco = saidasDoDia.length >= 2;
+      }
+
+      // Somar ao banco de horas apenas se atender os critérios
+      if (deveIncluirNoBanco) {
+        bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+      }
     }
 
     // Avançar para o próximo mês

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LogOut, UsersRound, Clock } from "lucide-react";
+import { LogOut, UsersRound, Clock, Building2 } from "lucide-react";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -78,15 +78,26 @@ function Home() {
         <LogOut size={20} />
       </button>
 
-      {temPermissao("usuarios.gerenciar") && (
-        <button
-          className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
-          title="Gerenciar Usuários"
-          onClick={() => navigate("/usuario", { replace: true })}
-        >
-          <UsersRound size={20} />
-        </button>
-      )}
+      <div className="absolute top-6 left-6 flex gap-2 z-10">
+        {temPermissao("usuarios.gerenciar") && (
+          <button
+            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+            title="Gerenciar Usuários"
+            onClick={() => navigate("/usuario", { replace: true })}
+          >
+            <UsersRound size={20} />
+          </button>
+        )}
+        {temPermissao("sistema.gerenciar_empresas") && (
+          <button
+            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+            title="Gerenciar Empresas"
+            onClick={() => navigate("/gerenciar-empresas", { replace: true })}
+          >
+            <Building2 size={20} />
+          </button>
+        )}
+      </div>
 
       {carregando && <Loading />}
 

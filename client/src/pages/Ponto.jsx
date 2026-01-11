@@ -7,6 +7,7 @@ import { useAviso } from "../context/AvisoContext.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function Ponto() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -189,19 +190,19 @@ function Ponto() {
               <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
                 <p className="text-white/70 text-sm mb-1">Trabalhadas</p>
                 <p className="text-xl font-semibold text-white">
-                  {pontoData.resumo.horasTrabalhadas.toFixed(2)}h
+                  {formatarHorasParaHHMM(pontoData.resumo.horasTrabalhadas)}
                 </p>
               </div>
               <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
                 <p className="text-white/70 text-sm mb-1">Extras</p>
                 <p className="text-xl font-semibold text-green-400">
-                  {pontoData.resumo.horasExtras.toFixed(2)}h
+                  {formatarHorasParaHHMM(pontoData.resumo.horasExtras)}
                 </p>
               </div>
               <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
                 <p className="text-white/70 text-sm mb-1">Negativas</p>
                 <p className="text-xl font-semibold text-red-400">
-                  {pontoData.resumo.horasNegativas.toFixed(2)}h
+                  {formatarHorasParaHHMM(pontoData.resumo.horasNegativas)}
                 </p>
               </div>
             </div>

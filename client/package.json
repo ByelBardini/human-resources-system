@@ -15,6 +15,7 @@
     "@tauri-apps/api": "^2.8.0",
     "@tauri-apps/plugin-store": "^2.4.0",
     "axios": "^1.11.0",
+    "brazilian-values": "^0.13.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",

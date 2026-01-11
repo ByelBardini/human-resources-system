@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAviso } from "../context/AvisoContext.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function Justificativa() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -221,8 +222,8 @@ function Justificativa() {
                       <div>
                         <p className="text-white font-semibold">{formatarData(dia.data)}</p>
                         <p className="text-white/70 text-sm">
-                          Extras: {dia.horasExtras.toFixed(2)}h | Negativas:{" "}
-                          {dia.horasNegativas.toFixed(2)}h
+                          Extras: {formatarHorasParaHHMM(dia.horasExtras)} | Negativas:{" "}
+                          {formatarHorasParaHHMM(dia.horasNegativas)}
                         </p>
                       </div>
                       <button
@@ -364,7 +365,7 @@ function Justificativa() {
                 <>
                   <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
                     <p className="text-green-400 text-sm">
-                      Você realizou <strong>{dadosDiaSelecionado.horasExtras.toFixed(2)}h</strong> extras neste dia.
+                      Você realizou <strong>{formatarHorasParaHHMM(dadosDiaSelecionado.horasExtras)}</strong> extras neste dia.
                       Descreva o motivo para que seja aprovado.
                     </p>
                   </div>
