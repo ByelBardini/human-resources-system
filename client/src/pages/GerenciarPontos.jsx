@@ -309,6 +309,14 @@ function GerenciarPontos() {
     });
   }
 
+  function obterDiaSemanaAbrev(dataStr) {
+    if (!dataStr) return "";
+    const data = new Date(dataStr + "T12:00:00");
+    const diaSemana = data.getDay();
+    const dias = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+    return dias[diaSemana];
+  }
+
   function formatarHora(dataHora) {
     const data = new Date(dataHora);
     return data.toLocaleTimeString("pt-BR", {
@@ -660,9 +668,21 @@ function GerenciarPontos() {
                                       }
                                     >
                                       <div className="flex items-center gap-2">
-                                        <span className="text-white text-sm w-12">
-                                          {formatarData(dia.data).slice(0, 5)}
-                                        </span>
+                                        <div className="flex flex-col">
+                                          <div className="flex items-center gap-1">
+                                            <span className="text-white text-sm w-12">
+                                              {formatarData(dia.data).slice(0, 5)}
+                                            </span>
+                                            <span className="text-white/50 text-xs">
+                                              {obterDiaSemanaAbrev(dia.data)}
+                                            </span>
+                                          </div>
+                                          {dia.feriado && (
+                                            <span className="text-purple-400 text-xs mt-0.5">
+                                              {dia.feriado}
+                                            </span>
+                                          )}
+                                        </div>
                                         <span className="text-white/70 text-xs">
                                           {formatarHorasParaHHMM(dia.horasTrabalhadas)}
                                         </span>
@@ -684,7 +704,7 @@ function GerenciarPontos() {
                                                 Justificado
                                               </span>
                                             );
-                                          } else if (dia.status === "divergente" || dia.horasExtras > 0 || dia.horasNegativas > 0) {
+                                          } else if (dia.status === "divergente" || dia.horasExtras > 0) {
                                             return (
                                               <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
                                                 Div.
@@ -709,21 +729,13 @@ function GerenciarPontos() {
 
                                     {isExpanded && (
                                       <div className="border-t border-white/10 p-2 bg-white/5">
-                                        <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                                        <div className="mb-2 text-xs">
                                           <div>
                                             <span className="text-white/50">
                                               Extras:
                                             </span>
                                             <span className="text-green-400 ml-1">
                                               +{formatarHorasParaHHMM(dia.horasExtras)}
-                                            </span>
-                                          </div>
-                                          <div>
-                                            <span className="text-white/50">
-                                              Neg.:
-                                            </span>
-                                            <span className="text-red-400 ml-1">
-                                              -{formatarHorasParaHHMM(dia.horasNegativas)}
                                             </span>
                                           </div>
                                         </div>

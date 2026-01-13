@@ -222,8 +222,7 @@ function Justificativa() {
                       <div>
                         <p className="text-white font-semibold">{formatarData(dia.data)}</p>
                         <p className="text-white/70 text-sm">
-                          Extras: {formatarHorasParaHHMM(dia.horasExtras)} | Negativas:{" "}
-                          {formatarHorasParaHHMM(dia.horasNegativas)}
+                          Extras: {formatarHorasParaHHMM(dia.horasExtras)}
                         </p>
                       </div>
                       <button

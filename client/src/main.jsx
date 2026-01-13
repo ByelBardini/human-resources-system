@@ -13,6 +13,7 @@ import RelatorioMensal from "./pages/RelatorioMensal.jsx";
 import PerfisJornada from "./pages/PerfisJornada.jsx";
 import GerenciarPontos from "./pages/GerenciarPontos.jsx";
 import GerenciarEmpresas from "./pages/GerenciarEmpresas.jsx";
+import GerenciarFeriados from "./pages/GerenciarFeriados.jsx";
 import { AvisoProvider } from "./context/AvisoContext.jsx";
 
 import "./style.css";
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
       {
         path: "/gerenciar-empresas",
         element: <GerenciarEmpresas />,
+      },
+      {
+        path: "/gerenciar-feriados",
+        element: <GerenciarFeriados />,
       },
     ],
   },

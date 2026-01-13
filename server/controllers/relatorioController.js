@@ -5,6 +5,8 @@ import {
   BancoHoras,
   BatidaPonto,
   PerfilJornada,
+  Feriado,
+  Empresa,
 } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
@@ -50,6 +52,71 @@ function calcularHorasTrabalhadas(batidas) {
   }
 
   return totalMinutos / 60;
+}
+
+// Função para verificar divergências (tolerância de 10 minutos)
+function verificarDivergencias(
+  batidas,
+  horasPrevistas,
+  entradaPrevista,
+  saidaPrevista
+) {
+  const divergencias = [];
+
+  // Filtrar apenas batidas válidas (normal ou aprovada)
+  const batidasValidas = batidas.filter(
+    (b) => b.status !== "recusada" && b.status !== "pendente"
+  );
+
+  // Verificar batidas faltantes
+  const entradas = batidasValidas.filter((b) => b.tipo === "entrada");
+  const saidas = batidasValidas.filter((b) => b.tipo === "saida");
+
+  if (entradas.length === 0 && horasPrevistas && horasPrevistas > 0) {
+    divergencias.push("Falta batida de entrada");
+  }
+
+  if (saidas.length === 0 && horasPrevistas && horasPrevistas > 0) {
+    divergencias.push("Falta batida de saída");
+  }
+
+  if (entradas.length !== saidas.length) {
+    divergencias.push("Número de batidas de entrada e saída não corresponde");
+  }
+
+  // Verificar entrada atrasada (tolerância de 10 minutos)
+  if (entradaPrevista && entradas.length > 0) {
+    const entrada = new Date(entradas[0].dataHora);
+    const entradaPrev = new Date(entrada);
+    entradaPrev.setHours(
+      parseInt(entradaPrevista.split(":")[0]),
+      parseInt(entradaPrevista.split(":")[1]),
+      0
+    );
+
+    const diffMinutos = Math.floor((entrada - entradaPrev) / (1000 * 60));
+    if (diffMinutos > TOLERANCIA_MINUTOS) {
+      divergencias.push(`Entrada atrasada em ${diffMinutos} minutos`);
+    }
+  }
+
+  // Verificar saída antecipada (tolerância de 10 minutos)
+  if (saidaPrevista && saidas.length > 0) {
+    const saida = new Date(saidas[saidas.length - 1].dataHora);
+    const saidaPrev = new Date(saida);
+    saidaPrev.setHours(
+      parseInt(saidaPrevista.split(":")[0]),
+      parseInt(saidaPrevista.split(":")[1]),
+      0
+    );
+
+    const diffMinutos = Math.floor((saidaPrev - saida) / (1000 * 60));
+    if (diffMinutos > TOLERANCIA_MINUTOS) {
+      divergencias.push(`Saída antecipada em ${diffMinutos} minutos`);
+    }
+  }
+
+  return divergencias;
 }
 
 function getUsuarioId(req) {
@@ -100,13 +167,114 @@ async function getPerfilJornadaUsuario(usuario_id) {
   return usuario.perfilJornada;
 }
 
+// Função para obter nome do feriado de uma data (retorna null se não for feriado)
+async function getNomeFeriado(usuario_id, data) {
+  // Verificar se é domingo (0 = domingo)
+  const dataBrasilia = getDataBrasilia(data);
+  const diaSemana = dataBrasilia.getDay();
+  if (diaSemana === 0) {
+    return "Domingo";
+  }
+
+  // Formatar data como YYYY-MM-DD
+  const dataStr = formatarDataStr(dataBrasilia);
+
+  // Buscar empresa do usuário
+  const usuario = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_empresa_id"],
+  });
+
+  const empresa_id = usuario?.usuario_empresa_id || null;
+
+  // Verificar se existe feriado nacional para a data
+  const feriadoNacional = await Feriado.findOne({
+    where: {
+      feriado_data: dataStr,
+      feriado_tipo: "nacional",
+      feriado_ativo: 1,
+    },
+  });
+
+  if (feriadoNacional) {
+    return feriadoNacional.feriado_nome;
+  }
+
+  // Verificar se existe feriado da empresa para a data
+  if (empresa_id) {
+    const feriadoEmpresa = await Feriado.findOne({
+      where: {
+        feriado_data: dataStr,
+        feriado_tipo: "empresa",
+        feriado_empresa_id: empresa_id,
+        feriado_ativo: 1,
+      },
+    });
+
+    if (feriadoEmpresa) {
+      return feriadoEmpresa.feriado_nome;
+    }
+  }
+
+  return null;
+}
+
+// Função para verificar se uma data é feriado ou domingo
+async function isFeriadoOuDomingo(usuario_id, data) {
+  // Verificar se é domingo (0 = domingo)
+  const dataBrasilia = getDataBrasilia(data);
+  const diaSemana = dataBrasilia.getDay();
+  if (diaSemana === 0) {
+    return true;
+  }
+
+  // Formatar data como YYYY-MM-DD
+  const dataStr = formatarDataStr(dataBrasilia);
+
+  // Buscar empresa do usuário
+  const usuario = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_empresa_id"],
+  });
+
+  const empresa_id = usuario?.usuario_empresa_id || null;
+
+  // Verificar se existe feriado nacional para a data
+  const feriadoNacional = await Feriado.findOne({
+    where: {
+      feriado_data: dataStr,
+      feriado_tipo: "nacional",
+      feriado_ativo: 1,
+    },
+  });
+
+  if (feriadoNacional) {
+    return true;
+  }
+
+  // Verificar se existe feriado da empresa para a data
+  if (empresa_id) {
+    const feriadoEmpresa = await Feriado.findOne({
+      where: {
+        feriado_data: dataStr,
+        feriado_tipo: "empresa",
+        feriado_empresa_id: empresa_id,
+        feriado_ativo: 1,
+      },
+    });
+
+    if (feriadoEmpresa) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Função para obter horas previstas do dia baseado no perfil
 function getHorasPrevistasDia(perfil, data) {
-  if (!perfil) return 0;
+  if (!perfil) return null;
 
   const diaSemana = data.getDay(); // 0 = domingo, 1 = segunda, etc.
   const diasMap = {
-    0: "domingo",
     1: "segunda",
     2: "terca",
     3: "quarta",
@@ -115,8 +283,13 @@ function getHorasPrevistasDia(perfil, data) {
     6: "sabado",
   };
 
+  // Domingo não tem campo no perfil
+  if (diaSemana === 0) return null;
+
   const campoDia = `perfil_jornada_${diasMap[diaSemana]}`;
   const horas = parseFloat(perfil[campoDia] || 0);
+
+  if (horas === 0) return null;
 
   return horas;
 }
@@ -267,35 +440,78 @@ export async function getRelatorioMensal(req, res) {
     const data = new Date(ano, mes - 1, dia);
     const dataStr = data.toISOString().split("T")[0];
 
+    // Verificar se é feriado
+    const nomeFeriado = await getNomeFeriado(usuario_id, data);
+    const eFeriadoOuDomingo = nomeFeriado !== null;
+
     // Buscar batidas do dia
     const batidasDoDia = batidasPorDia[dataStr] || [];
-    const horasPrevistas = getHorasPrevistasDia(perfil, data);
+    const horasPrevistas = eFeriadoOuDomingo ? null : getHorasPrevistasDia(perfil, data);
+
+    // Calcular horários previstos para verificação de divergências
+    let entradaPrevista = null;
+    let saidaPrevista = null;
+    if (!eFeriadoOuDomingo && horasPrevistas && horasPrevistas > 0) {
+      // Calcular horários previstos (assumindo início às 8h)
+      const horas = Math.floor(horasPrevistas);
+      const minutos = Math.round((horasPrevistas - horas) * 60);
+      entradaPrevista = `08:00`;
+      const saidaHora = 8 + horas;
+      const saidaMin = minutos;
+      saidaPrevista = `${String(saidaHora).padStart(2, "0")}:${String(
+        saidaMin
+      ).padStart(2, "0")}`;
+    }
+
+    // Verificar divergências de batidas (entrada atrasada, saída antecipada, etc.)
+    const divergencias = verificarDivergencias(
+      batidasDoDia,
+      horasPrevistas,
+      entradaPrevista,
+      saidaPrevista
+    );
 
     // Calcular horas trabalhadas em tempo real baseado nas batidas
     let horasTrabalhadas = calcularHorasTrabalhadas(batidasDoDia);
 
     // Calcular extras e negativas
-    let horasExtras = horasPrevistas
-      ? Math.max(0, horasTrabalhadas - horasPrevistas)
-      : 0;
-    let horasNegativas = horasPrevistas
-      ? Math.max(0, horasPrevistas - horasTrabalhadas)
-      : 0;
+    let horasExtras = 0;
+    let horasNegativas = 0;
 
-    // Aplicar tolerância de 10 minutos
-    const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
-    horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
-    horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+    if (eFeriadoOuDomingo) {
+      // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
+      horasExtras = horasTrabalhadas * 2;
+      horasNegativas = 0;
+      } else {
+        // Em dias normais: calcular normalmente
+        if (horasPrevistas === null || horasPrevistas === 0) {
+          // Se não há horas previstas, todas as horas trabalhadas são extras
+          horasExtras = horasTrabalhadas;
+          horasNegativas = 0;
+        } else {
+          horasExtras = Math.max(0, horasTrabalhadas - horasPrevistas);
+          horasNegativas = Math.max(0, horasPrevistas - horasTrabalhadas);
 
-    // Determinar status
-    let status =
-      horasExtras > 0 || horasNegativas > 0 ? "divergente" : "normal";
+          // Aplicar tolerância de 10 minutos
+          const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+          horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+          horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
 
-    // Verificar se é uma falta (dia sem batida que deveria ter trabalhado)
-    // Se o dia já passou, deveria ter trabalhado (horasPrevistas > 0), não bateu ponto
-    if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
-      // É uma falta - considerar como horas negativas
-      horasNegativas = horasPrevistas;
+          // Verificar se é uma falta (dia sem batida que deveria ter trabalhado)
+          // Se o dia já passou, deveria ter trabalhado (horasPrevistas > 0), não bateu ponto
+          if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
+            // É uma falta - considerar como horas negativas
+            horasNegativas = horasPrevistas;
+          }
+        }
+      }
+
+    // Determinar status: divergente se houver divergências de batidas OU horas extras/negativas
+    // Em feriados/domingos, não considerar horas extras como divergência, mas considerar divergências de batidas
+    let status = "normal";
+    if (divergencias.length > 0) {
+      status = "divergente";
+    } else if (!eFeriadoOuDomingo && (horasExtras > 0 || horasNegativas > 0)) {
       status = "divergente";
     }
 
@@ -321,6 +537,7 @@ export async function getRelatorioMensal(req, res) {
       status,
       batidas: batidasDoDia,
       justificativas: justificativasPorData[dataStr] || [],
+      feriado: nomeFeriado || null,
     });
   }
 
@@ -467,27 +684,65 @@ export async function getTotaisMensais(req, res) {
     const dataStr = data.toISOString().split("T")[0];
 
     const batidasDoDia = batidasPorDia[dataStr] || [];
-    const horasPrevistas = getHorasPrevistasDia(perfil, data);
+    
+    // Verificar se é feriado
+    const nomeFeriado = await getNomeFeriado(usuario_id, data);
+    const eFeriadoOuDomingo = nomeFeriado !== null;
+    const horasPrevistas = eFeriadoOuDomingo ? null : getHorasPrevistasDia(perfil, data);
+
+    // Calcular horários previstos para verificação de divergências
+    let entradaPrevista = null;
+    let saidaPrevista = null;
+    if (!eFeriadoOuDomingo && horasPrevistas && horasPrevistas > 0) {
+      // Calcular horários previstos (assumindo início às 8h)
+      const horas = Math.floor(horasPrevistas);
+      const minutos = Math.round((horasPrevistas - horas) * 60);
+      entradaPrevista = `08:00`;
+      const saidaHora = 8 + horas;
+      const saidaMin = minutos;
+      saidaPrevista = `${String(saidaHora).padStart(2, "0")}:${String(
+        saidaMin
+      ).padStart(2, "0")}`;
+    }
+
+    // Verificar divergências de batidas (entrada atrasada, saída antecipada, etc.)
+    const divergencias = verificarDivergencias(
+      batidasDoDia,
+      horasPrevistas,
+      entradaPrevista,
+      saidaPrevista
+    );
 
     // Calcular horas trabalhadas em tempo real baseado nas batidas
     let horasTrabalhadas = calcularHorasTrabalhadas(batidasDoDia);
 
     // Calcular extras e negativas
-    let horasExtras = horasPrevistas
-      ? Math.max(0, horasTrabalhadas - horasPrevistas)
-      : 0;
-    let horasNegativas = horasPrevistas
-      ? Math.max(0, horasPrevistas - horasTrabalhadas)
-      : 0;
+    let horasExtras = 0;
+    let horasNegativas = 0;
 
-    // Aplicar tolerância de 10 minutos
-    const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
-    horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
-    horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+    if (eFeriadoOuDomingo) {
+      // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
+      horasExtras = horasTrabalhadas * 2;
+      horasNegativas = 0;
+    } else {
+      if (horasPrevistas === null || horasPrevistas === 0) {
+        // Se não há horas previstas, todas as horas trabalhadas são extras
+        horasExtras = horasTrabalhadas;
+        horasNegativas = 0;
+      } else {
+        horasExtras = Math.max(0, horasTrabalhadas - horasPrevistas);
+        horasNegativas = Math.max(0, horasPrevistas - horasTrabalhadas);
 
-    // Verificar se é uma falta (dia sem batida que deveria ter trabalhado)
-    if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
-      horasNegativas = horasPrevistas;
+        // Aplicar tolerância de 10 minutos
+        const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+        horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+        horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+        // Verificar se é uma falta (dia sem batida que deveria ter trabalhado)
+        if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
+          horasNegativas = horasPrevistas;
+        }
+      }
     }
 
     // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
@@ -515,8 +770,14 @@ export async function getTotaisMensais(req, res) {
       deveIncluirNosTotais = saidasDoDia.length >= 2;
     }
 
-    // Determinar status
-    const status = horasExtras > 0 || horasNegativas > 0 ? "divergente" : "normal";
+    // Determinar status: divergente se houver divergências de batidas OU horas extras/negativas
+    // Em feriados/domingos, não considerar horas extras como divergência, mas considerar divergências de batidas
+    let status = "normal";
+    if (divergencias.length > 0) {
+      status = "divergente";
+    } else if (!eFeriadoOuDomingo && (horasExtras > 0 || horasNegativas > 0)) {
+      status = "divergente";
+    }
 
     // Somar aos totais apenas se atender os critérios
     if (deveIncluirNosTotais) {
@@ -620,31 +881,55 @@ export async function getTotaisMensais(req, res) {
     }));
 
     // Calcular horas do mês
+    const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+    
     for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
       const data = new Date(anoCursorNum, mesCursorNum - 1, dia);
       const dataStr = data.toISOString().split("T")[0];
 
       const batidasDoDia = batidasPorDiaMes[dataStr] || [];
-      const horasPrevistas = getHorasPrevistasDia(perfil, data);
+      
+      // Filtrar apenas batidas válidas (não recusadas e não pendentes)
+      const batidasValidasDoDia = batidasDoDia.filter(
+        (b) => b.status !== "recusada" && b.status !== "pendente"
+      );
+      
+      // Verificar se é feriado
+      const eFeriadoOuDomingo = await isFeriadoOuDomingo(usuario_id, data);
+      const horasPrevistas = eFeriadoOuDomingo ? null : getHorasPrevistasDia(perfil, data);
       
       // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), não conta horas negativas
       if (diasJustificados.has(dataStr)) {
         continue;
       }
 
-      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasDoDia);
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasValidasDoDia);
 
-      let horasExtrasDia = horasPrevistas ? Math.max(0, horasTrabalhadasDia - horasPrevistas) : 0;
-      let horasNegativasDia = horasPrevistas ? Math.max(0, horasPrevistas - horasTrabalhadasDia) : 0;
+      let horasExtrasDia = 0;
+      let horasNegativasDia = 0;
 
-      // Aplicar tolerância
-      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
-      horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
-      horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+      if (eFeriadoOuDomingo) {
+        // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
+        horasExtrasDia = horasTrabalhadasDia * 2;
+        horasNegativasDia = 0;
+      } else {
+        if (horasPrevistas === null || horasPrevistas === 0) {
+          // Se não há horas previstas, todas as horas trabalhadas são extras
+          horasExtrasDia = horasTrabalhadasDia;
+          horasNegativasDia = 0;
+        } else {
+          horasExtrasDia = Math.max(0, horasTrabalhadasDia - horasPrevistas);
+          horasNegativasDia = Math.max(0, horasPrevistas - horasTrabalhadasDia);
 
-      // Se é falta (sem batida em dia que deveria trabalhar)
-      if (data < hoje && horasPrevistas > 0 && batidasDoDia.length === 0) {
-        horasNegativasDia = horasPrevistas;
+          // Aplicar tolerância
+          horasExtrasDia = horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+          horasNegativasDia = horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+          // Se é falta (sem batida em dia que deveria trabalhar)
+          if (data < hoje && horasPrevistas > 0 && batidasValidasDoDia.length === 0) {
+            horasNegativasDia = horasPrevistas;
+          }
+        }
       }
 
       // Verificar se é o dia atual e se deve incluir no banco de horas
@@ -654,9 +939,6 @@ export async function getTotaisMensais(req, res) {
       // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
       let deveIncluirNoBanco = true;
       if (eDiaAtual) {
-        const batidasValidasDoDia = batidasDoDia.filter(
-          (b) => b.status !== "recusada" && b.status !== "pendente"
-        );
         const saidasDoDia = batidasValidasDoDia.filter((b) => b.tipo === "saida");
         deveIncluirNoBanco = saidasDoDia.length >= 2;
       }

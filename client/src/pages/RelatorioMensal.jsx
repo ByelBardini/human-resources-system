@@ -188,6 +188,13 @@ function RelatorioMensal() {
     });
   }
 
+  function obterDiaSemanaAbrev(dataStr) {
+    const data = new Date(dataStr + "T12:00:00");
+    const diaSemana = data.getDay();
+    const dias = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+    return dias[diaSemana];
+  }
+
   function formatarDataCompleta(dataStr) {
     const data = new Date(dataStr + "T12:00:00");
     return data.toLocaleDateString("pt-BR", {
@@ -384,7 +391,7 @@ function RelatorioMensal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <p className="text-white/70 text-sm mb-1">
                     Total Trabalhadas
@@ -397,12 +404,6 @@ function RelatorioMensal() {
                   <p className="text-white/70 text-sm mb-1">Total Extras</p>
                   <p className="text-2xl font-semibold text-green-400">
                     {formatarHorasParaHHMM(totais.horasExtras)}
-                  </p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">Total Negativas</p>
-                  <p className="text-2xl font-semibold text-red-400">
-                    {formatarHorasParaHHMM(totais.horasNegativas)}
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
@@ -460,20 +461,28 @@ function RelatorioMensal() {
                       onClick={() => toggleDia(dia.data)}
                     >
                       <div className="flex items-center gap-4">
-                        <span className="text-white font-semibold w-16">
-                          {formatarData(dia.data)}
-                        </span>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-semibold w-16">
+                              {formatarData(dia.data)}
+                            </span>
+                            <span className="text-white/50 text-xs">
+                              {obterDiaSemanaAbrev(dia.data)}
+                            </span>
+                          </div>
+                          {dia.feriado && (
+                            <span className="text-purple-400 text-xs mt-0.5">
+                              {dia.feriado}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-white/70 w-24">
                           {formatarHorasParaHHMM(dia.horasTrabalhadas)} trab.
                         </span>
                         <span
-                          className={`w-20 font-semibold ${
-                            dia.saldoDia >= 0
-                              ? "text-green-400"
-                              : "text-red-400"
-                          }`}
+                          className="w-20 font-semibold text-green-400"
                         >
-                          {formatarSaldo(dia.saldoDia)}
+                          {formatarSaldo(Math.max(0, dia.saldoDia))}
                         </span>
                         {(() => {
                           // Mostrar status baseado nas justificativas
@@ -575,7 +584,7 @@ function RelatorioMensal() {
                         </div>
 
                         {/* Resumo do dia */}
-                        <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
                           <div className="text-center">
                             <p className="text-white/50 text-xs">Extras</p>
                             <p className="text-green-400 font-semibold">
@@ -583,23 +592,11 @@ function RelatorioMensal() {
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-white/50 text-xs">Negativas</p>
-                            <p className="text-red-400 font-semibold">
-                              -{formatarHorasParaHHMM(dia.horasNegativas)}
-                            </p>
-                          </div>
-                          <div className="text-center">
                             <p className="text-white/50 text-xs">
                               Saldo do Dia
                             </p>
-                            <p
-                              className={`font-semibold ${
-                                dia.saldoDia >= 0
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              }`}
-                            >
-                              {formatarSaldo(dia.saldoDia)}
+                            <p className="font-semibold text-green-400">
+                              {formatarSaldo(Math.max(0, dia.saldoDia))}
                             </p>
                           </div>
                         </div>

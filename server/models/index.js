@@ -19,6 +19,7 @@ import Justificativa from "./justificativas.js";
 import DiaTrabalhado from "./diasTrabalhados.js";
 import BancoHoras from "./bancosHoras.js";
 import CargoPermissaoEmpresa from "./cargoPermissaoEmpresas.js";
+import Feriado from "./feriados.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -560,6 +561,18 @@ CargoPermissaoEmpresa.belongsTo(Empresa, {
   as: "empresa",
 });
 
+//Foreign keys de Feriados e Empresas
+Empresa.hasMany(Feriado, {
+  foreignKey: "feriado_empresa_id",
+  sourceKey: "empresa_id",
+  as: "feriados",
+});
+Feriado.belongsTo(Empresa, {
+  foreignKey: "feriado_empresa_id",
+  targetKey: "empresa_id",
+  as: "empresa",
+});
+
 export {
   Empresa,
   Funcionario,
@@ -582,4 +595,5 @@ export {
   DiaTrabalhado,
   BancoHoras,
   CargoPermissaoEmpresa,
+  Feriado,
 };

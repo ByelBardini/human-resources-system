@@ -119,9 +119,16 @@ function Ponto() {
           <h1 className="text-3xl font-semibold text-white mb-2 text-center">
             {pontoData.funcionario.nome}
           </h1>
-          <p className="text-center text-white/70 mb-6 capitalize">
-            {formatarData(pontoData.dataAtual)}
-          </p>
+          <div className="text-center mb-6">
+            <p className="text-white/70 capitalize">
+              {formatarData(pontoData.dataAtual)}
+            </p>
+            {pontoData.feriado && (
+              <p className="text-purple-400 text-sm mt-1">
+                {pontoData.feriado}
+              </p>
+            )}
+          </div>
 
           {/* Card de Banco de Horas em destaque */}
           <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
@@ -186,7 +193,7 @@ function Ponto() {
           </div>
 
           {pontoData.resumo && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
                 <p className="text-white/70 text-sm mb-1">Trabalhadas</p>
                 <p className="text-xl font-semibold text-white">
@@ -197,12 +204,6 @@ function Ponto() {
                 <p className="text-white/70 text-sm mb-1">Extras</p>
                 <p className="text-xl font-semibold text-green-400">
                   {formatarHorasParaHHMM(pontoData.resumo.horasExtras)}
-                </p>
-              </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
-                <p className="text-white/70 text-sm mb-1">Negativas</p>
-                <p className="text-xl font-semibold text-red-400">
-                  {formatarHorasParaHHMM(pontoData.resumo.horasNegativas)}
                 </p>
               </div>
             </div>
