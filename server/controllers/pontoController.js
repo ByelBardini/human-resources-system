@@ -1011,6 +1011,7 @@ export async function getGestaoFuncionarios(req, res) {
   const { empresa_id } = req.query;
 
   // Buscar usuários que tem perfil de jornada (ou seja, batem ponto)
+  // Um usuário é do tipo Funcionário se tem perfil_jornada_id e funcionario_id
   const whereClause = {
     usuario_ativo: 1,
     usuario_perfil_jornada_id: { [Op.not]: null },
@@ -1034,17 +1035,46 @@ export async function getGestaoFuncionarios(req, res) {
         as: "perfilJornada",
         required: false,
       },
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: ["funcionario_id", "funcionario_ativo"],
+        required: false,
+      },
     ],
     order: [["usuario_nome", "ASC"]],
   });
 
-  return res.status(200).json({
-    funcionarios: usuarios.map((u) => ({
+  // Filtrar apenas usuários do tipo Funcionário que estão ativos (usuário E funcionário)
+  const funcionariosAtivos = usuarios
+    .filter((u) => {
+      // Verificar se é usuário do tipo Funcionário
+      const eUsuarioFuncionario =
+        u.usuario_perfil_jornada_id !== null &&
+        u.usuario_funcionario_id !== null;
+
+      if (!eUsuarioFuncionario) {
+        // Se não é funcionário, incluir normalmente (usuários administrativos com perfil de jornada)
+        return true;
+      }
+
+      // Se é funcionário, verificar se usuário E funcionário estão ativos
+      const usuarioAtivo = u.usuario_ativo === 1;
+      const funcionarioAtivo =
+        u.funcionario && u.funcionario.funcionario_ativo === 1;
+
+      // Incluir apenas se usuário e funcionário estiverem ativos
+      return usuarioAtivo && funcionarioAtivo;
+    })
+    .map((u) => ({
       id: u.usuario_id,
       nome: u.usuario_nome,
       empresa_id: u.usuario_empresa_id,
       empresa_nome: u.empresa?.empresa_nome,
-    })),
+    }));
+
+  return res.status(200).json({
+    funcionarios: funcionariosAtivos,
   });
 }
 
@@ -1177,6 +1207,11 @@ export async function getHistoricoFuncionario(req, res) {
     // Verificar se o dia é válido (após data de criação do usuário)
     const diaValido = dia >= primeiroDiaValido;
 
+    // Pular dias antes da data de cadastro - não exibir no histórico
+    if (!diaValido) {
+      continue;
+    }
+
     // Verificar se é feriado
     const nomeFeriado = await getNomeFeriado(id, data);
     const eFeriadoOuDomingo = nomeFeriado !== null;
@@ -1189,80 +1224,77 @@ export async function getHistoricoFuncionario(req, res) {
     let horasNegativas = 0;
     let status = "normal";
 
-    if (diaValido) {
-      // Calcular horas trabalhadas em tempo real baseado nas batidas válidas
-      const batidasValidas = batidasDoDia.filter(
-        (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
-      );
-      horasTrabalhadas = calcularHorasTrabalhadas(batidasValidas);
+    // Calcular horas trabalhadas em tempo real baseado nas batidas válidas
+    const batidasValidas = batidasDoDia.filter(
+      (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+    );
+    horasTrabalhadas = calcularHorasTrabalhadas(batidasValidas);
 
-      // Calcular extras e negativas
-      if (eFeriadoOuDomingo) {
-        // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
-        horasExtras = horasTrabalhadas * 2;
-        horasNegativas = 0;
-      } else {
-        // Em dias normais: calcular normalmente
-        horasExtras = horasPrevistasDia
-          ? Math.max(0, horasTrabalhadas - horasPrevistasDia)
-          : 0;
-        horasNegativas = horasPrevistasDia
-          ? Math.max(0, horasPrevistasDia - horasTrabalhadas)
-          : 0;
+    // Calcular extras e negativas
+    if (eFeriadoOuDomingo) {
+      // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
+      horasExtras = horasTrabalhadas * 2;
+      horasNegativas = 0;
+    } else {
+      // Em dias normais: calcular normalmente
+      horasExtras = horasPrevistasDia
+        ? Math.max(0, horasTrabalhadas - horasPrevistasDia)
+        : 0;
+      horasNegativas = horasPrevistasDia
+        ? Math.max(0, horasPrevistasDia - horasTrabalhadas)
+        : 0;
 
-        // Aplicar tolerância de 10 minutos
-        const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
-        horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
-        horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+      // Aplicar tolerância de 10 minutos
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+      horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
 
-        // Verificar se é uma falta (dia que já passou, sem batidas, que deveria ter trabalhado)
-        if (data < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
-          horasNegativas = horasPrevistasDia;
-          status = "divergente";
-        } else if (horasExtras > 0 || horasNegativas > 0) {
-          status = "divergente";
-        }
-      }
-
-      // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
-      const justificativasDoDia = justificativasPorDia[dataStr] || [];
-      const temJustificativaAprovada = justificativasDoDia.some(
-        (j) =>
-          j.justificativa_status === "aprovada" &&
-          !["falta_nao_justificada", "horas_extras"].includes(
-            j.justificativa_tipo
-          )
-      );
-      if (temJustificativaAprovada) {
-        horasNegativas = 0;
-      }
-
-      // Verificar se é o dia atual e se deve incluir nos totais
-      const hojeStr = hoje.toISOString().split("T")[0];
-      const eDiaAtual = dataStr === hojeStr;
-
-      // Se for o dia atual, só incluir nos totais se houver pelo menos 2 saídas
-      let deveIncluirNosTotais = true;
-      if (eDiaAtual) {
-        const batidasValidasDoDia = batidasDoDia.filter(
-          (b) =>
-            b.batida_status !== "recusada" && b.batida_status !== "pendente"
-        );
-        const saidasDoDia = batidasValidasDoDia.filter(
-          (b) => b.batida_tipo === "saida"
-        );
-        deveIncluirNosTotais = saidasDoDia.length >= 2;
-      }
-
-      // Somar aos totais apenas para dias válidos e que atendam os critérios
-      if (deveIncluirNosTotais) {
-        totalHorasPrevistas += horasPrevistasDia || 0;
-        totalHorasTrabalhadas += horasTrabalhadas;
-        totalHorasExtras += horasExtras;
-        totalHorasNegativas += horasNegativas;
+      // Verificar se é uma falta (dia que já passou, sem batidas, que deveria ter trabalhado)
+      if (data < hoje && horasPrevistasDia > 0 && batidasDoDia.length === 0) {
+        horasNegativas = horasPrevistasDia;
+        status = "divergente";
+      } else if (horasExtras > 0 || horasNegativas > 0) {
+        status = "divergente";
       }
     }
-    // Para dias antes da criação do usuário: manter tudo como 0 e status normal
+
+    // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
+    const justificativasDoDia = justificativasPorDia[dataStr] || [];
+    const temJustificativaAprovada = justificativasDoDia.some(
+      (j) =>
+        j.justificativa_status === "aprovada" &&
+        !["falta_nao_justificada", "horas_extras"].includes(
+          j.justificativa_tipo
+        )
+    );
+    if (temJustificativaAprovada) {
+      horasNegativas = 0;
+    }
+
+    // Verificar se é o dia atual e se deve incluir nos totais
+    const hojeStr = hoje.toISOString().split("T")[0];
+    const eDiaAtual = dataStr === hojeStr;
+
+    // Se for o dia atual, só incluir nos totais se houver pelo menos 2 saídas
+    let deveIncluirNosTotais = true;
+    if (eDiaAtual) {
+      const batidasValidasDoDia = batidasDoDia.filter(
+        (b) =>
+          b.batida_status !== "recusada" && b.batida_status !== "pendente"
+      );
+      const saidasDoDia = batidasValidasDoDia.filter(
+        (b) => b.batida_tipo === "saida"
+      );
+      deveIncluirNosTotais = saidasDoDia.length >= 2;
+    }
+
+    // Somar aos totais apenas para dias válidos e que atendam os critérios
+    if (deveIncluirNosTotais) {
+      totalHorasPrevistas += horasPrevistasDia || 0;
+      totalHorasTrabalhadas += horasTrabalhadas;
+      totalHorasExtras += horasExtras;
+      totalHorasNegativas += horasNegativas;
+    }
 
     const saldoDia = horasExtras - horasNegativas;
 
@@ -1272,11 +1304,11 @@ export async function getHistoricoFuncionario(req, res) {
       horasExtras,
       horasNegativas,
       saldoDia,
-      horasPrevistas: diaValido ? (horasPrevistasDia || 0) : 0,
+      horasPrevistas: horasPrevistasDia || 0,
       status,
       batidas: batidasDoDia,
       justificativas: justificativasPorDia[dataStr] || [],
-      diaValido, // Indica se o dia conta para o funcionário
+      diaValido: true, // Todos os dias aqui são válidos (já filtrados acima)
       feriado: nomeFeriado || null,
     });
   }
@@ -2122,6 +2154,11 @@ export async function exportarPontoExcel(req, res) {
         as: "empresa",
         attributes: ["empresa_id", "empresa_nome"],
       },
+      {
+        model: Funcionario,
+        as: "funcionario",
+        required: false,
+      },
     ],
   });
 
@@ -2162,6 +2199,51 @@ export async function exportarPontoExcel(req, res) {
     ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
     : null;
 
+  // Verificar se o funcionário está desligado ou usuário inativo
+  const funcionario = usuarioAlvo.funcionario;
+  const funcionarioInativo = funcionario && funcionario.funcionario_ativo === 0;
+  const usuarioInativo = usuarioAlvo.usuario_ativo === 0;
+  
+  // Obter data de desligamento se aplicável
+  let dataDesligamento = null;
+  if (funcionarioInativo) {
+    dataDesligamento = funcionario.funcionario_data_desligamento
+      ? parseDateOnly(funcionario.funcionario_data_desligamento)
+      : null;
+    
+    if (!dataDesligamento) {
+      // Se não tem data de desligamento mas o funcionário está inativo, buscar última batida
+      const ultimaBatida = await BatidaPonto.findOne({
+        where: {
+          batida_usuario_id: funcionario_id,
+          batida_status: { [Op.in]: ["normal", "aprovada"] },
+        },
+        order: [["batida_data_hora", "DESC"]],
+      });
+      
+      if (ultimaBatida) {
+        dataDesligamento = getDataBrasilia(new Date(ultimaBatida.batida_data_hora));
+      } else {
+        dataDesligamento = dataCriacaoUsuario || getDataBrasilia();
+      }
+    }
+  } else if (usuarioInativo) {
+    // Se apenas o usuário está inativo, buscar a última batida de ponto
+    const ultimaBatida = await BatidaPonto.findOne({
+      where: {
+        batida_usuario_id: funcionario_id,
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "DESC"]],
+    });
+    
+    if (ultimaBatida) {
+      dataDesligamento = getDataBrasilia(new Date(ultimaBatida.batida_data_hora));
+    } else {
+      dataDesligamento = dataCriacaoUsuario || getDataBrasilia();
+    }
+  }
+
   // Verificar se é o mês atual para limitar até a data atual
   const hoje = getDataBrasilia();
   const mesAtual = hoje.getMonth() + 1;
@@ -2171,7 +2253,20 @@ export async function exportarPontoExcel(req, res) {
   const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
   const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
 
-  const ultimoDiaConsiderado = eMesAtual ? hoje.getDate() : fimMes.getDate();
+  // Limitar até a data de desligamento ou fim do mês, o que for menor
+  let dataLimite = eMesAtual ? hoje : fimMes;
+  if (dataDesligamento) {
+    const dataDesligamentoOnly = getDataBrasilia(dataDesligamento);
+    dataLimite = eMesAtual
+      ? dataDesligamentoOnly < hoje
+        ? dataDesligamentoOnly
+        : hoje
+      : dataDesligamentoOnly < fimMes
+      ? dataDesligamentoOnly
+      : fimMes;
+  }
+
+  const ultimoDiaConsiderado = dataLimite.getDate();
 
   // Calcular primeiro dia válido baseado na data de criação
   let primeiroDiaValido = 1;
@@ -2182,11 +2277,33 @@ export async function exportarPontoExcel(req, res) {
 
     if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
       primeiroDiaValido = criacaoDia;
+    } else if (
+      criacaoAno > parseInt(ano) ||
+      (criacaoAno === parseInt(ano) && criacaoMes > parseInt(mes))
+    ) {
+      primeiroDiaValido = ultimoDiaConsiderado + 1;
+    }
+  }
+
+  // Limitar até a data de desligamento se aplicável
+  if (dataDesligamento) {
+    const diaDesligamento = dataDesligamento.getDate();
+    const mesDesligamentoNum = dataDesligamento.getMonth() + 1;
+    const anoDesligamento = dataDesligamento.getFullYear();
+
+    if (
+      anoDesligamento === parseInt(ano) &&
+      mesDesligamentoNum === parseInt(mes)
+    ) {
+      const ultimoDiaAjustado = Math.min(ultimoDiaConsiderado, diaDesligamento);
+      // Ajustar dataLimite se necessário
+      if (ultimoDiaAjustado < ultimoDiaConsiderado) {
+        dataLimite = new Date(parseInt(ano), parseInt(mes) - 1, ultimoDiaAjustado);
+      }
     }
   }
 
   // Buscar todas as batidas do mês
-  const dataLimite = eMesAtual ? hoje : fimMes;
   const batidas = await BatidaPonto.findAll({
     where: {
       batida_usuario_id: funcionario_id,
@@ -3206,6 +3323,7 @@ export async function getFuncionariosDesligados(req, res) {
   const { empresa_id } = req.query;
 
   // Buscar usuários do tipo Funcionário (que têm perfil_jornada_id e funcionario_id)
+  // Não filtrar por usuario_ativo aqui, pois queremos incluir todos os funcionários desligados
   const whereClause = {
     usuario_perfil_jornada_id: { [Op.not]: null },
     usuario_funcionario_id: { [Op.not]: null },
@@ -3239,12 +3357,19 @@ export async function getFuncionariosDesligados(req, res) {
     order: [["usuario_nome", "ASC"]],
   });
 
-  // Filtrar apenas aqueles onde o funcionário está realmente inativo
+  // Filtrar aqueles onde o funcionário está inativo OU o usuário está inativo
   const funcionariosDesligados = usuarios
     .filter((u) => {
-      // Deve ter funcionário vinculado e estar inativo
+      // Deve ter funcionário vinculado
       if (!u.funcionario) return false;
-      return u.funcionario.funcionario_ativo === 0;
+      
+      // Incluir se:
+      // 1. O funcionário está inativo (funcionario_ativo === 0)
+      // 2. OU o usuário está inativo (usuario_ativo === 0)
+      const funcionarioInativo = u.funcionario.funcionario_ativo === 0;
+      const usuarioInativo = u.usuario_ativo === 0;
+      
+      return funcionarioInativo || usuarioInativo;
     })
     .map((u) => ({
       id: u.usuario_id,
@@ -3253,6 +3378,8 @@ export async function getFuncionariosDesligados(req, res) {
       empresa_nome: u.empresa?.empresa_nome,
       data_desligamento: u.funcionario?.funcionario_data_desligamento || null,
       funcionario_id: u.usuario_funcionario_id,
+      usuario_ativo: u.usuario_ativo,
+      funcionario_ativo: u.funcionario?.funcionario_ativo,
     }));
 
   return res.status(200).json({
@@ -3297,18 +3424,62 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
 
   const funcionario = usuarioAlvo.funcionario;
 
-  // Verificar se o funcionário está realmente desligado
-  if (funcionario.funcionario_ativo !== 0) {
-    throw ApiError.badRequest("Funcionário não está desligado");
+  // Verificar se o funcionário está desligado OU o usuário está inativo
+  const funcionarioInativo = funcionario.funcionario_ativo === 0;
+  const usuarioInativo = usuarioAlvo.usuario_ativo === 0;
+  
+  if (!funcionarioInativo && !usuarioInativo) {
+    throw ApiError.badRequest("Funcionário/Usuário não está inativo");
   }
 
-  // Obter data de desligamento
-  const dataDesligamento = funcionario.funcionario_data_desligamento
-    ? parseDateOnly(funcionario.funcionario_data_desligamento)
+  // Obter data de criação do usuário (precisa estar antes para usar na lógica abaixo)
+  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao
+    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
     : null;
 
-  if (!dataDesligamento) {
-    throw ApiError.badRequest("Funcionário não possui data de desligamento");
+  // Obter data de desligamento (se o funcionário estiver inativo)
+  // Se apenas o usuário estiver inativo, buscar a última batida de ponto para usar como data limite
+  let dataDesligamento = null;
+  
+  if (funcionarioInativo) {
+    dataDesligamento = funcionario.funcionario_data_desligamento
+      ? parseDateOnly(funcionario.funcionario_data_desligamento)
+      : null;
+    
+    if (!dataDesligamento) {
+      // Se não tem data de desligamento mas o funcionário está inativo, buscar última batida
+      const ultimaBatida = await BatidaPonto.findOne({
+        where: {
+          batida_usuario_id: id,
+          batida_status: { [Op.in]: ["normal", "aprovada"] },
+        },
+        order: [["batida_data_hora", "DESC"]],
+      });
+      
+      if (ultimaBatida) {
+        dataDesligamento = getDataBrasilia(new Date(ultimaBatida.batida_data_hora));
+      } else {
+        // Se não há batidas, usar data de criação do usuário
+        dataDesligamento = dataCriacaoUsuario || getDataBrasilia();
+      }
+    }
+  } else {
+    // Se apenas o usuário está inativo, buscar a última batida de ponto
+    const ultimaBatida = await BatidaPonto.findOne({
+      where: {
+        batida_usuario_id: id,
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "DESC"]],
+    });
+    
+    if (ultimaBatida) {
+      // Usar a data da última batida como data de inativação
+      dataDesligamento = getDataBrasilia(new Date(ultimaBatida.batida_data_hora));
+    } else {
+      // Se não há batidas, usar data de criação do usuário
+      dataDesligamento = dataCriacaoUsuario || getDataBrasilia();
+    }
   }
 
   // Verificar se o mês solicitado é após o desligamento
@@ -3324,11 +3495,6 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
       "Não é possível visualizar pontos após a data de desligamento"
     );
   }
-
-  // Obter data de criação do usuário
-  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao
-    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
-    : null;
 
   // Verificar se é o mês atual para limitar até a data atual ou data de desligamento
   const hoje = getDataBrasilia();
@@ -3348,7 +3514,7 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
     ? dataDesligamento
     : fimMes;
 
-  const ultimoDiaConsiderado = Math.min(
+  let ultimoDiaConsiderado = Math.min(
     fimMes.getDate(),
     dataLimite.getDate()
   );
@@ -3372,12 +3538,12 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
 
   // Limitar até a data de desligamento
   const diaDesligamento = dataDesligamento.getDate();
-  const mesDesligamentoNum = dataDesligamento.getMonth() + 1;
-  const anoDesligamento = dataDesligamento.getFullYear();
+  const mesDesligamentoNumLocal = dataDesligamento.getMonth() + 1;
+  const anoDesligamentoLocal = dataDesligamento.getFullYear();
 
   if (
-    anoDesligamento === parseInt(ano) &&
-    mesDesligamentoNum === parseInt(mes)
+    anoDesligamentoLocal === parseInt(ano) &&
+    mesDesligamentoNumLocal === parseInt(mes)
   ) {
     ultimoDiaConsiderado = Math.min(ultimoDiaConsiderado, diaDesligamento);
   }
@@ -3435,6 +3601,10 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
   // Buscar perfil de jornada para calcular horas previstas
   const perfil = await getPerfilJornadaUsuario(id);
 
+  // Normalizar data de desligamento para comparação (apenas data, sem horas)
+  // Definir antes dos loops para usar em múltiplos lugares
+  const dataDesligamentoOnly = getDataBrasilia(dataDesligamento);
+
   // Montar resposta - calcular horas em tempo real
   const diasDoMes = [];
   let totalHorasPrevistas = 0;
@@ -3448,21 +3618,12 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
 
     // Verificar se o dia é válido (após data de criação e antes/igual à data de desligamento)
     const diaValido = dia >= primeiroDiaValido;
-    const diaAntesDesligamento = data <= dataDesligamento;
+    // Comparar apenas datas, sem horas
+    const dataDiaOnly = getDataBrasilia(data);
+    const diaAntesDesligamento = dataDiaOnly <= dataDesligamentoOnly;
 
+    // Pular dias antes da data de cadastro ou após a data de inativação - não exibir no histórico
     if (!diaValido || !diaAntesDesligamento) {
-      diasDoMes.push({
-        data: dataStr,
-        horasTrabalhadas: 0,
-        horasExtras: 0,
-        horasNegativas: 0,
-        horasPrevistas: 0,
-        status: "normal",
-        batidas: [],
-        justificativas: [],
-        diaValido: false,
-        feriado: null,
-      });
       continue;
     }
 
@@ -3562,11 +3723,11 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
       horasExtras,
       horasNegativas,
       saldoDia,
-      horasPrevistas: diaValido ? horasPrevistasDia || 0 : 0,
+      horasPrevistas: horasPrevistasDia || 0,
       status,
       batidas: batidasDoDia,
       justificativas: justificativasPorDia[dataStr] || [],
-      diaValido,
+      diaValido: true, // Todos os dias aqui são válidos (já filtrados acima)
       feriado: nomeFeriado || null,
     });
   }
@@ -3577,7 +3738,8 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
     totalHorasPrevistas - totalHorasTrabalhadas
   );
 
-  // Calcular banco de horas ACUMULADO até a data de desligamento
+  // Calcular banco de horas ACUMULADO até a data de desligamento/inativação
+  // A data limite é: data de criação até data de inativação (última batida ou data de desligamento do funcionário)
   const bancoHorasRecord = await BancoHoras.findOne({
     where: { banco_usuario_id: id },
   });
@@ -3591,19 +3753,26 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
   }
 
   // Limitar data de início do banco à data de desligamento
-  if (dataInicioBanco > dataDesligamento) {
-    dataInicioBanco = dataDesligamento;
+  if (dataInicioBanco > dataDesligamentoOnly) {
+    dataInicioBanco = dataDesligamentoOnly;
   }
 
   let bancoHorasAcumulado = 0;
+  
+  // Obter informações do mês de desligamento para usar no loop
+  const mesDesligamentoNumBanco = dataDesligamento.getMonth() + 1;
+  const anoDesligamentoBanco = dataDesligamento.getFullYear();
 
-  // Iterar por todos os meses desde dataInicioBanco até o mês do desligamento (ou mês solicitado, o que for menor)
+  // Iterar por todos os meses desde dataInicioBanco até o mês do desligamento
+  // IMPORTANTE: Sempre calcular até a data de desligamento, não apenas até o mês visualizado
+  // O banco de horas acumulado deve mostrar o total desde a criação até a inativação
   let mesCursor = new Date(
     dataInicioBanco.getFullYear(),
     dataInicioBanco.getMonth(),
     1
   );
-  const fimConsulta = mesSolicitado > mesDesligamento ? mesDesligamento : mesSolicitado;
+  // Sempre usar o mês de desligamento como fim, não o mês solicitado
+  const fimConsulta = mesDesligamento;
 
   while (mesCursor <= fimConsulta) {
     const mesCursorNum = mesCursor.getMonth() + 1;
@@ -3614,8 +3783,8 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
 
     // Limitar até a data de desligamento
     const dataLimiteCursor =
-      mesCursorNum === mesDesligamentoNum &&
-      anoCursorNum === anoDesligamento
+      mesCursorNum === mesDesligamentoNumBanco &&
+      anoCursorNum === anoDesligamentoBanco
         ? dataDesligamento
         : fimMesCursor;
     const ultimoDiaCursor = dataLimiteCursor.getDate();
@@ -3686,8 +3855,9 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
       const dataDia = new Date(anoCursorNum, mesCursorNum - 1, dia);
       const dataStr = dataDia.toISOString().split("T")[0];
 
-      // Não incluir dias após desligamento
-      if (dataDia > dataDesligamento) {
+      // Não incluir dias após desligamento (comparar apenas datas, sem horas)
+      const dataDiaOnly = getDataBrasilia(dataDia);
+      if (dataDiaOnly > dataDesligamentoOnly) {
         continue;
       }
 
@@ -3736,8 +3906,12 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
             horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
 
           // Se é falta (sem batida em dia que deveria trabalhar)
+          // Mas só considerar falta se o dia for antes da data de inativação
+          const dataDiaOnly = getDataBrasilia(dataDia);
+          const hojeOnly = getDataBrasilia();
           if (
-            dataDia < hoje &&
+            dataDiaOnly < hojeOnly &&
+            dataDiaOnly <= dataDesligamentoOnly &&
             horasPrevistasDia > 0 &&
             batidasValidasDoDia.length === 0
           ) {
@@ -3746,13 +3920,15 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
         }
       }
 
-      // Verificar se é o dia atual e se deve incluir no banco de horas
+      // Verificar se é o dia atual ou dia de inativação e se deve incluir no banco de horas
       const hojeStr = hoje.toISOString().split("T")[0];
+      const dataDesligamentoStr = dataDesligamentoOnly.toISOString().split("T")[0];
       const eDiaAtual = dataStr === hojeStr;
+      const eDiaInativacao = dataStr === dataDesligamentoStr;
 
-      // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
+      // Se for o dia atual ou dia de inativação, só incluir no banco de horas se houver pelo menos 2 saídas válidas
       let deveIncluirNoBanco = true;
-      if (eDiaAtual) {
+      if (eDiaAtual || eDiaInativacao) {
         const saidasDoDia = batidasValidasDoDia.filter(
           (b) => b.batida_tipo === "saida"
         );

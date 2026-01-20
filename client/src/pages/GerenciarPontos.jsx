@@ -316,6 +316,23 @@ function GerenciarPontos() {
     }
   }
 
+  async function handleExportarExcelDesligado() {
+    if (!funcionarioDesligadoSelecionado) return;
+
+    setCarregando(true);
+    try {
+      await exportarPontoExcel(funcionarioDesligadoSelecionado.id, mes, ano);
+      setCarregando(false);
+      mostrarAviso("sucesso", "Planilha exportada com sucesso!");
+      setTimeout(() => {
+        limparAviso();
+      }, 2000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
   async function handleExportarTodosPontos() {
     setCarregando(true);
     try {
@@ -378,9 +395,11 @@ function GerenciarPontos() {
     return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
   }
 
-  // Verificar se pode navegar para o mês anterior (não pode ir antes da data de criação do usuário)
+  // Verificar se pode navegar para o mês anterior
+  // O backend já filtra os dias corretamente (apenas após data de cadastro e antes de inativação)
+  // Portanto, permitimos navegar para qualquer mês - o backend mostrará apenas os dias válidos
   function podeMesAnterior() {
-    // Se for funcionário desligado, usar data de desligamento
+    // Se for funcionário desligado, não pode ir além da data de desligamento
     if (historicoFuncionarioDesligado?.funcionario?.dataDesligamento) {
       const dataDesligamento = new Date(
         historicoFuncionarioDesligado.funcionario.dataDesligamento + "T12:00:00"
@@ -388,37 +407,15 @@ function GerenciarPontos() {
       const mesDesligamento = dataDesligamento.getMonth() + 1;
       const anoDesligamento = dataDesligamento.getFullYear();
 
-      // Não pode ir para antes do mês de desligamento (mas pode ir antes da criação)
+      // Não pode ir para antes do mês de desligamento
       if (ano < anoDesligamento) return true; // Pode ir antes do desligamento
       if (ano === anoDesligamento && mes <= mesDesligamento) return false;
-
-      // Verificar data de criação também
-      if (historicoFuncionarioDesligado?.funcionario?.dataCriacao) {
-        const dataCriacao = new Date(
-          historicoFuncionarioDesligado.funcionario.dataCriacao + "T12:00:00"
-        );
-        const mesCriacao = dataCriacao.getMonth() + 1;
-        const anoCriacao = dataCriacao.getFullYear();
-
-        if (ano < anoCriacao) return false;
-        if (ano === anoCriacao && mes <= mesCriacao) return false;
-      }
 
       return true;
     }
 
-    if (!historicoFuncionario?.funcionario?.dataCriacao) return true;
-
-    const dataCriacao = new Date(
-      historicoFuncionario.funcionario.dataCriacao + "T12:00:00"
-    );
-    const mesCriacao = dataCriacao.getMonth() + 1;
-    const anoCriacao = dataCriacao.getFullYear();
-
-    // Não pode ir para antes do mês de criação
-    if (ano < anoCriacao) return false;
-    if (ano === anoCriacao && mes <= mesCriacao) return false;
-
+    // Para usuários ativos, sempre permitir navegar para meses anteriores
+    // O backend filtrará os dias antes da data de cadastro automaticamente
     return true;
   }
 
@@ -1207,23 +1204,17 @@ function GerenciarPontos() {
 
                         {historicoFuncionarioDesligado && (
                           <>
-                            {/* Banco de Horas */}
+                            {/* Botão de Download */}
                             <div className="flex gap-4 mb-4">
-                              <div className="flex-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg p-3 border border-indigo-500/30">
-                                <p className="text-white/70 text-xs">
-                                  Banco de Horas
-                                </p>
-                                <p
-                                  className={`text-xl font-bold ${
-                                    historicoFuncionarioDesligado.bancoHoras >= 0
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                  }`}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={handleExportarExcelDesligado}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 text-sm"
+                                  title="Exportar para Excel"
                                 >
-                                  {formatarBancoHoras(
-                                    historicoFuncionarioDesligado.bancoHoras
-                                  )}
-                                </p>
+                                  <Download size={14} />
+                                  Exportar
+                                </button>
                               </div>
                             </div>
 
