@@ -1,9 +1,10 @@
-import { Funcionario, Setor, Cargo, Nivel, Usuario, CargoUsuario, CargoPermissao, CargoPermissaoEmpresa, Permissao } from "../models/index.js";
+import { Funcionario, Setor, Cargo, Nivel, Usuario, CargoUsuario, CargoPermissao, CargoPermissaoEmpresa, Permissao, PerfilJornada, Empresa } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import sequelize from "../config/database.js";
 import fs from "fs/promises";
 import path from "path";
 import { Op } from "sequelize";
+import bcrypt from "bcrypt";
 
 // Função para obter empresas permitidas para uma permissão específica
 async function getEmpresasPermitidasParaPermissao(usuario, codigoPermissao) {
@@ -329,6 +330,9 @@ export async function postFuncionario(req, res) {
     funcionario_sexo,
     funcionario_data_nascimento,
     funcionario_data_admissao,
+    criar_usuario,
+    perfil_jornada_id,
+    usuario_login,
   } = req.body;
   const fotoPath = req.file ? `/uploads/fotos/${req.file.filename}` : null;
 
@@ -345,6 +349,17 @@ export async function postFuncionario(req, res) {
   ) {
     throw ApiError.badRequest("Todos os dados são obrigatórios");
   }
+
+  // Validar se perfil de jornada e login foram informados quando criar_usuario for true
+  if (criar_usuario === "true" || criar_usuario === true) {
+    if (!perfil_jornada_id) {
+      throw ApiError.badRequest("Perfil de carga horária é obrigatório para criar usuário.");
+    }
+    if (!usuario_login || !usuario_login.trim()) {
+      throw ApiError.badRequest("Login do usuário é obrigatório para criar usuário.");
+    }
+  }
+
   console.log(req.body);
 
   const nivel = await Nivel.findOne({
@@ -354,26 +369,129 @@ export async function postFuncionario(req, res) {
     },
   });
 
-  const novoFuncionario = await Funcionario.create(
-    {
-      funcionario_empresa_id,
-      funcionario_setor_id,
-      funcionario_cargo_id,
-      funcionario_nivel_id: nivel.nivel_id,
-      funcionario_nome,
-      funcionario_cpf,
-      funcionario_celular,
-      funcionario_sexo,
-      funcionario_data_nascimento,
-      funcionario_data_admissao,
-      funcionario_imagem_caminho: fotoPath,
-    },
-    {
-      usuario_id: usuario_id,
-    }
-  );
+  if (!nivel) {
+    throw ApiError.badRequest("Nível inválido para o cargo informado");
+  }
 
-  return res.status(201).json(novoFuncionario);
+  // Usar transação para garantir consistência
+  let usuarioCriado = false;
+  let loginGerado = null;
+  
+  const resultado = await sequelize.transaction(async (t) => {
+    const novoFuncionario = await Funcionario.create(
+      {
+        funcionario_empresa_id,
+        funcionario_setor_id,
+        funcionario_cargo_id,
+        funcionario_nivel_id: nivel.nivel_id,
+        funcionario_nome,
+        funcionario_cpf,
+        funcionario_celular,
+        funcionario_sexo,
+        funcionario_data_nascimento,
+        funcionario_data_admissao,
+        funcionario_imagem_caminho: fotoPath,
+      },
+      {
+        transaction: t,
+        usuario_id: usuario_id,
+      }
+    );
+
+    // Criar usuário automaticamente se solicitado
+    if (criar_usuario === "true" || criar_usuario === true) {
+      // Verificar se o perfil de jornada existe e está ativo
+      const perfilJornada = await PerfilJornada.findByPk(perfil_jornada_id, { transaction: t });
+      if (!perfilJornada || perfilJornada.perfil_jornada_ativo === 0) {
+        throw ApiError.badRequest("Perfil de carga horária inválido ou inativo.");
+      }
+
+      // Verificar se a empresa existe
+      const empresa = await Empresa.findByPk(funcionario_empresa_id, { transaction: t });
+      if (!empresa) {
+        throw ApiError.badRequest("Empresa não encontrada.");
+      }
+
+      // Usar cargo padrão "Usuário Básico" para funcionários
+      const cargoBasico = await CargoUsuario.findOne({
+        where: { cargo_usuario_nome: "Usuário Básico" },
+        transaction: t,
+      });
+
+      if (!cargoBasico) {
+        throw ApiError.badRequest("Cargo padrão 'Usuário Básico' não encontrado.");
+      }
+
+      // Usar login fornecido pelo usuário
+      let login = usuario_login.trim();
+
+      // Verificar se já existe usuário com este login
+      const usuarioExistente = await Usuario.findOne({
+        where: { usuario_login: login },
+        transaction: t,
+      });
+
+      if (usuarioExistente) {
+        throw ApiError.badRequest("Já existe um usuário com este login. Escolha outro login.");
+      }
+
+      const senhaHash = bcrypt.hashSync("12345", 10);
+
+      await Usuario.create(
+        {
+          usuario_nome: funcionario_nome,
+          usuario_login: login,
+          usuario_senha: senhaHash,
+          usuario_cargo_id: cargoBasico.cargo_usuario_id,
+          usuario_perfil_jornada_id: perfil_jornada_id,
+          usuario_empresa_id: funcionario_empresa_id,
+          usuario_funcionario_id: novoFuncionario.funcionario_id,
+          usuario_data_criacao: new Date(),
+        },
+        { transaction: t }
+      );
+
+      usuarioCriado = true;
+      loginGerado = login;
+
+      // Garantir que o cargo tenha permissão de registrar ponto
+      const permissaoRegistrarPonto = await Permissao.findOne({
+        where: { permissao_codigo: "ponto.registrar" },
+        transaction: t,
+      });
+
+      if (permissaoRegistrarPonto) {
+        const temPermissao = await CargoPermissao.findOne({
+          where: {
+            cargo_usuario_id: cargoBasico.cargo_usuario_id,
+            permissao_id: permissaoRegistrarPonto.permissao_id,
+          },
+          transaction: t,
+        });
+
+        if (!temPermissao) {
+          await CargoPermissao.create(
+            {
+              cargo_usuario_id: cargoBasico.cargo_usuario_id,
+              permissao_id: permissaoRegistrarPonto.permissao_id,
+            },
+            { transaction: t }
+          );
+        }
+      }
+    }
+
+    return novoFuncionario;
+  });
+
+  // Adicionar informações sobre usuário criado na resposta
+  const resposta = {
+    ...resultado.toJSON(),
+    usuario_criado: usuarioCriado,
+    ...(usuarioCriado && loginGerado ? { usuario_login: loginGerado } : {}),
+  };
+
+  return res.status(201).json(resposta);
 }
 
 export async function inativaFuncionario(req, res) {

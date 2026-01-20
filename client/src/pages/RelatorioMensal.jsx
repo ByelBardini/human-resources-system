@@ -480,9 +480,9 @@ function RelatorioMensal() {
                           {formatarHorasParaHHMM(dia.horasTrabalhadas)} trab.
                         </span>
                         <span
-                          className="w-20 font-semibold text-green-400"
+                          className={`w-20 font-semibold ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}
                         >
-                          {formatarSaldo(Math.max(0, dia.saldoDia))}
+                          {formatarSaldo(dia.saldoDia)}
                         </span>
                         {(() => {
                           // Mostrar status baseado nas justificativas
@@ -584,19 +584,29 @@ function RelatorioMensal() {
                         </div>
 
                         {/* Resumo do dia */}
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div className="text-center">
-                            <p className="text-white/50 text-xs">Extras</p>
-                            <p className="text-green-400 font-semibold">
-                              +{formatarHorasParaHHMM(dia.horasExtras)}
-                            </p>
-                          </div>
-                          <div className="text-center">
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          {dia.horasExtras > 0 && (
+                            <div className="text-center">
+                              <p className="text-white/50 text-xs">Extras</p>
+                              <p className="text-green-400 font-semibold">
+                                +{formatarHorasParaHHMM(dia.horasExtras)}
+                              </p>
+                            </div>
+                          )}
+                          {dia.horasNegativas > 0 && (
+                            <div className="text-center">
+                              <p className="text-white/50 text-xs">Negativas</p>
+                              <p className="text-red-400 font-semibold">
+                                -{formatarHorasParaHHMM(dia.horasNegativas)}
+                              </p>
+                            </div>
+                          )}
+                          <div className={`text-center ${dia.horasExtras > 0 && dia.horasNegativas > 0 ? 'col-span-1' : 'col-span-2'}`}>
                             <p className="text-white/50 text-xs">
                               Saldo do Dia
                             </p>
-                            <p className="font-semibold text-green-400">
-                              {formatarSaldo(Math.max(0, dia.saldoDia))}
+                            <p className={`font-semibold ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {formatarSaldo(dia.saldoDia)}
                             </p>
                           </div>
                         </div>

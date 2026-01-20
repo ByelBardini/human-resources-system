@@ -16,6 +16,8 @@ import {
   recalcularDia,
   exportarPontoExcel,
   exportarTodosPontosZip,
+  getFuncionariosDesligados,
+  getHistoricoFuncionarioDesligado,
 } from "../controllers/pontoController.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import express from "express";
@@ -65,6 +67,14 @@ router.get(
 router.get(
   "/ponto/gestao/exportar-todos",
   asyncHandler(exportarTodosPontosZip)
+);
+router.get(
+  "/ponto/gestao/funcionarios-desligados",
+  asyncHandler(getFuncionariosDesligados)
+);
+router.get(
+  "/ponto/gestao/funcionario-desligado/:id/historico",
+  asyncHandler(getHistoricoFuncionarioDesligado)
 );
 
 export default router;

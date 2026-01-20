@@ -7,6 +7,7 @@ import {
   Justificativa,
   Empresa,
   Feriado,
+  Funcionario,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import { ApiError } from "../middlewares/ApiError.js";
@@ -387,11 +388,30 @@ export async function calcularESalvarDia(usuario_id, data, batidas, perfil) {
     : horasExtras > toleranciaHoras
     ? horasExtras
     : 0;
-  const horasNegativasAjustadas = eFeriadoOuDomingo
+  let horasNegativasAjustadas = eFeriadoOuDomingo
     ? 0
     : horasNegativas > toleranciaHoras
     ? horasNegativas
     : 0;
+
+  // Verificar se há justificativa aprovada para este dia (exceto falta_nao_justificada e horas_extras)
+  // Se houver, zerar as horas negativas (falta justificada e aprovada)
+  const dataStr = formatarDataStr(data);
+  const justificativaAprovada = await Justificativa.findOne({
+    where: {
+      justificativa_usuario_id: usuario_id,
+      justificativa_data: dataStr,
+      justificativa_status: "aprovada",
+      justificativa_tipo: {
+        [Op.notIn]: ["falta_nao_justificada", "horas_extras"],
+      },
+    },
+  });
+
+  // Se houver justificativa aprovada (exceto falta_nao_justificada), zerar horas negativas
+  if (justificativaAprovada) {
+    horasNegativasAjustadas = 0;
+  }
 
   const divergencias = verificarDivergencias(
     batidasValidas,
@@ -1244,11 +1264,14 @@ export async function getHistoricoFuncionario(req, res) {
     }
     // Para dias antes da criação do usuário: manter tudo como 0 e status normal
 
+    const saldoDia = horasExtras - horasNegativas;
+
     diasDoMes.push({
       data: dataStr,
       horasTrabalhadas,
       horasExtras,
       horasNegativas,
+      saldoDia,
       horasPrevistas: diaValido ? (horasPrevistasDia || 0) : 0,
       status,
       batidas: batidasDoDia,
@@ -1488,7 +1511,21 @@ export async function getPendentes(req, res) {
       {
         model: Usuario,
         as: "usuario",
-        attributes: ["usuario_id", "usuario_nome"],
+        attributes: [
+          "usuario_id",
+          "usuario_nome",
+          "usuario_ativo",
+          "usuario_funcionario_id",
+          "usuario_perfil_jornada_id",
+        ],
+        include: [
+          {
+            model: Funcionario,
+            as: "funcionario",
+            attributes: ["funcionario_id", "funcionario_ativo"],
+            required: false,
+          },
+        ],
       },
     ],
     order: [["justificativa_data", "DESC"]],
@@ -1501,14 +1538,77 @@ export async function getPendentes(req, res) {
       {
         model: Usuario,
         as: "usuario",
-        attributes: ["usuario_id", "usuario_nome"],
+        attributes: [
+          "usuario_id",
+          "usuario_nome",
+          "usuario_ativo",
+          "usuario_funcionario_id",
+          "usuario_perfil_jornada_id",
+        ],
+        include: [
+          {
+            model: Funcionario,
+            as: "funcionario",
+            attributes: ["funcionario_id", "funcionario_ativo"],
+            required: false,
+          },
+        ],
       },
     ],
     order: [["batida_data_hora", "DESC"]],
   });
 
+  // Filtrar apenas usuários do tipo Funcionário que estão ativos
+  // Um usuário é do tipo Funcionário se tem perfil_jornada_id e funcionario_id
+  // Está inativo se: usuario_ativo = 0 OU funcionario_ativo = 0
+  const justificativasFiltradas = justificativasPendentes.filter((j) => {
+    const usuario = j.usuario;
+    if (!usuario) return false;
+
+    // Verificar se é usuário do tipo Funcionário
+    const eUsuarioFuncionario =
+      usuario.usuario_perfil_jornada_id !== null &&
+      usuario.usuario_funcionario_id !== null;
+
+    if (!eUsuarioFuncionario) {
+      // Se não é funcionário, incluir normalmente
+      return true;
+    }
+
+    // Se é funcionário, verificar se está ativo
+    const usuarioAtivo = usuario.usuario_ativo === 1;
+    const funcionarioAtivo =
+      usuario.funcionario && usuario.funcionario.funcionario_ativo === 1;
+
+    // Incluir apenas se usuário e funcionário estiverem ativos
+    return usuarioAtivo && funcionarioAtivo;
+  });
+
+  const batidasFiltradas = batidasPendentes.filter((b) => {
+    const usuario = b.usuario;
+    if (!usuario) return false;
+
+    // Verificar se é usuário do tipo Funcionário
+    const eUsuarioFuncionario =
+      usuario.usuario_perfil_jornada_id !== null &&
+      usuario.usuario_funcionario_id !== null;
+
+    if (!eUsuarioFuncionario) {
+      // Se não é funcionário, incluir normalmente
+      return true;
+    }
+
+    // Se é funcionário, verificar se está ativo
+    const usuarioAtivo = usuario.usuario_ativo === 1;
+    const funcionarioAtivo =
+      usuario.funcionario && usuario.funcionario.funcionario_ativo === 1;
+
+    // Incluir apenas se usuário e funcionário estiverem ativos
+    return usuarioAtivo && funcionarioAtivo;
+  });
+
   // Mapear para formato compatível com frontend
-  const justificativasMapeadas = justificativasPendentes.map((j) => ({
+  const justificativasMapeadas = justificativasFiltradas.map((j) => ({
     ...j.toJSON(),
     funcionario: j.usuario
       ? {
@@ -1518,7 +1618,7 @@ export async function getPendentes(req, res) {
       : null,
   }));
 
-  const batidasMapeadas = batidasPendentes.map((b) => ({
+  const batidasMapeadas = batidasFiltradas.map((b) => ({
     ...b.toJSON(),
     funcionario: b.usuario
       ? {
@@ -3087,4 +3187,608 @@ export async function exportarTodosPontosZip(req, res) {
 
   // Finalizar ZIP
   await archive.finalize();
+}
+
+// Listar funcionários desligados (usuários do tipo Funcionário inativos)
+export async function getFuncionariosDesligados(req, res) {
+  const usuario = req.user;
+  const permissoes = usuario.permissoes || [];
+
+  if (
+    !permissoes.includes("ponto.aprovar_justificativas") &&
+    !permissoes.includes("ponto.alterar_batidas")
+  ) {
+    throw ApiError.forbidden(
+      "Você não tem permissão para acessar esta funcionalidade"
+    );
+  }
+
+  const { empresa_id } = req.query;
+
+  // Buscar usuários do tipo Funcionário (que têm perfil_jornada_id e funcionario_id)
+  const whereClause = {
+    usuario_perfil_jornada_id: { [Op.not]: null },
+    usuario_funcionario_id: { [Op.not]: null },
+  };
+
+  if (empresa_id) {
+    whereClause.usuario_empresa_id = empresa_id;
+  }
+
+  const usuarios = await Usuario.findAll({
+    where: whereClause,
+    include: [
+      {
+        model: Empresa,
+        as: "empresa",
+        attributes: ["empresa_id", "empresa_nome"],
+        required: false,
+      },
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: [
+          "funcionario_id",
+          "funcionario_nome",
+          "funcionario_ativo",
+          "funcionario_data_desligamento",
+        ],
+        required: true, // Deve ter funcionário vinculado
+      },
+    ],
+    order: [["usuario_nome", "ASC"]],
+  });
+
+  // Filtrar apenas aqueles onde o funcionário está realmente inativo
+  const funcionariosDesligados = usuarios
+    .filter((u) => {
+      // Deve ter funcionário vinculado e estar inativo
+      if (!u.funcionario) return false;
+      return u.funcionario.funcionario_ativo === 0;
+    })
+    .map((u) => ({
+      id: u.usuario_id,
+      nome: u.usuario_nome,
+      empresa_id: u.usuario_empresa_id,
+      empresa_nome: u.empresa?.empresa_nome,
+      data_desligamento: u.funcionario?.funcionario_data_desligamento || null,
+      funcionario_id: u.usuario_funcionario_id,
+    }));
+
+  return res.status(200).json({
+    funcionarios: funcionariosDesligados,
+  });
+}
+
+// Obter histórico de funcionário desligado (até a data de desligamento)
+export async function getHistoricoFuncionarioDesligado(req, res) {
+  const usuario = req.user;
+  const permissoes = usuario.permissoes || [];
+
+  if (
+    !permissoes.includes("ponto.aprovar_justificativas") &&
+    !permissoes.includes("ponto.alterar_batidas")
+  ) {
+    throw ApiError.forbidden(
+      "Você não tem permissão para acessar esta funcionalidade"
+    );
+  }
+
+  const { id } = req.params;
+  const { mes, ano } = req.query;
+
+  if (!mes || !ano) {
+    throw ApiError.badRequest("Mês e ano são obrigatórios");
+  }
+
+  const usuarioAlvo = await Usuario.findByPk(id, {
+    include: [
+      {
+        model: Funcionario,
+        as: "funcionario",
+        required: true,
+      },
+    ],
+  });
+
+  if (!usuarioAlvo || !usuarioAlvo.funcionario) {
+    throw ApiError.notFound("Usuário/Funcionário não encontrado");
+  }
+
+  const funcionario = usuarioAlvo.funcionario;
+
+  // Verificar se o funcionário está realmente desligado
+  if (funcionario.funcionario_ativo !== 0) {
+    throw ApiError.badRequest("Funcionário não está desligado");
+  }
+
+  // Obter data de desligamento
+  const dataDesligamento = funcionario.funcionario_data_desligamento
+    ? parseDateOnly(funcionario.funcionario_data_desligamento)
+    : null;
+
+  if (!dataDesligamento) {
+    throw ApiError.badRequest("Funcionário não possui data de desligamento");
+  }
+
+  // Verificar se o mês solicitado é após o desligamento
+  const mesSolicitado = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const mesDesligamento = new Date(
+    dataDesligamento.getFullYear(),
+    dataDesligamento.getMonth(),
+    1
+  );
+
+  if (mesSolicitado > mesDesligamento) {
+    throw ApiError.badRequest(
+      "Não é possível visualizar pontos após a data de desligamento"
+    );
+  }
+
+  // Obter data de criação do usuário
+  const dataCriacaoUsuario = usuarioAlvo.usuario_data_criacao
+    ? parseDateOnly(usuarioAlvo.usuario_data_criacao)
+    : null;
+
+  // Verificar se é o mês atual para limitar até a data atual ou data de desligamento
+  const hoje = getDataBrasilia();
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const eMesAtual = parseInt(mes) === mesAtual && parseInt(ano) === anoAtual;
+
+  const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+  const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
+
+  // Limitar até a data de desligamento ou fim do mês, o que for menor
+  const dataLimite = eMesAtual
+    ? dataDesligamento < hoje
+      ? dataDesligamento
+      : hoje
+    : dataDesligamento < fimMes
+    ? dataDesligamento
+    : fimMes;
+
+  const ultimoDiaConsiderado = Math.min(
+    fimMes.getDate(),
+    dataLimite.getDate()
+  );
+
+  // Calcular primeiro dia válido baseado na data de criação
+  let primeiroDiaValido = 1;
+  if (dataCriacaoUsuario) {
+    const criacaoAno = dataCriacaoUsuario.getFullYear();
+    const criacaoMes = dataCriacaoUsuario.getMonth() + 1;
+    const criacaoDia = dataCriacaoUsuario.getDate();
+
+    if (criacaoAno === parseInt(ano) && criacaoMes === parseInt(mes)) {
+      primeiroDiaValido = criacaoDia;
+    } else if (
+      criacaoAno > parseInt(ano) ||
+      (criacaoAno === parseInt(ano) && criacaoMes > parseInt(mes))
+    ) {
+      primeiroDiaValido = ultimoDiaConsiderado + 1;
+    }
+  }
+
+  // Limitar até a data de desligamento
+  const diaDesligamento = dataDesligamento.getDate();
+  const mesDesligamentoNum = dataDesligamento.getMonth() + 1;
+  const anoDesligamento = dataDesligamento.getFullYear();
+
+  if (
+    anoDesligamento === parseInt(ano) &&
+    mesDesligamentoNum === parseInt(mes)
+  ) {
+    ultimoDiaConsiderado = Math.min(ultimoDiaConsiderado, diaDesligamento);
+  }
+
+  const justificativas = await Justificativa.findAll({
+    where: {
+      justificativa_usuario_id: id,
+      justificativa_data: {
+        [Op.between]: [inicioMes, dataLimite],
+      },
+    },
+  });
+
+  // Buscar batidas do mês (até a data limite)
+  const inicioDiaMes = new Date(inicioMes);
+  inicioDiaMes.setHours(0, 0, 0, 0);
+  const fimDiaMes = new Date(dataLimite);
+  fimDiaMes.setHours(23, 59, 59, 999);
+
+  const batidas = await BatidaPonto.findAll({
+    where: {
+      batida_usuario_id: id,
+      batida_data_hora: {
+        [Op.between]: [inicioDiaMes, fimDiaMes],
+      },
+    },
+    order: [["batida_data_hora", "ASC"]],
+  });
+
+  // Organizar batidas por dia
+  const batidasPorDia = {};
+  batidas.forEach((b) => {
+    const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+    if (!batidasPorDia[dataStr]) {
+      batidasPorDia[dataStr] = [];
+    }
+    batidasPorDia[dataStr].push({
+      batida_id: b.batida_id,
+      batida_tipo: b.batida_tipo,
+      batida_data_hora: b.batida_data_hora,
+      batida_status: b.batida_status,
+    });
+  });
+
+  // Organizar justificativas por dia
+  const justificativasPorDia = {};
+  justificativas.forEach((j) => {
+    const dataStr = formatarDataStr(j.justificativa_data);
+    if (!justificativasPorDia[dataStr]) {
+      justificativasPorDia[dataStr] = [];
+    }
+    justificativasPorDia[dataStr].push(j);
+  });
+
+  // Buscar perfil de jornada para calcular horas previstas
+  const perfil = await getPerfilJornadaUsuario(id);
+
+  // Montar resposta - calcular horas em tempo real
+  const diasDoMes = [];
+  let totalHorasPrevistas = 0;
+  let totalHorasTrabalhadas = 0;
+  let totalHorasExtras = 0;
+  let totalHorasNegativas = 0;
+
+  for (let dia = 1; dia <= ultimoDiaConsiderado; dia++) {
+    const data = new Date(parseInt(ano), parseInt(mes) - 1, dia);
+    const dataStr = data.toISOString().split("T")[0];
+
+    // Verificar se o dia é válido (após data de criação e antes/igual à data de desligamento)
+    const diaValido = dia >= primeiroDiaValido;
+    const diaAntesDesligamento = data <= dataDesligamento;
+
+    if (!diaValido || !diaAntesDesligamento) {
+      diasDoMes.push({
+        data: dataStr,
+        horasTrabalhadas: 0,
+        horasExtras: 0,
+        horasNegativas: 0,
+        horasPrevistas: 0,
+        status: "normal",
+        batidas: [],
+        justificativas: [],
+        diaValido: false,
+        feriado: null,
+      });
+      continue;
+    }
+
+    // Verificar se é feriado
+    const nomeFeriado = await getNomeFeriado(id, data);
+    const eFeriadoOuDomingo = nomeFeriado !== null;
+
+    const batidasDoDia = batidasPorDia[dataStr] || [];
+    const horasPrevistasDia = eFeriadoOuDomingo
+      ? null
+      : getHorasPrevistasDia(perfil, data);
+
+    let horasTrabalhadas = 0;
+    let horasExtras = 0;
+    let horasNegativas = 0;
+    let status = "normal";
+
+    // Calcular horas trabalhadas em tempo real baseado nas batidas válidas
+    const batidasValidas = batidasDoDia.filter(
+      (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+    );
+    horasTrabalhadas = calcularHorasTrabalhadas(batidasValidas);
+
+    // Calcular extras e negativas
+    if (eFeriadoOuDomingo) {
+      horasExtras = horasTrabalhadas * 2;
+      horasNegativas = 0;
+    } else {
+      horasExtras = horasPrevistasDia
+        ? Math.max(0, horasTrabalhadas - horasPrevistasDia)
+        : 0;
+      horasNegativas = horasPrevistasDia
+        ? Math.max(0, horasPrevistasDia - horasTrabalhadas)
+        : 0;
+
+      // Aplicar tolerância de 10 minutos
+      const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+      horasExtras = horasExtras > toleranciaHoras ? horasExtras : 0;
+      horasNegativas = horasNegativas > toleranciaHoras ? horasNegativas : 0;
+
+      // Verificar se é uma falta (dia que já passou, sem batidas, que deveria ter trabalhado)
+      if (
+        data < hoje &&
+        horasPrevistasDia > 0 &&
+        batidasDoDia.length === 0
+      ) {
+        horasNegativas = horasPrevistasDia;
+        status = "divergente";
+      } else if (horasExtras > 0 || horasNegativas > 0) {
+        status = "divergente";
+      }
+    }
+
+    // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), zerar horas negativas
+    const justificativasDoDia = justificativasPorDia[dataStr] || [];
+    const temJustificativaAprovada = justificativasDoDia.some(
+      (j) =>
+        j.justificativa_status === "aprovada" &&
+        !["falta_nao_justificada", "horas_extras"].includes(
+          j.justificativa_tipo
+        )
+    );
+    if (temJustificativaAprovada) {
+      horasNegativas = 0;
+    }
+
+    // Verificar se é o dia atual e se deve incluir nos totais
+    const hojeStr = hoje.toISOString().split("T")[0];
+    const eDiaAtual = dataStr === hojeStr;
+
+    // Se for o dia atual, só incluir nos totais se houver pelo menos 2 saídas
+    let deveIncluirNosTotais = true;
+    if (eDiaAtual) {
+      const batidasValidasDoDia = batidasDoDia.filter(
+        (b) =>
+          b.batida_status !== "recusada" && b.batida_status !== "pendente"
+      );
+      const saidasDoDia = batidasValidasDoDia.filter(
+        (b) => b.batida_tipo === "saida"
+      );
+      deveIncluirNosTotais = saidasDoDia.length >= 2;
+    }
+
+    // Somar aos totais apenas para dias válidos e que atendam os critérios
+    if (deveIncluirNosTotais) {
+      totalHorasPrevistas += horasPrevistasDia || 0;
+      totalHorasTrabalhadas += horasTrabalhadas;
+      totalHorasExtras += horasExtras;
+      totalHorasNegativas += horasNegativas;
+    }
+
+    const saldoDia = horasExtras - horasNegativas;
+
+    diasDoMes.push({
+      data: dataStr,
+      horasTrabalhadas,
+      horasExtras,
+      horasNegativas,
+      saldoDia,
+      horasPrevistas: diaValido ? horasPrevistasDia || 0 : 0,
+      status,
+      batidas: batidasDoDia,
+      justificativas: justificativasPorDia[dataStr] || [],
+      diaValido,
+      feriado: nomeFeriado || null,
+    });
+  }
+
+  // Calcular horas pendentes (previstas - trabalhadas, se positivo)
+  const horasPendentes = Math.max(
+    0,
+    totalHorasPrevistas - totalHorasTrabalhadas
+  );
+
+  // Calcular banco de horas ACUMULADO até a data de desligamento
+  const bancoHorasRecord = await BancoHoras.findOne({
+    where: { banco_usuario_id: id },
+  });
+
+  let dataInicioBanco = dataCriacaoUsuario || new Date(0);
+  if (bancoHorasRecord?.banco_data_inicio) {
+    const dataInicioRecord = parseDateOnly(bancoHorasRecord.banco_data_inicio);
+    if (dataInicioRecord > dataInicioBanco) {
+      dataInicioBanco = dataInicioRecord;
+    }
+  }
+
+  // Limitar data de início do banco à data de desligamento
+  if (dataInicioBanco > dataDesligamento) {
+    dataInicioBanco = dataDesligamento;
+  }
+
+  let bancoHorasAcumulado = 0;
+
+  // Iterar por todos os meses desde dataInicioBanco até o mês do desligamento (ou mês solicitado, o que for menor)
+  let mesCursor = new Date(
+    dataInicioBanco.getFullYear(),
+    dataInicioBanco.getMonth(),
+    1
+  );
+  const fimConsulta = mesSolicitado > mesDesligamento ? mesDesligamento : mesSolicitado;
+
+  while (mesCursor <= fimConsulta) {
+    const mesCursorNum = mesCursor.getMonth() + 1;
+    const anoCursorNum = mesCursor.getFullYear();
+
+    const inicioMesCursor = new Date(anoCursorNum, mesCursorNum - 1, 1);
+    const fimMesCursor = new Date(anoCursorNum, mesCursorNum, 0);
+
+    // Limitar até a data de desligamento
+    const dataLimiteCursor =
+      mesCursorNum === mesDesligamentoNum &&
+      anoCursorNum === anoDesligamento
+        ? dataDesligamento
+        : fimMesCursor;
+    const ultimoDiaCursor = dataLimiteCursor.getDate();
+
+    let primeiroDiaCursor = 1;
+    if (
+      dataInicioBanco.getFullYear() === anoCursorNum &&
+      dataInicioBanco.getMonth() + 1 === mesCursorNum
+    ) {
+      primeiroDiaCursor = dataInicioBanco.getDate();
+    }
+
+    // Buscar batidas do mês
+    const batidasMes = await BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: id,
+        batida_data_hora: {
+          [Op.between]: [
+            inicioMesCursor,
+            new Date(
+              dataLimiteCursor.getFullYear(),
+              dataLimiteCursor.getMonth(),
+              dataLimiteCursor.getDate(),
+              23,
+              59,
+              59,
+              999
+            ),
+          ],
+        },
+        batida_status: { [Op.in]: ["normal", "aprovada"] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    });
+
+    // Organizar batidas por dia
+    const batidasPorDiaMes = {};
+    batidasMes.forEach((b) => {
+      const dataStr = new Date(b.batida_data_hora).toISOString().split("T")[0];
+      if (!batidasPorDiaMes[dataStr]) batidasPorDiaMes[dataStr] = [];
+      batidasPorDiaMes[dataStr].push(b);
+    });
+
+    // Buscar justificativas aprovadas do mês (exceto falta_nao_justificada e horas_extras)
+    const justificativasMes = await Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: id,
+        justificativa_data: {
+          [Op.between]: [inicioMesCursor, dataLimiteCursor],
+        },
+        justificativa_status: "aprovada",
+        justificativa_tipo: {
+          [Op.notIn]: ["falta_nao_justificada", "horas_extras"],
+        },
+      },
+    });
+    const diasJustificados = new Set(
+      justificativasMes.map((j) => {
+        const data = j.justificativa_data;
+        return typeof data === "string"
+          ? data
+          : new Date(data).toISOString().split("T")[0];
+      })
+    );
+
+    // Calcular horas do mês
+    for (let dia = primeiroDiaCursor; dia <= ultimoDiaCursor; dia++) {
+      const dataDia = new Date(anoCursorNum, mesCursorNum - 1, dia);
+      const dataStr = dataDia.toISOString().split("T")[0];
+
+      // Não incluir dias após desligamento
+      if (dataDia > dataDesligamento) {
+        continue;
+      }
+
+      const batidasDoDia = batidasPorDiaMes[dataStr] || [];
+
+      // Filtrar apenas batidas válidas
+      const batidasValidasDoDia = batidasDoDia.filter(
+        (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+      );
+
+      // Verificar se é feriado
+      const eFeriadoOuDomingo = await isFeriadoOuDomingo(id, dataDia);
+      const horasPrevistasDia = eFeriadoOuDomingo
+        ? null
+        : getHorasPrevistasDia(perfil, dataDia);
+
+      // Se o dia tem justificativa aprovada, não conta horas negativas
+      if (diasJustificados.has(dataStr)) {
+        continue;
+      }
+
+      let horasTrabalhadasDia = calcularHorasTrabalhadas(batidasValidasDoDia);
+
+      let horasExtrasDia = 0;
+      let horasNegativasDia = 0;
+
+      if (eFeriadoOuDomingo) {
+        horasExtrasDia = horasTrabalhadasDia * 2;
+        horasNegativasDia = 0;
+      } else {
+        if (horasPrevistasDia === null || horasPrevistasDia === 0) {
+          horasExtrasDia = horasTrabalhadasDia;
+          horasNegativasDia = 0;
+        } else {
+          horasExtrasDia = Math.max(0, horasTrabalhadasDia - horasPrevistasDia);
+          horasNegativasDia = Math.max(
+            0,
+            horasPrevistasDia - horasTrabalhadasDia
+          );
+
+          // Aplicar tolerância
+          const toleranciaHoras = TOLERANCIA_MINUTOS / 60;
+          horasExtrasDia =
+            horasExtrasDia > toleranciaHoras ? horasExtrasDia : 0;
+          horasNegativasDia =
+            horasNegativasDia > toleranciaHoras ? horasNegativasDia : 0;
+
+          // Se é falta (sem batida em dia que deveria trabalhar)
+          if (
+            dataDia < hoje &&
+            horasPrevistasDia > 0 &&
+            batidasValidasDoDia.length === 0
+          ) {
+            horasNegativasDia = horasPrevistasDia;
+          }
+        }
+      }
+
+      // Verificar se é o dia atual e se deve incluir no banco de horas
+      const hojeStr = hoje.toISOString().split("T")[0];
+      const eDiaAtual = dataStr === hojeStr;
+
+      // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
+      let deveIncluirNoBanco = true;
+      if (eDiaAtual) {
+        const saidasDoDia = batidasValidasDoDia.filter(
+          (b) => b.batida_tipo === "saida"
+        );
+        deveIncluirNoBanco = saidasDoDia.length >= 2;
+      }
+
+      // Somar ao banco de horas apenas se atender os critérios
+      if (deveIncluirNoBanco) {
+        bancoHorasAcumulado += horasExtrasDia - horasNegativasDia;
+      }
+    }
+
+    // Avançar para o próximo mês
+    mesCursor = new Date(mesCursor.getFullYear(), mesCursor.getMonth() + 1, 1);
+  }
+
+  return res.status(200).json({
+    funcionario: {
+      id: usuarioAlvo.usuario_id,
+      nome: usuarioAlvo.usuario_nome,
+      dataCriacao: dataCriacaoUsuario
+        ? formatarDataStr(dataCriacaoUsuario)
+        : null,
+      dataDesligamento: formatarDataStr(dataDesligamento),
+    },
+    dias: diasDoMes,
+    bancoHoras: bancoHorasAcumulado,
+    resumoMes: {
+      horasPrevistas: totalHorasPrevistas,
+      horasTrabalhadas: totalHorasTrabalhadas,
+      horasExtras: totalHorasExtras,
+      horasNegativas: totalHorasNegativas,
+      horasPendentes: horasPendentes,
+      eMesAtual: false,
+      dataLimite: formatarDataStr(dataDesligamento),
+      primeiroDiaValido: primeiroDiaValido,
+    },
+  });
 }

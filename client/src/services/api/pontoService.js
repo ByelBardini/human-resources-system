@@ -90,6 +90,35 @@ export async function getHistoricoFuncionario(id, mes, ano) {
   }
 }
 
+export async function getFuncionariosDesligados(empresa_id = null) {
+  try {
+    const params = {};
+    if (empresa_id) {
+      params.empresa_id = empresa_id;
+    }
+    const response = await api.get("/ponto/gestao/funcionarios-desligados", {
+      params,
+    });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar funcionários desligados:");
+  }
+}
+
+export async function getHistoricoFuncionarioDesligado(id, mes, ano) {
+  try {
+    const response = await api.get(
+      `/ponto/gestao/funcionario-desligado/${id}/historico`,
+      {
+        params: { mes, ano },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao buscar histórico do funcionário desligado:");
+  }
+}
+
 export async function getPendentes() {
   try {
     const response = await api.get("/ponto/gestao/pendentes");

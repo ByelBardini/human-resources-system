@@ -6,6 +6,7 @@ import {
   postFuncionario,
   getCargoSetor,
 } from "../../services/api/funcionarioService.js";
+import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function AdicionaFuncionarioModal({
@@ -34,6 +35,12 @@ function AdicionaFuncionarioModal({
   const [fotoPreview, setFotoPreview] = useState(null);
   const inputRef = useRef(null);
 
+  // Estados para cadastro de usuário
+  const [criarUsuario, setCriarUsuario] = useState(false);
+  const [perfilJornadaId, setPerfilJornadaId] = useState("");
+  const [loginUsuario, setLoginUsuario] = useState("");
+  const [perfisJornada, setPerfisJornada] = useState([]);
+
   async function getCargosSetores() {
     const id = localStorage.getItem("empresa_id");
     try {
@@ -46,8 +53,19 @@ function AdicionaFuncionarioModal({
     }
   }
 
+  async function getPerfisJornada() {
+    try {
+      const response = await listarPerfisJornadaPublico();
+      setPerfisJornada(response.perfis || []);
+    } catch (err) {
+      console.error("Erro ao buscar perfis de jornada:", err);
+      setPerfisJornada([]);
+    }
+  }
+
   useEffect(() => {
     getCargosSetores();
+    getPerfisJornada();
   }, []);
 
   useEffect(() => {
@@ -144,6 +162,18 @@ function AdicionaFuncionarioModal({
       return;
     }
 
+    // Validar se perfil de jornada foi selecionado quando checkbox estiver marcado
+    if (criarUsuario && !perfilJornadaId) {
+      mostrarAviso("erro", "Selecione um perfil de carga horária para criar o usuário!", true);
+      return;
+    }
+
+    // Validar se login foi informado quando checkbox estiver marcado
+    if (criarUsuario && !loginUsuario.trim()) {
+      mostrarAviso("erro", "Informe o login do usuário!", true);
+      return;
+    }
+
     const payload = {
       funcionario_empresa_id: id,
       funcionario_setor_id: setor,
@@ -156,13 +186,25 @@ function AdicionaFuncionarioModal({
       funcionario_data_nascimento: nascimento,
       funcionario_data_admissao: admissao,
     };
+
+    // Adicionar campos para criação de usuário se checkbox estiver marcado
+    if (criarUsuario) {
+      payload.criar_usuario = true;
+      payload.perfil_jornada_id = perfilJornadaId;
+      payload.usuario_login = loginUsuario.trim();
+    }
     setCarregando(true);
 
     try {
-      await postFuncionario(payload, fotoFile);
+      const response = await postFuncionario(payload, fotoFile);
       setCarregando(false);
 
-      mostrarAviso("sucesso", "Funcionário inserido com sucesso!", true);
+      let mensagem = "Funcionário inserido com sucesso!";
+      if (response.usuario_criado && response.usuario_login) {
+        mensagem = `Funcionário inserido com sucesso!\nUsuário criado automaticamente.\nLogin: ${response.usuario_login}\nSenha padrão: 12345`;
+      }
+
+      mostrarAviso("sucesso", mensagem, true);
       setModificado(true);
       setTimeout(() => {
         limparAviso();
@@ -429,6 +471,75 @@ function AdicionaFuncionarioModal({
                   className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                 />
               </div>
+
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={criarUsuario}
+                    onChange={(e) => {
+                      setCriarUsuario(e.target.checked);
+                      if (!e.target.checked) {
+                        setPerfilJornadaId("");
+                        setLoginUsuario("");
+                      }
+                    }}
+                    className="w-4 h-4 rounded bg-white/10 border border-white/20 text-white focus:ring-2 focus:ring-white/30"
+                  />
+                  <span className="text-sm text-white/70">
+                    Cadastrar usuário para este funcionário
+                  </span>
+                </label>
+              </div>
+
+              {criarUsuario && (
+                <>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-white/70 mb-1">
+                      Login do Usuário *
+                    </label>
+                    <input
+                      type="text"
+                      value={loginUsuario}
+                      onChange={(e) => setLoginUsuario(e.target.value)}
+                      placeholder="Ex.: joao.silva"
+                      className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 outline-none focus:bg-white/15"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-white/70 mb-1">
+                      Perfil de Carga Horária *
+                    </label>
+                    {perfisJornada.length === 0 ? (
+                      <p className="text-yellow-400 text-sm">
+                        Nenhum perfil de jornada disponível.
+                      </p>
+                    ) : (
+                      <select
+                        value={perfilJornadaId}
+                        onChange={(e) => setPerfilJornadaId(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
+                      >
+                        <option className="bg-slate-900" hidden value="">
+                          Selecione um perfil...
+                        </option>
+                        {perfisJornada
+                          .filter((p) => p.perfil_jornada_ativo === 1)
+                          .map((perfil) => (
+                            <option
+                              key={perfil.perfil_jornada_id}
+                              value={perfil.perfil_jornada_id}
+                              className="bg-slate-900"
+                            >
+                              {perfil.perfil_jornada_nome}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

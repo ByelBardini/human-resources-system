@@ -27,6 +27,8 @@ import {
   recalcularBancoHoras,
   exportarPontoExcel,
   exportarTodosPontosZip,
+  getFuncionariosDesligados,
+  getHistoricoFuncionarioDesligado,
 } from "../services/api/pontoService.js";
 import {
   aprovarJustificativa,
@@ -38,7 +40,7 @@ import { useAviso } from "../context/AvisoContext.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
-import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
+import { formatarHorasParaHHMM, formatarHorasComSinal } from "../utils/formatarHoras.js";
 
 function GerenciarPontos() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -65,6 +67,13 @@ function GerenciarPontos() {
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [ano, setAno] = useState(new Date().getFullYear());
   const [diaExpandido, setDiaExpandido] = useState(null);
+
+  // Estados de funcionários desligados
+  const [funcionariosDesligados, setFuncionariosDesligados] = useState([]);
+  const [funcionarioDesligadoSelecionado, setFuncionarioDesligadoSelecionado] =
+    useState(null);
+  const [historicoFuncionarioDesligado, setHistoricoFuncionarioDesligado] =
+    useState(null);
 
   // Modal de reprovação
   const [modalReprovar, setModalReprovar] = useState(null);
@@ -142,6 +151,30 @@ function GerenciarPontos() {
     try {
       const data = await getHistoricoFuncionario(id, mes, ano);
       setHistoricoFuncionario(data);
+      setCarregando(false);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function buscarFuncionariosDesligados(empresaId = null) {
+    setCarregando(true);
+    try {
+      const data = await getFuncionariosDesligados(empresaId);
+      setFuncionariosDesligados(data.funcionarios);
+      setCarregando(false);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function buscarHistoricoFuncionarioDesligado(id) {
+    setCarregando(true);
+    try {
+      const data = await getHistoricoFuncionarioDesligado(id, mes, ano);
+      setHistoricoFuncionarioDesligado(data);
       setCarregando(false);
     } catch (err) {
       setCarregando(false);
@@ -347,29 +380,73 @@ function GerenciarPontos() {
 
   // Verificar se pode navegar para o mês anterior (não pode ir antes da data de criação do usuário)
   function podeMesAnterior() {
+    // Se for funcionário desligado, usar data de desligamento
+    if (historicoFuncionarioDesligado?.funcionario?.dataDesligamento) {
+      const dataDesligamento = new Date(
+        historicoFuncionarioDesligado.funcionario.dataDesligamento + "T12:00:00"
+      );
+      const mesDesligamento = dataDesligamento.getMonth() + 1;
+      const anoDesligamento = dataDesligamento.getFullYear();
+
+      // Não pode ir para antes do mês de desligamento (mas pode ir antes da criação)
+      if (ano < anoDesligamento) return true; // Pode ir antes do desligamento
+      if (ano === anoDesligamento && mes <= mesDesligamento) return false;
+
+      // Verificar data de criação também
+      if (historicoFuncionarioDesligado?.funcionario?.dataCriacao) {
+        const dataCriacao = new Date(
+          historicoFuncionarioDesligado.funcionario.dataCriacao + "T12:00:00"
+        );
+        const mesCriacao = dataCriacao.getMonth() + 1;
+        const anoCriacao = dataCriacao.getFullYear();
+
+        if (ano < anoCriacao) return false;
+        if (ano === anoCriacao && mes <= mesCriacao) return false;
+      }
+
+      return true;
+    }
+
     if (!historicoFuncionario?.funcionario?.dataCriacao) return true;
-    
-    const dataCriacao = new Date(historicoFuncionario.funcionario.dataCriacao + "T12:00:00");
+
+    const dataCriacao = new Date(
+      historicoFuncionario.funcionario.dataCriacao + "T12:00:00"
+    );
     const mesCriacao = dataCriacao.getMonth() + 1;
     const anoCriacao = dataCriacao.getFullYear();
-    
+
     // Não pode ir para antes do mês de criação
     if (ano < anoCriacao) return false;
     if (ano === anoCriacao && mes <= mesCriacao) return false;
-    
+
     return true;
   }
 
-  // Verificar se pode navegar para o mês seguinte (não pode ir além do mês atual)
+  // Verificar se pode navegar para o mês seguinte (não pode ir além do mês atual ou data de desligamento)
   function podeMesSeguinte() {
+    // Se for funcionário desligado, não pode ir além da data de desligamento
+    if (historicoFuncionarioDesligado?.funcionario?.dataDesligamento) {
+      const dataDesligamento = new Date(
+        historicoFuncionarioDesligado.funcionario.dataDesligamento + "T12:00:00"
+      );
+      const mesDesligamento = dataDesligamento.getMonth() + 1;
+      const anoDesligamento = dataDesligamento.getFullYear();
+
+      // Não pode ir além do mês de desligamento
+      if (ano > anoDesligamento) return false;
+      if (ano === anoDesligamento && mes >= mesDesligamento) return false;
+
+      return true;
+    }
+
     const hoje = new Date();
     const mesAtual = hoje.getMonth() + 1;
     const anoAtual = hoje.getFullYear();
-    
+
     // Não pode ir além do mês atual
     if (ano > anoAtual) return false;
     if (ano === anoAtual && mes >= mesAtual) return false;
-    
+
     return true;
   }
 
@@ -404,6 +481,16 @@ function GerenciarPontos() {
     setFuncionarioSelecionado(null);
     setHistoricoFuncionario(null);
     buscarFuncionarios(empresaId);
+    
+    // Se estiver na aba de desligados, buscar também
+    if (abaAtiva === "desligados") {
+      buscarFuncionariosDesligados(empresaId);
+    }
+  }
+
+  function selecionarFuncionarioDesligado(func) {
+    setFuncionarioDesligadoSelecionado(func);
+    setDiaExpandido(null);
   }
 
   useEffect(() => {
@@ -426,6 +513,18 @@ function GerenciarPontos() {
       buscarHistoricoFuncionario(funcionarioSelecionado.id);
     }
   }, [funcionarioSelecionado, mes, ano]);
+
+  useEffect(() => {
+    if (funcionarioDesligadoSelecionado) {
+      buscarHistoricoFuncionarioDesligado(funcionarioDesligadoSelecionado.id);
+    }
+  }, [funcionarioDesligadoSelecionado, mes, ano]);
+
+  useEffect(() => {
+    if (abaAtiva === "desligados") {
+      buscarFuncionariosDesligados(empresaSelecionada);
+    }
+  }, [abaAtiva, empresaSelecionada]);
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-start p-6 overflow-hidden">
@@ -497,6 +596,22 @@ function GerenciarPontos() {
                   {pendentes.justificativas.length + pendentes.batidas.length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => {
+                setAbaAtiva("desligados");
+                buscarFuncionariosDesligados(empresaSelecionada);
+                setFuncionarioDesligadoSelecionado(null);
+                setHistoricoFuncionarioDesligado(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                abaAtiva === "desligados"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-white/5 text-white/70 hover:bg-white/10"
+              }`}
+            >
+              <Users size={18} />
+              Funcionários Desligados
             </button>
           </div>
 
@@ -704,7 +819,7 @@ function GerenciarPontos() {
                                                 Justificado
                                               </span>
                                             );
-                                          } else if (dia.status === "divergente" || dia.horasExtras > 0) {
+                                          } else if (dia.status === "divergente" || dia.horasExtras > 0 || dia.horasNegativas > 0) {
                                             return (
                                               <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
                                                 Div.
@@ -714,91 +829,116 @@ function GerenciarPontos() {
                                           return null;
                                         })()}
                                       </div>
-                                      {isExpanded ? (
-                                        <ChevronUp
-                                          size={14}
-                                          className="text-white/50"
-                                        />
-                                      ) : (
-                                        <ChevronDown
-                                          size={14}
-                                          className="text-white/50"
-                                        />
-                                      )}
+                                      <div className="flex items-center gap-2">
+                                        {dia.saldoDia !== undefined && (
+                                          <span className={`text-sm font-semibold ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {formatarHorasComSinal(dia.saldoDia)}
+                                          </span>
+                                        )}
+                                        {isExpanded ? (
+                                          <ChevronUp
+                                            size={14}
+                                            className="text-white/50"
+                                          />
+                                        ) : (
+                                          <ChevronDown
+                                            size={14}
+                                            className="text-white/50"
+                                          />
+                                        )}
+                                      </div>
                                     </div>
 
                                     {isExpanded && (
                                       <div className="border-t border-white/10 p-2 bg-white/5">
-                                        <div className="mb-2 text-xs">
-                                          <div>
-                                            <span className="text-white/50">
-                                              Extras:
-                                            </span>
-                                            <span className="text-green-400 ml-1">
-                                              +{formatarHorasParaHHMM(dia.horasExtras)}
-                                            </span>
+                                        {temBatidas ? (
+                                          <div className="space-y-2">
+                                            <p className="text-white/70 text-xs font-semibold mb-1">
+                                              Batidas de Ponto:
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                              {dia.batidas.map((b, idx) => (
+                                                <div
+                                                  key={idx}
+                                                  className={`px-3 py-2 rounded-lg border ${
+                                                    b.batida_status === "pendente"
+                                                      ? "bg-orange-500/20 border-orange-500/30 text-orange-400"
+                                                      : b.batida_status ===
+                                                        "recusada"
+                                                      ? "bg-red-500/20 border-red-500/30 text-red-400"
+                                                      : "bg-white/10 border-white/20 text-white"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="font-semibold">
+                                                      {b.batida_tipo === "entrada"
+                                                        ? "Entrada"
+                                                        : "Saída"}
+                                                    </span>
+                                                    <span className="text-sm">
+                                                      {formatarHora(
+                                                        b.batida_data_hora
+                                                      )}
+                                                    </span>
+                                                    {b.batida_status ===
+                                                      "pendente" && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-orange-500/30">
+                                                        Pendente
+                                                      </span>
+                                                    )}
+                                                    {b.batida_status ===
+                                                      "recusada" && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/30">
+                                                        Recusada
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
                                           </div>
-                                        </div>
-
-                                        {temBatidas && (
-                                          <div className="flex flex-wrap gap-1 mb-2">
-                                            {dia.batidas.map((b, idx) => (
-                                              <span
-                                                key={idx}
-                                                className={`px-2 py-1 rounded text-xs ${
-                                                  b.batida_status === "pendente"
-                                                    ? "bg-orange-500/20 text-orange-400"
-                                                    : b.batida_status ===
-                                                      "recusada"
-                                                    ? "bg-red-500/20 text-red-400"
-                                                    : "bg-white/10 text-white/70"
-                                                }`}
-                                              >
-                                                {b.batida_tipo === "entrada"
-                                                  ? "E"
-                                                  : "S"}
-                                                :{" "}
-                                                {formatarHora(
-                                                  b.batida_data_hora
-                                                )}
-                                                {b.batida_status ===
-                                                  "pendente" && " (pend.)"}
-                                              </span>
-                                            ))}
-                                          </div>
+                                        ) : (
+                                          <p className="text-white/50 text-xs text-center py-2">
+                                            Nenhuma batida registrada neste dia
+                                          </p>
                                         )}
 
                                         {dia.justificativas &&
                                           dia.justificativas.length > 0 && (
-                                            <div className="space-y-1">
-                                              {dia.justificativas.map(
-                                                (j, idx) => (
-                                                  <div
-                                                    key={idx}
-                                                    className={`px-2 py-1 rounded text-xs ${
-                                                      j.justificativa_status ===
+                                            <div className="mt-3 pt-3 border-t border-white/10">
+                                              <p className="text-white/70 text-xs font-semibold mb-2">
+                                                Justificativas:
+                                              </p>
+                                              <div className="space-y-1">
+                                                {dia.justificativas.map(
+                                                  (j, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      className={`px-2 py-1 rounded text-xs ${
+                                                        j.justificativa_status ===
+                                                        "pendente"
+                                                          ? "bg-orange-500/20 text-orange-400"
+                                                          : j.justificativa_status ===
+                                                            "aprovada"
+                                                          ? "bg-green-500/20 text-green-400"
+                                                          : "bg-red-500/20 text-red-400"
+                                                      }`}
+                                                    >
+                                                      {tiposJustificativa[
+                                                        j.justificativa_tipo
+                                                      ] || j.justificativa_tipo}
+                                                      {" - "}
+                                                      {j.justificativa_status ===
                                                       "pendente"
-                                                        ? "bg-orange-500/20 text-orange-400"
+                                                        ? "Pendente"
                                                         : j.justificativa_status ===
                                                           "aprovada"
-                                                        ? "bg-green-500/20 text-green-400"
-                                                        : "bg-red-500/20 text-red-400"
-                                                    }`}
-                                                  >
-                                                    {tiposJustificativa[
-                                                      j.justificativa_tipo
-                                                    ] || j.justificativa_tipo}
-                                                    {" - "}
-                                                    {j.justificativa_status ===
-                                                    "pendente"
-                                                      ? "Pendente"
-                                                      : j.justificativa_status ===
-                                                        "aprovada"
-                                                      ? "Aprovada"
-                                                      : "Recusada"}
-                                                  </div>
-                                                )
-                                              )}
+                                                        ? "Aprovada"
+                                                        : "Recusada"}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
                                             </div>
                                           )}
                                       </div>
@@ -945,6 +1085,358 @@ function GerenciarPontos() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Aba de Funcionários Desligados */}
+          {abaAtiva === "desligados" && (
+            <div className="space-y-4">
+              {/* Seleção de Empresa */}
+              <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Building2 size={20} />
+                  Selecione a Empresa
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {empresas.map((emp) => (
+                    <button
+                      key={emp.id}
+                      onClick={() => selecionarEmpresa(emp.id)}
+                      className={`p-3 rounded-lg text-left transition-colors ${
+                        empresaSelecionada === emp.id
+                          ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"
+                          : "bg-white/5 hover:bg-white/10 border border-white/10 text-white"
+                      }`}
+                    >
+                      <p className="font-medium truncate">{emp.nome}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lista de Funcionários Desligados e Histórico */}
+              {empresaSelecionada && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Lista de Funcionários Desligados */}
+                  <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                    <h2 className="text-lg font-semibold text-white mb-4">
+                      Funcionários Desligados
+                    </h2>
+                    {funcionariosDesligados.length === 0 ? (
+                      <p className="text-white/50 text-center py-4">
+                        Nenhum funcionário desligado encontrado
+                      </p>
+                    ) : (
+                      <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                        {funcionariosDesligados.map((func) => (
+                          <button
+                            key={func.id}
+                            onClick={() => selecionarFuncionarioDesligado(func)}
+                            className={`w-full text-left p-3 rounded-lg transition-colors ${
+                              funcionarioDesligadoSelecionado?.id === func.id
+                                ? "bg-emerald-500/20 border border-emerald-500/30"
+                                : "bg-white/5 hover:bg-white/10 border border-white/10"
+                            }`}
+                          >
+                            <p className="text-white font-medium">{func.nome}</p>
+                            {func.data_desligamento && (
+                              <p className="text-white/50 text-xs mt-1">
+                                Desligado em: {formatarData(func.data_desligamento)}
+                              </p>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Histórico do Funcionário Desligado */}
+                  <div className="md:col-span-2 bg-white/5 rounded-lg border border-white/10 p-4">
+                    {!funcionarioDesligadoSelecionado ? (
+                      <div className="flex items-center justify-center h-full text-white/50 py-8">
+                        Selecione um funcionário desligado para ver o histórico
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h2 className="text-lg font-semibold text-white">
+                              {funcionarioDesligadoSelecionado.nome}
+                            </h2>
+                            {historicoFuncionarioDesligado?.funcionario
+                              ?.dataDesligamento && (
+                              <p className="text-white/50 text-sm mt-1">
+                                Desligado em:{" "}
+                                {formatarData(
+                                  historicoFuncionarioDesligado.funcionario
+                                    .dataDesligamento
+                                )}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => mudarMes(-1)}
+                              disabled={!podeMesAnterior()}
+                              className={`p-1 rounded ${
+                                podeMesAnterior()
+                                  ? "bg-white/5 hover:bg-white/10 text-white"
+                                  : "bg-white/5 text-white/30 cursor-not-allowed"
+                              }`}
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <span className="text-sm min-w-[120px] text-center">
+                              {meses[mes - 1]} {ano}
+                            </span>
+                            <button
+                              onClick={() => mudarMes(1)}
+                              disabled={!podeMesSeguinte()}
+                              className={`p-1 rounded ${
+                                podeMesSeguinte()
+                                  ? "bg-white/5 hover:bg-white/10 text-white"
+                                  : "bg-white/5 text-white/30 cursor-not-allowed"
+                              }`}
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {historicoFuncionarioDesligado && (
+                          <>
+                            {/* Banco de Horas */}
+                            <div className="flex gap-4 mb-4">
+                              <div className="flex-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-lg p-3 border border-indigo-500/30">
+                                <p className="text-white/70 text-xs">
+                                  Banco de Horas
+                                </p>
+                                <p
+                                  className={`text-xl font-bold ${
+                                    historicoFuncionarioDesligado.bancoHoras >= 0
+                                      ? "text-green-400"
+                                      : "text-red-400"
+                                  }`}
+                                >
+                                  {formatarBancoHoras(
+                                    historicoFuncionarioDesligado.bancoHoras
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Lista de Dias */}
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                              {historicoFuncionarioDesligado.dias.map((dia) => {
+                                const isExpanded = diaExpandido === dia.data;
+                                const temBatidas =
+                                  dia.batidas && dia.batidas.length > 0;
+
+                                return (
+                                  <div
+                                    key={dia.data}
+                                    className="bg-white/5 rounded border border-white/10"
+                                  >
+                                    <div
+                                      className="p-2 flex items-center justify-between cursor-pointer hover:bg-white/5"
+                                      onClick={() =>
+                                        setDiaExpandido(
+                                          isExpanded ? null : dia.data
+                                        )
+                                      }
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex flex-col">
+                                          <div className="flex items-center gap-1">
+                                            <span className="text-white text-sm w-12">
+                                              {formatarData(dia.data).slice(0, 5)}
+                                            </span>
+                                            <span className="text-white/50 text-xs">
+                                              {obterDiaSemanaAbrev(dia.data)}
+                                            </span>
+                                          </div>
+                                          {dia.feriado && (
+                                            <span className="text-purple-400 text-xs mt-0.5">
+                                              {dia.feriado}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-white/70 text-xs">
+                                          {formatarHorasParaHHMM(
+                                            dia.horasTrabalhadas
+                                          )}
+                                        </span>
+                                        {(() => {
+                                          const temJustAprovada =
+                                            dia.justificativas?.some(
+                                              (j) =>
+                                                j.justificativa_status ===
+                                                "aprovada"
+                                            );
+                                          const temJustPendente =
+                                            dia.justificativas?.some(
+                                              (j) =>
+                                                j.justificativa_status ===
+                                                "pendente"
+                                            );
+                                          const temJustRecusada =
+                                            dia.justificativas?.some(
+                                              (j) =>
+                                                j.justificativa_status ===
+                                                "recusada"
+                                            ) &&
+                                            !temJustAprovada &&
+                                            !temJustPendente;
+
+                                          if (temJustAprovada || temJustPendente) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-green-500/20 text-green-400">
+                                                Justificado
+                                              </span>
+                                            );
+                                          } else if (temJustRecusada) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-red-500/20 text-red-400">
+                                                Justificado
+                                              </span>
+                                            );
+                                          } else if (
+                                            dia.status === "divergente" ||
+                                            dia.horasExtras > 0 ||
+                                            dia.horasNegativas > 0
+                                          ) {
+                                            return (
+                                              <span className="px-1 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">
+                                                Div.
+                                              </span>
+                                            );
+                                          }
+                                          return null;
+                                        })()}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {dia.saldoDia !== undefined && (
+                                          <span className={`text-sm font-semibold ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {formatarHorasComSinal(dia.saldoDia)}
+                                          </span>
+                                        )}
+                                        {isExpanded ? (
+                                          <ChevronUp
+                                            size={14}
+                                            className="text-white/50"
+                                          />
+                                        ) : (
+                                          <ChevronDown
+                                            size={14}
+                                            className="text-white/50"
+                                          />
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {isExpanded && (
+                                      <div className="border-t border-white/10 p-2 bg-white/5">
+                                        {temBatidas ? (
+                                          <div className="space-y-2">
+                                            <p className="text-white/70 text-xs font-semibold mb-1">
+                                              Batidas de Ponto:
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                              {dia.batidas.map((b, idx) => (
+                                                <div
+                                                  key={idx}
+                                                  className={`px-3 py-2 rounded-lg border ${
+                                                    b.batida_status === "pendente"
+                                                      ? "bg-orange-500/20 border-orange-500/30 text-orange-400"
+                                                      : b.batida_status ===
+                                                        "recusada"
+                                                      ? "bg-red-500/20 border-red-500/30 text-red-400"
+                                                      : "bg-white/10 border-white/20 text-white"
+                                                  }`}
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <span className="font-semibold">
+                                                      {b.batida_tipo === "entrada"
+                                                        ? "Entrada"
+                                                        : "Saída"}
+                                                    </span>
+                                                    <span className="text-sm">
+                                                      {formatarHora(b.batida_data_hora)}
+                                                    </span>
+                                                    {b.batida_status ===
+                                                      "pendente" && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-orange-500/30">
+                                                        Pendente
+                                                      </span>
+                                                    )}
+                                                    {b.batida_status ===
+                                                      "recusada" && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/30">
+                                                        Recusada
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <p className="text-white/50 text-xs text-center py-2">
+                                            Nenhuma batida registrada neste dia
+                                          </p>
+                                        )}
+
+                                        {dia.justificativas &&
+                                          dia.justificativas.length > 0 && (
+                                            <div className="mt-3 pt-3 border-t border-white/10">
+                                              <p className="text-white/70 text-xs font-semibold mb-2">
+                                                Justificativas:
+                                              </p>
+                                              <div className="space-y-1">
+                                                {dia.justificativas.map(
+                                                  (j, idx) => (
+                                                    <div
+                                                      key={idx}
+                                                      className={`px-2 py-1 rounded text-xs ${
+                                                        j.justificativa_status ===
+                                                        "pendente"
+                                                          ? "bg-orange-500/20 text-orange-400"
+                                                          : j.justificativa_status ===
+                                                            "aprovada"
+                                                          ? "bg-green-500/20 text-green-400"
+                                                          : "bg-red-500/20 text-red-400"
+                                                      }`}
+                                                    >
+                                                      {tiposJustificativa[
+                                                        j.justificativa_tipo
+                                                      ] || j.justificativa_tipo}
+                                                      {" - "}
+                                                      {j.justificativa_status ===
+                                                      "pendente"
+                                                        ? "Pendente"
+                                                        : j.justificativa_status ===
+                                                          "aprovada"
+                                                        ? "Aprovada"
+                                                        : "Recusada"}
+                                                    </div>
+                                                  )
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
