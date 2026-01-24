@@ -7,6 +7,7 @@ import {
   PerfilJornada,
   Feriado,
   Empresa,
+  Funcionario,
 } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
@@ -329,10 +330,20 @@ export async function getRelatorioMensal(req, res) {
   }
 
   // Obter data de criação do usuário (usando parseDateOnly para evitar problemas de timezone)
-  const usuarioCompleto = await Usuario.findByPk(usuario_id);
+  const usuarioCompleto = await Usuario.findByPk(usuario_id, {
+    include: [
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: ["funcionario_batida_fora_empresa"],
+      },
+    ],
+  });
   const dataCriacaoUsuario = usuarioCompleto?.usuario_data_criacao 
     ? parseDateOnly(usuarioCompleto.usuario_data_criacao)
     : null;
+  const batidaForaEmpresa =
+    usuarioCompleto?.funcionario?.funcionario_batida_fora_empresa === 1;
 
   const inicioMes = new Date(parseInt(ano), parseInt(mes) - 1, 1);
   const fimMes = new Date(parseInt(ano), parseInt(mes), 0);
@@ -365,6 +376,7 @@ export async function getRelatorioMensal(req, res) {
         info: {
           mensagem: "O usuário ainda não existia neste período",
           dataCriacao: formatarDataStr(dataCriacaoUsuario),
+          batidaForaEmpresa,
         }
       });
     }
@@ -421,6 +433,7 @@ export async function getRelatorioMensal(req, res) {
       tipo: b.batida_tipo,
       dataHora: b.batida_data_hora,
       status: b.batida_status,
+      batida_foto_caminho: b.batida_foto_caminho,
     });
   });
 
@@ -548,6 +561,7 @@ export async function getRelatorioMensal(req, res) {
       dataLimite: formatarDataStr(dataLimite),
       dataCriacao: dataCriacaoUsuario ? formatarDataStr(dataCriacaoUsuario) : null,
       primeiroDiaExibido: primeiroDia,
+      batidaForaEmpresa,
     }
   });
 }

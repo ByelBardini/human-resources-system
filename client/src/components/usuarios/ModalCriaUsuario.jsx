@@ -25,6 +25,7 @@ function ModalCriaUsuario({
   const [perfilJornadaId, setPerfilJornadaId] = useState("");
   const [empresaId, setEmpresaId] = useState("");
   const [funcionarioId, setFuncionarioId] = useState("");
+  const [batidaForaEmpresa, setBatidaForaEmpresa] = useState(false);
   const [cargos, setCargos] = useState([]);
   const [perfisJornada, setPerfisJornada] = useState([]);
   const [empresas, setEmpresas] = useState([]);
@@ -66,6 +67,8 @@ function ModalCriaUsuario({
         empresa_id: tipoUsuario === "funcionario" ? empresaId : null,
         funcionario_id: tipoUsuario === "funcionario" ? funcionarioId : null,
         tipo_usuario: tipoUsuario,
+        batida_fora_empresa:
+          tipoUsuario === "funcionario" ? batidaForaEmpresa : undefined,
       });
 
       mostrarAviso(
@@ -103,6 +106,7 @@ function ModalCriaUsuario({
     setPerfilJornadaId("");
     setEmpresaId("");
     setFuncionarioId("");
+    setBatidaForaEmpresa(false);
     setFuncionariosSemUsuario([]);
   }, [cadastrado]);
 
@@ -138,6 +142,7 @@ function ModalCriaUsuario({
         setEmpresaId("");
         setFuncionariosSemUsuario([]);
         setFuncionarioId("");
+        setBatidaForaEmpresa(false);
       }
     }
     buscarDadosFuncionario();
@@ -384,6 +389,20 @@ function ModalCriaUsuario({
                 </select>
               )}
             </div>
+          )}
+
+          {tipoUsuario === "funcionario" && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={batidaForaEmpresa}
+                onChange={(e) => setBatidaForaEmpresa(e.target.checked)}
+                className="w-4 h-4 rounded bg-white/10 border border-white/20 text-white focus:ring-2 focus:ring-white/30"
+              />
+              <span className="text-sm text-white/70">
+                Batidas de ponto fora da empresa
+              </span>
+            </label>
           )}
         </div>
 

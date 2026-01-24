@@ -487,7 +487,25 @@ export async function registrarBatida(req, res) {
   requirePermissao(req, "ponto.registrar");
 
   const usuario_id = getUsuarioId(req);
-  const usuario = req.user;
+  const usuarioCompleto = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_id", "usuario_funcionario_id"],
+    include: [
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: ["funcionario_batida_fora_empresa"],
+      },
+    ],
+  });
+
+  const exigeFoto =
+    usuarioCompleto?.funcionario?.funcionario_batida_fora_empresa === 1;
+
+  if (exigeFoto && !req.file) {
+    throw ApiError.badRequest("Foto obrigatoria para batida fora da empresa.");
+  }
+
+  const fotoPath = req.file ? `/uploads/batidas/${req.file.filename}` : null;
 
   // Usar fuso horário de Brasília
   const agora = getDataHoraBrasilia();
@@ -520,6 +538,7 @@ export async function registrarBatida(req, res) {
     batida_data_hora: agora,
     batida_tipo: proximaBatida,
     batida_status: "normal",
+    ...(fotoPath ? { batida_foto_caminho: fotoPath } : {}),
   });
 
   // Recalcular dia
@@ -609,10 +628,20 @@ export async function getPontoHoje(req, res) {
   const proximaBatida = determinarProximaBatida(batidas);
 
   // Calcular saldo do banco de horas ACUMULADO (desde a data de início até hoje)
-  const usuarioCompleto = await Usuario.findByPk(usuario_id);
+  const usuarioCompleto = await Usuario.findByPk(usuario_id, {
+    include: [
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: ["funcionario_batida_fora_empresa"],
+      },
+    ],
+  });
   const dataCriacaoUsuario = usuarioCompleto?.usuario_data_criacao
     ? parseDateOnly(usuarioCompleto.usuario_data_criacao)
     : null;
+  const batidaForaEmpresa =
+    usuarioCompleto?.funcionario?.funcionario_batida_fora_empresa === 1;
 
   const mesAtual = dataAtual.getMonth() + 1;
   const anoAtual = dataAtual.getFullYear();
@@ -785,6 +814,9 @@ export async function getPontoHoje(req, res) {
       // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
       let deveIncluirNoBanco = true;
       if (eDiaAtual) {
+        const batidasValidasDoDia = batidasDoDia.filter(
+          (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+        );
         const saidasDoDia = batidasValidasDoDia.filter(
           (b) => b.batida_tipo === "saida"
         );
@@ -804,6 +836,7 @@ export async function getPontoHoje(req, res) {
   return res.status(200).json({
     funcionario: {
       nome: usuario.usuario_nome,
+      batida_fora_empresa: batidaForaEmpresa,
     },
     dataAtual: dataAtual.toISOString().split("T")[0],
     jornadaPrevista: horasPrevistas
@@ -918,6 +951,32 @@ export async function adicionarBatidaManual(req, res) {
   const usuarioAlvoId =
     podeAprovar && para_usuario_id ? para_usuario_id : usuario_id;
 
+  const usuarioAlvo = await Usuario.findByPk(usuarioAlvoId, {
+    attributes: ["usuario_id"],
+    include: [
+      {
+        model: Funcionario,
+        as: "funcionario",
+        attributes: ["funcionario_batida_fora_empresa"],
+      },
+    ],
+  });
+
+  if (!usuarioAlvo) {
+    throw ApiError.notFound("Usuário não encontrado");
+  }
+
+  const exigeFoto =
+    usuarioAlvo.funcionario?.funcionario_batida_fora_empresa === 1;
+
+  if (exigeFoto && !req.file) {
+    throw ApiError.badRequest(
+      "Anexo obrigatório para batida manual fora da empresa."
+    );
+  }
+
+  const fotoPath = req.file ? `/uploads/batidas/${req.file.filename}` : null;
+
   // Definir status baseado na permissão do usuário
   const status = podeAprovar ? "aprovada" : "pendente";
 
@@ -930,6 +989,7 @@ export async function adicionarBatidaManual(req, res) {
     batida_observacao: observacao,
     batida_aprovador_id: podeAprovar ? usuario_id : null,
     batida_data_aprovacao: podeAprovar ? new Date() : null,
+    ...(fotoPath ? { batida_foto_caminho: fotoPath } : {}),
   });
 
   // Se a batida foi aprovada automaticamente, recalcular o dia
@@ -1177,6 +1237,7 @@ export async function getHistoricoFuncionario(req, res) {
       batida_tipo: b.batida_tipo,
       batida_data_hora: b.batida_data_hora,
       batida_status: b.batida_status,
+      batida_foto_caminho: b.batida_foto_caminho,
     });
   });
 
@@ -1483,6 +1544,9 @@ export async function getHistoricoFuncionario(req, res) {
       // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
       let deveIncluirNoBanco = true;
       if (eDiaAtual) {
+        const batidasValidasDoDia = batidasDoDia.filter(
+          (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+        );
         const saidasDoDia = batidasValidasDoDia.filter(
           (b) => b.batida_tipo === "saida"
         );
@@ -1752,6 +1816,67 @@ export async function reprovarBatida(req, res) {
   });
 }
 
+// Invalidar batida (marca como recusada)
+export async function invalidarBatida(req, res) {
+  requirePermissao(req, "invalidar_batida_ponto");
+
+  const usuario_id = getUsuarioId(req);
+  const { id } = req.params;
+  const { motivo } = req.body;
+
+  const batida = await BatidaPonto.findByPk(id);
+
+  if (!batida) {
+    throw ApiError.notFound("Batida nao encontrada");
+  }
+
+  if (batida.batida_status === "recusada") {
+    throw ApiError.badRequest("Batida ja esta recusada");
+  }
+
+  batida.batida_status = "recusada";
+  batida.batida_aprovador_id = usuario_id;
+  batida.batida_data_aprovacao = new Date();
+  if (motivo) {
+    batida.batida_observacao =
+      (batida.batida_observacao || "") + ` | Motivo invalidacao: ${motivo}`;
+  }
+  await batida.save();
+
+  // Recalcular dia removendo a batida invalida
+  const dataBatida = new Date(batida.batida_data_hora);
+  const dataStr = dataBatida.toISOString().split("T")[0];
+  const data = new Date(dataStr);
+
+  const inicioDia = new Date(data);
+  inicioDia.setHours(0, 0, 0, 0);
+  const fimDia = new Date(data);
+  fimDia.setHours(23, 59, 59, 999);
+
+  const batidaUsuarioId = batida.batida_usuario_id;
+
+  const batidasValidas = await BatidaPonto.findAll({
+    where: {
+      batida_usuario_id: batidaUsuarioId,
+      batida_data_hora: {
+        [Op.between]: [inicioDia, fimDia],
+      },
+      batida_status: {
+        [Op.in]: ["normal", "aprovada"],
+      },
+    },
+    order: [["batida_data_hora", "ASC"]],
+  });
+
+  const perfil = await getPerfilJornadaUsuario(batidaUsuarioId);
+  await calcularESalvarDia(batidaUsuarioId, data, batidasValidas, perfil);
+
+  return res.status(200).json({
+    batida,
+    mensagem: "Batida invalidada",
+  });
+}
+
 // Fechar/Zerar banco de horas de um usuário
 export async function fecharBancoHoras(req, res) {
   requirePermissao(req, "ponto.alterar_batidas");
@@ -1985,6 +2110,9 @@ export async function recalcularBancoHoras(req, res) {
       // Se for o dia atual, só incluir no banco de horas se houver pelo menos 2 saídas válidas
       let deveIncluirNoBanco = true;
       if (eDiaAtual) {
+        const batidasValidasDoDia = batidasDoDia.filter(
+          (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
+        );
         const saidasDoDia = batidasValidasDoDia.filter(
           (b) => b.batida_tipo === "saida"
         );

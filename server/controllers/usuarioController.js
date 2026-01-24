@@ -25,8 +25,21 @@ function requirePermissao(req, codigoPermissao) {
   return usuario;
 }
 
+function parseBooleanFlag(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
 export async function registrarUsuario(req, res) {
-  const { usuario_nome, usuario_login, usuario_cargo_id, perfil_jornada_id, empresa_id, tipo_usuario, funcionario_id } = req.body;
+  const {
+    usuario_nome,
+    usuario_login,
+    usuario_cargo_id,
+    perfil_jornada_id,
+    empresa_id,
+    tipo_usuario,
+    funcionario_id,
+    batida_fora_empresa,
+  } = req.body;
   requirePermissao(req, "usuarios.gerenciar");
 
   if (!usuario_nome || !usuario_login) {
@@ -70,6 +83,17 @@ export async function registrarUsuario(req, res) {
     if (usuarioExistente) {
       throw ApiError.badRequest("Este funcionário já possui um usuário vinculado.");
     }
+
+    const batidaForaEmpresa = parseBooleanFlag(batida_fora_empresa);
+
+    await funcionario.update(
+      {
+        funcionario_batida_fora_empresa: batidaForaEmpresa ? 1 : 0,
+      },
+      {
+        usuario_id: requireUser(req).usuario_id,
+      }
+    );
 
     // Verificar se o perfil de jornada existe
     const perfilJornada = await PerfilJornada.findByPk(perfil_jornada_id);

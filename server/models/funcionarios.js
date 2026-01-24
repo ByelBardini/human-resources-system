@@ -81,6 +81,11 @@ Funcionario.init(
       defaultValue: 1,
       allowNull: false,
     },
+    funcionario_batida_fora_empresa: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,

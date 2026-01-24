@@ -23,6 +23,7 @@ import {
   getPendentes,
   aprovarBatida,
   reprovarBatida,
+  invalidarBatida,
   fecharBancoHoras,
   recalcularBancoHoras,
   exportarPontoExcel,
@@ -96,6 +97,18 @@ function GerenciarPontos() {
     "Novembro",
     "Dezembro",
   ];
+
+  function baixarFotoBatida(caminho) {
+    if (!caminho) return;
+    const url = `${import.meta.env.VITE_API_BASE_URL}${caminho}`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = caminho.split("/").pop() || "batida.jpg";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
 
   const tiposJustificativa = {
     esqueceu_bater: "Esqueceu de bater ponto",
@@ -241,8 +254,13 @@ function GerenciarPontos() {
 
     setCarregando(true);
     try {
-      await reprovarBatida(modalReprovar.id, motivoReprovar);
-      mostrarAviso("sucesso", "Batida reprovada!");
+      if (modalReprovar.acao === "invalidar") {
+        await invalidarBatida(modalReprovar.id, motivoReprovar);
+        mostrarAviso("sucesso", "Batida invalidada!");
+      } else {
+        await reprovarBatida(modalReprovar.id, motivoReprovar);
+        mostrarAviso("sucesso", "Batida reprovada!");
+      }
       setModalReprovar(null);
       setMotivoReprovar("");
       setTimeout(() => {
@@ -889,6 +907,39 @@ function GerenciarPontos() {
                                                         Recusada
                                                       </span>
                                                     )}
+                                                    {b.batida_foto_caminho && (
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          baixarFotoBatida(
+                                                            b.batida_foto_caminho
+                                                          )
+                                                        }
+                                                        className="p-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                                        title="Baixar foto"
+                                                      >
+                                                        <Download size={14} />
+                                                      </button>
+                                                    )}
+                                                    {temPermissao(
+                                                      "invalidar_batida_ponto"
+                                                    ) &&
+                                                      b.batida_status !==
+                                                        "recusada" && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            setModalReprovar({
+                                                              id: b.batida_id,
+                                                              acao: "invalidar",
+                                                            })
+                                                          }
+                                                          className="p-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                                          title="Invalidar"
+                                                        >
+                                                          <XCircle size={14} />
+                                                        </button>
+                                                      )}
                                                   </div>
                                                 </div>
                                               ))}
@@ -1064,11 +1115,23 @@ function GerenciarPontos() {
                               >
                                 <CheckCircle size={18} />
                               </button>
+                              {b.batida_foto_caminho && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    baixarFotoBatida(b.batida_foto_caminho)
+                                  }
+                                  className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                  title="Baixar foto"
+                                >
+                                  <Download size={18} />
+                                </button>
+                              )}
                               <button
                                 onClick={() =>
                                   setModalReprovar({
                                     id: b.batida_id,
-                                    tipo: "batida",
+                                    acao: "reprovar",
                                   })
                                 }
                                 className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
@@ -1368,6 +1431,39 @@ function GerenciarPontos() {
                                                         Recusada
                                                       </span>
                                                     )}
+                                                    {b.batida_foto_caminho && (
+                                                      <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                          baixarFotoBatida(
+                                                            b.batida_foto_caminho
+                                                          )
+                                                        }
+                                                        className="p-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                                        title="Baixar foto"
+                                                      >
+                                                        <Download size={14} />
+                                                      </button>
+                                                    )}
+                                                    {temPermissao(
+                                                      "invalidar_batida_ponto"
+                                                    ) &&
+                                                      b.batida_status !==
+                                                        "recusada" && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() =>
+                                                            setModalReprovar({
+                                                              id: b.batida_id,
+                                                              acao: "invalidar",
+                                                            })
+                                                          }
+                                                          className="p-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+                                                          title="Invalidar"
+                                                        >
+                                                          <XCircle size={14} />
+                                                        </button>
+                                                      )}
                                                   </div>
                                                 </div>
                                               ))}
@@ -1440,20 +1536,28 @@ function GerenciarPontos() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
             <h2 className="text-2xl font-semibold text-white mb-4">
-              Reprovar Batida
+              {modalReprovar.acao === "invalidar"
+                ? "Invalidar Batida"
+                : "Reprovar Batida"}
             </h2>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-white/70 text-sm mb-2">
-                  Motivo da reprovação (opcional)
+                  {modalReprovar.acao === "invalidar"
+                    ? "Motivo da invalidacao (opcional)"
+                    : "Motivo da reprovacao (opcional)"}
                 </label>
                 <textarea
                   value={motivoReprovar}
                   onChange={(e) => setMotivoReprovar(e.target.value)}
                   rows={3}
                   className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white"
-                  placeholder="Informe o motivo da reprovação..."
+                  placeholder={
+                    modalReprovar.acao === "invalidar"
+                      ? "Informe o motivo da invalidacao..."
+                      : "Informe o motivo da reprovacao..."
+                  }
                 />
               </div>
 
@@ -1472,7 +1576,7 @@ function GerenciarPontos() {
                   disabled={carregando}
                   className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  Reprovar
+                  {modalReprovar.acao === "invalidar" ? "Invalidar" : "Reprovar"}
                 </button>
               </div>
             </div>

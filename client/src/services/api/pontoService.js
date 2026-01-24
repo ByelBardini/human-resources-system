@@ -1,9 +1,16 @@
 import { handleApiError } from "./handleApiError.js";
 import { api } from "../api.js";
 
-export async function registrarBatida() {
+export async function registrarBatida(fotoFile) {
   try {
-    const response = await api.post("/ponto/registrar");
+    const fd = new FormData();
+    if (fotoFile) {
+      fd.append("foto", fotoFile);
+    }
+    const response = await api.post("/ponto/registrar", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true,
+    });
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao registrar batida:");
@@ -39,12 +46,27 @@ export async function getBancoHoras() {
   }
 }
 
-export async function adicionarBatida(data_hora, tipo, observacao) {
+export async function adicionarBatida(
+  data_hora,
+  tipo,
+  observacao,
+  para_usuario_id,
+  fotoFile
+) {
   try {
-    const response = await api.post("/ponto/adicionar-batida", {
-      data_hora,
-      tipo,
-      observacao,
+    const fd = new FormData();
+    fd.append("data_hora", data_hora);
+    fd.append("tipo", tipo);
+    fd.append("observacao", observacao);
+    if (para_usuario_id) {
+      fd.append("para_usuario_id", para_usuario_id);
+    }
+    if (fotoFile) {
+      fd.append("foto", fotoFile);
+    }
+    const response = await api.post("/ponto/adicionar-batida", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true,
     });
     return response.data;
   } catch (err) {
@@ -145,6 +167,17 @@ export async function reprovarBatida(id, motivo) {
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao reprovar batida:");
+  }
+}
+
+export async function invalidarBatida(id, motivo) {
+  try {
+    const response = await api.put(`/ponto/gestao/batida/${id}/invalidar`, {
+      motivo,
+    });
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao invalidar batida:");
   }
 }
 

@@ -6,6 +6,10 @@ import path from "path";
 import { Op } from "sequelize";
 import bcrypt from "bcrypt";
 
+function parseBooleanFlag(value) {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
 // Função para obter empresas permitidas para uma permissão específica
 async function getEmpresasPermitidasParaPermissao(usuario, codigoPermissao) {
   // Buscar a permissão pelo código
@@ -255,7 +259,12 @@ export async function putFuncionario(req, res) {
     funcionario_nivel,
     funcionario_celular,
     funcionario_observacao,
+    funcionario_batida_fora_empresa,
   } = req.body;
+  const batidaForaEmpresa =
+    typeof funcionario_batida_fora_empresa !== "undefined"
+      ? parseBooleanFlag(funcionario_batida_fora_empresa)
+      : undefined;
   console.log(req.body);
   const fotoPath = req.file ? `/uploads/fotos/${req.file.filename}` : null;
   const caminhoNovaFoto = req.file ? path.resolve(req.file.path) : null;
@@ -300,6 +309,9 @@ export async function putFuncionario(req, res) {
       funcionario_nivel_id: nivel.nivel_id,
       funcionario_celular,
       funcionario_observacao,
+      ...(batidaForaEmpresa !== undefined
+        ? { funcionario_batida_fora_empresa: batidaForaEmpresa ? 1 : 0 }
+        : {}),
       ...(fotoPath ? { funcionario_imagem_caminho: fotoPath } : {}),
     },
     {
@@ -333,8 +345,10 @@ export async function postFuncionario(req, res) {
     criar_usuario,
     perfil_jornada_id,
     usuario_login,
+    funcionario_batida_fora_empresa,
   } = req.body;
   const fotoPath = req.file ? `/uploads/fotos/${req.file.filename}` : null;
+  const batidaForaEmpresa = parseBooleanFlag(funcionario_batida_fora_empresa);
 
   if (
     !funcionario_empresa_id ||
@@ -391,6 +405,7 @@ export async function postFuncionario(req, res) {
         funcionario_data_nascimento,
         funcionario_data_admissao,
         funcionario_imagem_caminho: fotoPath,
+        funcionario_batida_fora_empresa: batidaForaEmpresa ? 1 : 0,
       },
       {
         transaction: t,

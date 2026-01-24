@@ -40,6 +40,7 @@ function RelatorioMensal() {
   const [batidaTipo, setBatidaTipo] = useState("entrada");
   const [batidaHora, setBatidaHora] = useState("");
   const [batidaObservacao, setBatidaObservacao] = useState("");
+  const [batidaAnexo, setBatidaAnexo] = useState(null);
 
   // Modal de justificativa
   const [modalJustificativa, setModalJustificativa] = useState(false);
@@ -101,21 +102,31 @@ function RelatorioMensal() {
   }
 
   async function handleAdicionarBatida() {
+    const exigeAnexo = relatorio?.info?.batidaForaEmpresa;
     if (!batidaHora || !batidaObservacao.trim()) {
       mostrarAviso("erro", "Hora e observação são obrigatórios", true);
+      return;
+    }
+    if (exigeAnexo && !batidaAnexo) {
+      mostrarAviso(
+        "erro",
+        "Anexo obrigatório para batida manual fora da empresa",
+        true
+      );
       return;
     }
 
     setCarregando(true);
     try {
       const dataHora = `${batidaData}T${batidaHora}:00`;
-      await adicionarBatida(dataHora, batidaTipo, batidaObservacao);
+      await adicionarBatida(dataHora, batidaTipo, batidaObservacao, null, batidaAnexo);
       mostrarAviso("sucesso", "Batida registrada e aguardando aprovação!");
       setTimeout(() => {
         limparAviso();
         setModalBatida(false);
         setBatidaHora("");
         setBatidaObservacao("");
+        setBatidaAnexo(null);
         buscarRelatorio();
       }, 1000);
     } catch (err) {
@@ -711,6 +722,22 @@ function RelatorioMensal() {
                 />
               </div>
 
+              {relatorio?.info?.batidaForaEmpresa && (
+                <div>
+                  <label className="block text-white/70 text-sm mb-2">
+                    Anexo (obrigatório)
+                  </label>
+                  <input
+                    type="file"
+                    onChange={(e) =>
+                      setBatidaAnexo(e.target.files?.[0] || null)
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
+                    accept="image/*"
+                  />
+                </div>
+              )}
+
               <p className="text-orange-400 text-sm">
                 ⚠️ Esta batida ficará pendente até ser aprovada por um gestor.
               </p>
@@ -721,6 +748,7 @@ function RelatorioMensal() {
                     setModalBatida(false);
                     setBatidaHora("");
                     setBatidaObservacao("");
+                    setBatidaAnexo(null);
                   }}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >

@@ -40,6 +40,7 @@ function AdicionaFuncionarioModal({
   const [perfilJornadaId, setPerfilJornadaId] = useState("");
   const [loginUsuario, setLoginUsuario] = useState("");
   const [perfisJornada, setPerfisJornada] = useState([]);
+  const [batidaForaEmpresa, setBatidaForaEmpresa] = useState(false);
 
   async function getCargosSetores() {
     const id = localStorage.getItem("empresa_id");
@@ -185,6 +186,7 @@ function AdicionaFuncionarioModal({
       funcionario_sexo: sexo,
       funcionario_data_nascimento: nascimento,
       funcionario_data_admissao: admissao,
+      funcionario_batida_fora_empresa: batidaForaEmpresa,
     };
 
     // Adicionar campos para criação de usuário se checkbox estiver marcado
@@ -488,6 +490,20 @@ function AdicionaFuncionarioModal({
                   />
                   <span className="text-sm text-white/70">
                     Cadastrar usuário para este funcionário
+                  </span>
+                </label>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={batidaForaEmpresa}
+                    onChange={(e) => setBatidaForaEmpresa(e.target.checked)}
+                    className="w-4 h-4 rounded bg-white/10 border border-white/20 text-white focus:ring-2 focus:ring-white/30"
+                  />
+                  <span className="text-sm text-white/70">
+                    Batidas de ponto fora da empresa
                   </span>
                 </label>
               </div>

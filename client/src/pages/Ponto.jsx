@@ -16,6 +16,8 @@ function Ponto() {
 
   const [carregando, setCarregando] = useState(false);
   const [pontoData, setPontoData] = useState(null);
+  const [fotoFile, setFotoFile] = useState(null);
+  const [fotoPreview, setFotoPreview] = useState(null);
 
   async function deslogar() {
     localStorage.clear();
@@ -44,10 +46,17 @@ function Ponto() {
   }
 
   async function handleRegistrarPonto() {
+    if (pontoData?.funcionario?.batida_fora_empresa && !fotoFile) {
+      mostrarAviso("erro", "Foto obrigatoria para registrar a batida.", true);
+      return;
+    }
     setCarregando(true);
     try {
-      const resultado = await registrarBatida();
+      const resultado = await registrarBatida(fotoFile);
       mostrarAviso("sucesso", resultado.mensagem);
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+      setFotoFile(null);
+      setFotoPreview(null);
       setTimeout(() => {
         limparAviso();
         buscarPontoHoje();
@@ -56,6 +65,19 @@ function Ponto() {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
     }
+  }
+
+  function onSelectFoto(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      mostrarAviso("erro", "Selecione apenas imagens para a foto.", true);
+      return;
+    }
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    const url = URL.createObjectURL(file);
+    setFotoFile(file);
+    setFotoPreview(url);
   }
 
   function formatarData(dataStr) {
@@ -90,6 +112,12 @@ function Ponto() {
     buscarPontoHoje();
     document.title = "Ponto - Sistema RH";
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+    };
+  }, [fotoPreview]);
 
   if (!pontoData) {
     return (
@@ -251,6 +279,35 @@ function Ponto() {
             Registrar Ponto (
             {pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
           </button>
+
+          {pontoData.funcionario?.batida_fora_empresa && (
+            <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
+              <label className="block text-white/70 text-sm mb-2">
+                Foto obrigatoria da batida
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={onSelectFoto}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
+              />
+              {fotoFile && (
+                <p className="mt-2 text-xs text-white/70">
+                  Selecionado:{" "}
+                  <span className="text-white/90">{fotoFile.name}</span>
+                </p>
+              )}
+              {fotoPreview && (
+                <div className="mt-3">
+                  <img
+                    src={fotoPreview}
+                    alt="Pre-visualizacao"
+                    className="h-24 w-24 rounded-lg object-cover border border-white/10"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="mt-6 flex gap-4">
             <button

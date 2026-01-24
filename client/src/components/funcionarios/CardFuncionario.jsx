@@ -35,6 +35,10 @@ export default function CardFuncionario({
     localStorage.setItem("celular", funcionario.funcionario_celular);
     localStorage.setItem("observacao", funcionario.funcionario_observacao);
     localStorage.setItem("imagem", funcionario.funcionario_imagem_caminho);
+    localStorage.setItem(
+      "batida_fora_empresa",
+      funcionario.funcionario_batida_fora_empresa ? "1" : "0"
+    );
     setModifica(true);
   }
 

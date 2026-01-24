@@ -22,6 +22,7 @@ function ModalModificaFuncionario({
   const [nivel, setNivel] = useState("");
   const [celular, setCelular] = useState("");
   const [observacao, setObservacao] = useState("");
+  const [batidaForaEmpresa, setBatidaForaEmpresa] = useState(false);
 
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
@@ -64,6 +65,7 @@ function ModalModificaFuncionario({
       funcionario_nivel: nivel,
       funcionario_observacao: observacao,
       funcionario_celular: celular,
+      funcionario_batida_fora_empresa: batidaForaEmpresa,
     };
     setCarregando(true);
 
@@ -109,6 +111,8 @@ function ModalModificaFuncionario({
       setFotoPreview(
         `${import.meta.env.VITE_API_BASE_URL}${localStorage.getItem("imagem")}`
       );
+    const batidaFlag = localStorage.getItem("batida_fora_empresa");
+    setBatidaForaEmpresa(batidaFlag === "1");
   }, []);
 
   return (
@@ -300,6 +304,20 @@ function ModalModificaFuncionario({
                     placeholder="(00) 00000-0000"
                     className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 focus:border-white/30"
                   />
+                </div>
+
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={batidaForaEmpresa}
+                      onChange={(e) => setBatidaForaEmpresa(e.target.checked)}
+                      className="w-4 h-4 rounded bg-white/10 border border-white/20 text-white focus:ring-2 focus:ring-white/30"
+                    />
+                    <span className="text-sm text-white/70">
+                      Batidas de ponto fora da empresa
+                    </span>
+                  </label>
                 </div>
               </div>
 

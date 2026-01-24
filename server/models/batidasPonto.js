@@ -52,6 +52,11 @@ BatidaPonto.init(
       allowNull: true,
       defaultValue: null,
     },
+    batida_foto_caminho: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,
