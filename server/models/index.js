@@ -20,6 +20,7 @@ import DiaTrabalhado from "./diasTrabalhados.js";
 import BancoHoras from "./bancosHoras.js";
 import CargoPermissaoEmpresa from "./cargoPermissaoEmpresas.js";
 import Feriado from "./feriados.js";
+import Ferias from "./ferias.js";
 
 // Foreign keys de setores e empresas
 Empresa.hasMany(Setor, {
@@ -573,6 +574,28 @@ Feriado.belongsTo(Empresa, {
   as: "empresa",
 });
 
+// Foreign keys de Ferias com Usuarios e Funcionarios
+Usuario.hasMany(Ferias, {
+  foreignKey: "ferias_usuario_id",
+  sourceKey: "usuario_id",
+  as: "ferias",
+});
+Ferias.belongsTo(Usuario, {
+  foreignKey: "ferias_usuario_id",
+  targetKey: "usuario_id",
+  as: "usuario",
+});
+Funcionario.hasMany(Ferias, {
+  foreignKey: "ferias_funcionario_id",
+  sourceKey: "funcionario_id",
+  as: "ferias",
+});
+Ferias.belongsTo(Funcionario, {
+  foreignKey: "ferias_funcionario_id",
+  targetKey: "funcionario_id",
+  as: "funcionario",
+});
+
 export {
   Empresa,
   Funcionario,
@@ -596,4 +619,5 @@ export {
   BancoHoras,
   CargoPermissaoEmpresa,
   Feriado,
+  Ferias,
 };

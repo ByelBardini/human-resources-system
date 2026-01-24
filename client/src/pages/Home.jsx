@@ -1,5 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LogOut, UsersRound, Clock, Building2, Calendar } from "lucide-react";
+import {
+  LogOut,
+  UsersRound,
+  Clock,
+  Building2,
+  Calendar,
+  CalendarDays,
+} from "lucide-react";
 import { getEmpresas } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -104,6 +111,15 @@ function Home() {
             onClick={() => navigate("/gerenciar-feriados", { replace: true })}
           >
             <Calendar size={20} />
+          </button>
+        )}
+        {temPermissao("sistema.gerenciar_ferias") && (
+          <button
+            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+            title="Gerenciar Férias"
+            onClick={() => navigate("/gerenciar-ferias", { replace: true })}
+          >
+            <CalendarDays size={20} />
           </button>
         )}
       </div>

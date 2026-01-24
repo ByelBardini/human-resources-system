@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { LogOut, Clock, CheckCircle, AlertCircle, Wallet } from "lucide-react";
+import { LogOut, Clock, CheckCircle, AlertCircle, Wallet, CalendarDays } from "lucide-react";
 import { getPontoHoje, registrarBatida } from "../services/api/pontoService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +46,10 @@ function Ponto() {
   }
 
   async function handleRegistrarPonto() {
+    if (pontoData?.emFerias) {
+      mostrarAviso("erro", "Você está em férias e não pode registrar ponto.", true);
+      return;
+    }
     if (pontoData?.funcionario?.batida_fora_empresa && !fotoFile) {
       mostrarAviso("erro", "Foto obrigatoria para registrar a batida.", true);
       return;
@@ -89,6 +93,12 @@ function Ponto() {
       day: "numeric",
       timeZone: "America/Sao_Paulo",
     });
+  }
+
+  function formatarDataCurta(dataStr) {
+    if (!dataStr) return "";
+    const data = new Date(dataStr + "T00:00:00");
+    return data.toLocaleDateString("pt-BR");
   }
 
   function formatarHora(dataHora) {
@@ -154,6 +164,12 @@ function Ponto() {
             {pontoData.feriado && (
               <p className="text-purple-400 text-sm mt-1">
                 {pontoData.feriado}
+              </p>
+            )}
+            {pontoData.emFerias && pontoData.ferias && (
+              <p className="text-amber-400 text-sm mt-1">
+                Em férias: {formatarDataCurta(pontoData.ferias.data_inicio)} até{" "}
+                {formatarDataCurta(pontoData.ferias.data_fim)}
               </p>
             )}
           </div>
@@ -270,43 +286,67 @@ function Ponto() {
             )}
           </div>
 
-          <button
-            onClick={handleRegistrarPonto}
-            disabled={carregando}
-            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
-          >
-            <Clock size={20} />
-            Registrar Ponto (
-            {pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
-          </button>
+          {pontoData.emFerias ? (
+            <div className="w-full bg-amber-500/20 border border-amber-400/30 rounded-lg p-6 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <CalendarDays className="text-amber-300" size={32} />
+                <div>
+                  <p className="text-amber-200 font-semibold text-lg mb-1">
+                    Você está em férias
+                  </p>
+                  {pontoData.ferias && (
+                    <p className="text-amber-300/80 text-sm">
+                      Período: {formatarDataCurta(pontoData.ferias.data_inicio)} até{" "}
+                      {formatarDataCurta(pontoData.ferias.data_fim)}
+                    </p>
+                  )}
+                  <p className="text-amber-200/70 text-sm mt-2">
+                    Não é possível registrar ponto durante este período
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={handleRegistrarPonto}
+                disabled={carregando}
+                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <Clock size={20} />
+                Registrar Ponto (
+                {pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
+              </button>
 
-          {pontoData.funcionario?.batida_fora_empresa && (
-            <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
-              <label className="block text-white/70 text-sm mb-2">
-                Foto obrigatoria da batida
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={onSelectFoto}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
-              />
-              {fotoFile && (
-                <p className="mt-2 text-xs text-white/70">
-                  Selecionado:{" "}
-                  <span className="text-white/90">{fotoFile.name}</span>
-                </p>
-              )}
-              {fotoPreview && (
-                <div className="mt-3">
-                  <img
-                    src={fotoPreview}
-                    alt="Pre-visualizacao"
-                    className="h-24 w-24 rounded-lg object-cover border border-white/10"
+              {pontoData.funcionario?.batida_fora_empresa && (
+                <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
+                  <label className="block text-white/70 text-sm mb-2">
+                    Foto obrigatoria da batida
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onSelectFoto}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
                   />
+                  {fotoFile && (
+                    <p className="mt-2 text-xs text-white/70">
+                      Selecionado:{" "}
+                      <span className="text-white/90">{fotoFile.name}</span>
+                    </p>
+                  )}
+                  {fotoPreview && (
+                    <div className="mt-3">
+                      <img
+                        src={fotoPreview}
+                        alt="Pre-visualizacao"
+                        className="h-24 w-24 rounded-lg object-cover border border-white/10"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
 
           <div className="mt-6 flex gap-4">

@@ -18,6 +18,7 @@ import justificativaRoutes from "./routes/justificativaRoutes.js";
 import relatorioRoutes from "./routes/relatorioRoutes.js";
 import perfilJornadaRoutes from "./routes/perfilJornadaRoutes.js";
 import feriadoRoutes from "./routes/feriadoRoutes.js";
+import feriasRoutes from "./routes/feriasRoutes.js";
 import { ApiError } from "./middlewares/ApiError.js";
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.use("/", justificativaRoutes);
 app.use("/", relatorioRoutes);
 app.use("/", perfilJornadaRoutes);
 app.use("/", feriadoRoutes);
+app.use("/", feriasRoutes);
 
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
