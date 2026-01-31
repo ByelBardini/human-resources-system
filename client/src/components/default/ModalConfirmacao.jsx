@@ -37,18 +37,17 @@ function ModalConfirmacao({ texto = "Aviso", onClickSim, onClickNao }) {
 
         <div className="flex items-center justify-center gap-3">
           <button
-            className={`cursor-pointer rounded-xl bg-emerald-400/40 shadow-emerald-900/30 
-                hover:bg-emerald-500 active:bg-emerald-700 transition text-white font-medium py-2.5 px-8 shadow-lg`}
+            className={`rounded-xl bg-emerald-400/40 shadow-emerald-900/30 
+                hover:bg-emerald-500 active:bg-emerald-700 transition text-white font-medium py-2.5 px-8 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}
             onClick={onClickSim}
             autoFocus
           >
             Sim
           </button>
           <button
-            className={`cursor-pointer rounded-xl bg-red-400/40 shadow-red-900/30 
-                hover:bg-red-500 active:bg-red-700 transition text-white font-medium py-2.5 px-8 shadow-lg`}
+            className={`rounded-xl bg-red-400/40 shadow-red-900/30 
+                hover:bg-red-500 active:bg-red-700 transition text-white font-medium py-2.5 px-8 shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}
             onClick={onClickNao}
-            autoFocus
           >
             Não
           </button>

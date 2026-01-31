@@ -1,9 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { X } from "lucide-react";
-import { useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { getSetores } from "../../services/api/setorService.js";
 import { putDescricao } from "../../services/api/descricaoService.js";
-import { useEffect } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModificaDescricaoModal({
@@ -118,7 +117,7 @@ function ModificaDescricaoModal({
             onClick={() => setModificaDesc(false)}
             type="button"
             title="Fechar"
-            className="cursor-pointer h-9 w-9 inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/10 text-white/90 hover:bg-white/20"
+            className="h-9 w-9 inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/10 text-white/90 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             <X size={18} />
           </button>
@@ -253,14 +252,14 @@ function ModificaDescricaoModal({
           <button
             onClick={() => setModificaDesc(false)}
             type="button"
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10"
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Cancelar
           </button>
           <button
             onClick={clicaSalvar}
             type="button"
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 text-white hover:bg-white/30 shadow"
+            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 text-white hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Salvar alterações
           </button>
@@ -270,4 +269,4 @@ function ModificaDescricaoModal({
   );
 }
 
-export default ModificaDescricaoModal;
+export default memo(ModificaDescricaoModal);

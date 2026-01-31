@@ -117,14 +117,14 @@ export default function ProjecaoSalarial({
       <div className="flex justify-center gap-6">
         <button
           onClick={() => setAdicionando(true)}
-          className="cursor-pointer px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow"
+          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         >
           Adicionar Função
         </button>
 
         <button
           onClick={() => setAumentoGeral(true)}
-          className="cursor-pointer px-4 py-2 rounded-lg bg-emerald-400/10 hover:bg-emerald-400/20 border border-emerald-400/10 text-emerald-400 shadow"
+          className="px-4 py-2 rounded-lg bg-emerald-400/10 hover:bg-emerald-400/20 border border-emerald-400/10 text-emerald-400 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
         >
           Aumento Geral
         </button>

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { X, Upload, Image as ImageIcon } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { formatToCPFOrCNPJ, isCPF, formatToPhone } from "brazilian-values";
 import {
   postFuncionario,
@@ -581,4 +581,4 @@ function AdicionaFuncionarioModal({
   );
 }
 
-export default AdicionaFuncionarioModal;
+export default memo(AdicionaFuncionarioModal);

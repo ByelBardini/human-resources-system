@@ -43,7 +43,7 @@ function MenuOpcoes({ setOpcaoSelecionada, opcaoSelecionada }) {
         <button
           key={btn.id}
           onClick={() => seleciona(btn.id)}
-          className={`cursor-pointer px-4 py-2 rounded-lg bg-white/7 border border-white/15 transition-colors text-xl flex items-center justify-center
+          className={`px-4 py-2 rounded-lg bg-white/7 border border-white/15 transition-colors text-xl flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
             ${
               opcaoSelecionada === btn.id
                 ? "bg-white/20 text-white"
@@ -57,7 +57,7 @@ function MenuOpcoes({ setOpcaoSelecionada, opcaoSelecionada }) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setOpen(!open)}
-          className={`cursor-pointer px-4 py-2 rounded-lg border bg-white/7 border-white/15 transition-colors text-xl flex items-center justify-center
+          className={`px-4 py-2 rounded-lg border bg-white/7 border-white/15 transition-colors text-xl flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
       ${
         open || ["projecaoSalarial", "manualFuncoes"].includes(opcaoSelecionada)
           ? "bg-white/15 text-white"
@@ -73,7 +73,7 @@ function MenuOpcoes({ setOpcaoSelecionada, opcaoSelecionada }) {
               <button
                 key={btn.id}
                 onClick={() => seleciona(btn.id)}
-                className={`cursor-pointer gap-2 px-4 py-2 rounded-lg border bg-white/10 border-white/15 transition-colors flex items-center justify-center whitespace-nowrap
+                className={`gap-2 px-4 py-2 rounded-lg border bg-white/10 border-white/15 transition-colors flex items-center justify-center whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
                   ${
                     opcaoSelecionada === btn.id
                       ? "bg-white/20 text-white"

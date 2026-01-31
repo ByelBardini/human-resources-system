@@ -1,5 +1,5 @@
+import { memo, useEffect, useState } from "react";
 import { X, UploadCloud, AlertTriangle } from "lucide-react";
-import { useEffect, useState } from "react";
 import { postNotificacao } from "../../services/api/notificacoesServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
@@ -115,7 +115,7 @@ function ModalCriaNotificacao({
           <button
             type="button"
             title="Fechar"
-            className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-xl
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
                        bg-white/10 border border-white/10 hover:bg-white/20"
             onClick={() => setNotificacao(false)}
           >
@@ -254,7 +254,7 @@ function ModalCriaNotificacao({
 
                 {arquivo ? (
                   <button
-                    className="cursor-pointer px-2 py-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-sm shrink-0"
+                    className="px-2 py-1 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-sm shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                     onClick={() => setArquivo(null)}
                   >
                     X
@@ -264,7 +264,7 @@ function ModalCriaNotificacao({
                 )}
                 <label
                   htmlFor="anexo-notificacao"
-                  className="cursor-pointer px-3 py-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-sm shrink-0"
+                  className="px-3 py-2 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-sm shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
                   Procurar…
                 </label>
@@ -314,7 +314,7 @@ function ModalCriaNotificacao({
         <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
           <button
             type="button"
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             onClick={() => setNotificacao(false)}
           >
             Cancelar
@@ -322,7 +322,7 @@ function ModalCriaNotificacao({
           <button
             onClick={clicaEnviar}
             type="button"
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow"
+            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Salvar
           </button>
@@ -332,4 +332,4 @@ function ModalCriaNotificacao({
   );
 }
 
-export default ModalCriaNotificacao;
+export default memo(ModalCriaNotificacao);

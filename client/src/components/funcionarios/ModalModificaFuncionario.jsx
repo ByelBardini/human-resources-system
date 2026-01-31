@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { X, UploadCloud, Image } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import {
   getCargoSetor,
@@ -358,4 +358,4 @@ function ModalModificaFuncionario({
   );
 }
 
-export default ModalModificaFuncionario;
+export default memo(ModalModificaFuncionario);

@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
+import { memo } from "react";
 import { motion } from "framer-motion";
 
-export default function Loading() {
+function Loading() {
   return (
     <motion.div
       className="fixed inset-0 grid place-items-center z-[100]"
@@ -34,3 +35,5 @@ export default function Loading() {
     </motion.div>
   );
 }
+
+export default memo(Loading);

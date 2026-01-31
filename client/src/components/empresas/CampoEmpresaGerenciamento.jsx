@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Pencil, Building2 } from "lucide-react";
 
 function CampoEmpresaGerenciamento({
@@ -66,4 +67,4 @@ function CampoEmpresaGerenciamento({
   );
 }
 
-export default CampoEmpresaGerenciamento;
+export default memo(CampoEmpresaGerenciamento);

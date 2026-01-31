@@ -90,7 +90,7 @@ function Notificacoes({
         <div className="ml-auto flex items-center gap-2">
           {ativo == 1 && (
             <button
-              className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               onClick={() => setNotificacao(true)}
             >
               <Plus size={16} /> Novo

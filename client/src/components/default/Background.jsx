@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { motion } from "framer-motion";
 
 function Background() {
@@ -55,4 +56,4 @@ function Background() {
   );
 }
 
-export default Background;
+export default memo(Background);

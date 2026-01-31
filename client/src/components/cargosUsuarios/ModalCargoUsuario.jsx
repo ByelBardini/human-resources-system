@@ -1,5 +1,5 @@
+import { memo, useEffect, useState } from "react";
 import { X, Save, Building2, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
   postCargoUsuario,
   putCargoUsuario,
@@ -261,7 +261,7 @@ function ModalCargoUsuario({
                         return (
                           <div key={permissao.permissao_id} className="rounded bg-white/5">
                             <label
-                              className="flex items-start gap-2 cursor-pointer p-1.5 hover:bg-white/5 transition"
+                              className="flex items-start gap-2 p-1.5 hover:bg-white/5 transition"
                             >
                               <input
                                 type="checkbox"
@@ -321,7 +321,7 @@ function ModalCargoUsuario({
                                   {empresas.map((empresa) => (
                                     <label
                                       key={empresa.empresa_id}
-                                      className="flex items-center gap-1.5 cursor-pointer p-1 rounded hover:bg-white/10"
+                                      className="flex items-center gap-1.5 p-1 rounded hover:bg-white/10"
                                     >
                                       <input
                                         type="checkbox"
@@ -379,5 +379,5 @@ function ModalCargoUsuario({
   );
 }
 
-export default ModalCargoUsuario;
+export default memo(ModalCargoUsuario);
 

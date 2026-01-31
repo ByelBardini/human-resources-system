@@ -19,17 +19,17 @@ function IconeBotao({ onClick, tipo }) {
       }}
       className={`${base} ${tipos[tipo]}`}
     >
-      {tipo == "editar" && (
+      {tipo === "editar" && (
         <SquarePen
           size={18}
           strokeWidth={1.8}
           className="pointer-events-none"
         />
       )}
-      {tipo == "deletar" && (
+      {tipo === "deletar" && (
         <Trash2 size={18} strokeWidth={1.8} className="pointer-events-none" />
       )}
-      {tipo == "confirmar" && (
+      {tipo === "confirmar" && (
         <Check size={18} strokeWidth={1.8} className="pointer-events-none" />
       )}
     </button>

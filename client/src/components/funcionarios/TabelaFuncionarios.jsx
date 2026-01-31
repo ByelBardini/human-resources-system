@@ -193,7 +193,7 @@ function TabelaFuncionarios({
           <th className="px-4 py-3 text-left font-medium w-[250px]">
             <div className="flex items-center justify-between">
               Nome
-              <button className="cursor-pointer" onClick={ordenarPorNome}>
+              <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30" onClick={ordenarPorNome}>
                 {nomeSort ? (
                   <ArrowDownZA size={18} strokeWidth={2.2} />
                 ) : (
@@ -210,7 +210,7 @@ function TabelaFuncionarios({
             <th className="px-4 py-3 font-medium w-[130px]">
               <div className="flex justify-between">
                 Salário
-                <button className="cursor-pointer" onClick={ordenarPorSalario}>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30" onClick={ordenarPorSalario}>
                   {salarioSort ? (
                     <ArrowUp10 size={18} strokeWidth={2.2} />
                   ) : (
@@ -223,7 +223,7 @@ function TabelaFuncionarios({
             <th className="px-4 py-3 font-medium w-[130px]">
               <div className="flex justify-between">
                 Gasto
-                <button className="cursor-pointer" onClick={ordenarPorSalario}>
+                <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30" onClick={ordenarPorSalario}>
                   {salarioSort ? (
                     <ArrowUp10 size={18} strokeWidth={2.2} />
                   ) : (
@@ -238,7 +238,7 @@ function TabelaFuncionarios({
               <div className="flex justify-between">
                 Idade
                 <button
-                  className="cursor-pointer"
+                  className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                   onClick={ordenarPorNascimento}
                 >
                   {nascimentoSort ? (
@@ -258,7 +258,7 @@ function TabelaFuncionarios({
           <th className="px-4 py-3 font-medium w-[140px]">
             <div className="flex justify-between">
               Admitido hà:
-              <button className="cursor-pointer" onClick={ordenarPorAdmissao}>
+              <button className="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30" onClick={ordenarPorAdmissao}>
                 {admissaoSort ? (
                   <ArrowUp10 size={18} strokeWidth={2.2} />
                 ) : (

@@ -1,5 +1,5 @@
+import { memo, useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
 import {
   criarFerias,
   atualizarFerias,
@@ -242,4 +242,4 @@ function ModalFerias({
   );
 }
 
-export default ModalFerias;
+export default memo(ModalFerias);

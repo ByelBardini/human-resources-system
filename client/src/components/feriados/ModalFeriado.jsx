@@ -1,5 +1,5 @@
+import { memo, useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { criarFeriado, atualizarFeriado, excluirFeriado } from "../../services/api/feriadoService.js";
 import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
@@ -182,7 +182,7 @@ function ModalFeriado({
                 empresas.map((empresa) => (
                   <label
                     key={empresa.empresa_id}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-2 py-1"
+                    className="flex items-center gap-2 hover:bg-white/5 rounded px-2 py-1"
                   >
                     <input
                       type="checkbox"
@@ -250,4 +250,4 @@ function ModalFeriado({
   );
 }
 
-export default ModalFeriado;
+export default memo(ModalFeriado);

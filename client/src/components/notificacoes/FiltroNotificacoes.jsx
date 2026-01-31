@@ -92,7 +92,7 @@ function FiltroNotificacoes({
         ref={btnRef}
         type="button"
         onClick={abre}
-        className="cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-white"
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 border border-white/10 hover:bg-white/20 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         aria-haspopup="menu"
         aria-expanded={open}
         title="Filtro por período"
@@ -141,7 +141,7 @@ function FiltroNotificacoes({
                 <div className="flex justify-end gap-2 pt-1">
                   <button
                     type="button"
-                    className="cursor-pointer px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
                     onClick={() => setOpen(false)}
                   >
                     Cancelar
@@ -149,7 +149,7 @@ function FiltroNotificacoes({
                   {valido && (
                     <button
                       type="button"
-                      className="cursor-pointer px-3 py-1.5 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30"
+                      className="px-3 py-1.5 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30"
                       onClick={busca}
                     >
                       Aplicar

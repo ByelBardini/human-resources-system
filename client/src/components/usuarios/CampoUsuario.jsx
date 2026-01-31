@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Pencil } from "lucide-react";
 
 function CampoUsuario({
@@ -65,4 +66,4 @@ function CampoUsuario({
   );
 }
 
-export default CampoUsuario;
+export default memo(CampoUsuario);

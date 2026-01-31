@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import { memo, useEffect, useState } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { Download, XCircle, Timer } from "lucide-react";
-import { useEffect, useState } from "react";
 
 const parseDate = (v) => {
   if (!v) return null;
@@ -36,7 +36,7 @@ function CampoNotificacao({
 }) {
   const { mostrarAviso } = useAviso();
   const [dias, setDias] = useState(0);
-  const temDataFinal = tipo == "suspensao" || tipo == "atestado";
+  const temDataFinal = tipo === "suspensao" || tipo === "atestado";
 
   async function baixar(caminho) {
     const url = `${
@@ -97,7 +97,7 @@ function CampoNotificacao({
         </div>
 
         {falta &&
-          (tipo == "falta" ? (
+          (tipo === "falta" ? (
             <span className="w-1/8 justify-center inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs bg-red-500/15 text-red-200 border-red-400/30 whitespace-nowrap shrink-0">
               Falta <XCircle size={16} />
             </span>
@@ -112,7 +112,7 @@ function CampoNotificacao({
         <button
           type="button"
           onClick={() => baixar(arquivo)}
-          className="text-center cursor-pointer rounded-xl bg-white/5 border border-white/10 w-12 h-12 shrink-0 grid place-items-center text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+          className="text-center rounded-xl bg-white/5 border border-white/10 w-12 h-12 shrink-0 grid place-items-center text-white/80 hover:bg-white/10 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         >
           <Download size={18} />
         </button>
@@ -121,4 +121,4 @@ function CampoNotificacao({
   );
 }
 
-export default CampoNotificacao;
+export default memo(CampoNotificacao);

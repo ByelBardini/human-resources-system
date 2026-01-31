@@ -1,5 +1,5 @@
+import { memo, useEffect, useState } from "react";
 import { X, Save, Upload, Power } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatToCPFOrCNPJ } from "brazilian-values";
 import { putEmpresa, inativarEmpresa, getEmpresaImagem } from "../../services/api/empresasService.js";
@@ -198,7 +198,7 @@ function ModalEditaEmpresa({
                 type="color"
                 value={cor}
                 onChange={(e) => setCor(e.target.value)}
-                className="w-16 h-10 rounded-lg border border-white/15 cursor-pointer"
+                className="w-16 h-10 rounded-lg border border-white/15"
               />
               <input
                 type="text"
@@ -287,4 +287,4 @@ function ModalEditaEmpresa({
   );
 }
 
-export default ModalEditaEmpresa;
+export default memo(ModalEditaEmpresa);

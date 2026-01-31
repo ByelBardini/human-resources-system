@@ -1,7 +1,7 @@
+import { memo, useState } from "react";
+import { X } from "lucide-react";
 import { aumentoCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
-import { useState } from "react";
-import { X } from "lucide-react";
 
 function ModalAumentoGeral({
   setConfirmacao,
@@ -66,8 +66,7 @@ function ModalAumentoGeral({
           <h2 className="text-lg font-semibold">Adicionar um Aumento Geral</h2>
           <button
             type="button"
-            className="cursor-pointer inline-flex h-9 w-9 items-center justify-center
-                     rounded-xl bg-white/10 border border-white/10 hover:bg-white/20"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             title="Fechar"
             onClick={() => setAumentoGeral(false)}
           >
@@ -107,14 +106,14 @@ function ModalAumentoGeral({
           <button
             type="button"
             onClick={() => setAumentoGeral(false)}
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Cancelar
           </button>
           <button
             onClick={clicaAdiciona}
             type="button"
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow"
+            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Inserir Aumento
           </button>
@@ -124,4 +123,4 @@ function ModalAumentoGeral({
   );
 }
 
-export default ModalAumentoGeral;
+export default memo(ModalAumentoGeral);

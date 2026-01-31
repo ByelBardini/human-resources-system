@@ -96,7 +96,7 @@ export default function CardFuncionario({
               {funcionario.funcionario_ativo == 1 && (
                 <button
                   type="button"
-                  className="cursor-pointer px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25"
+                  className="px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                   title="Inativar funcionário"
                   onClick={() => setInativando(true)}
                 >
@@ -106,7 +106,7 @@ export default function CardFuncionario({
 
               <button
                 type="button"
-                className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 hover:bg-white/20"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 title="Fechar"
                 onClick={() => setCard(false)}
               >
@@ -118,8 +118,7 @@ export default function CardFuncionario({
                 type="button"
                 title="Editar"
                 onClick={abreModificacao}
-                className="absolute -bottom-16 right-6 cursor-pointer inline-flex h-9 w-9 items-center justify-center
-             rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/20 transition shadow-md"
+                className="absolute -bottom-16 right-6 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 text-white hover:bg-white/20 transition shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               >
                 <Pen size={18} />
               </button>
@@ -238,7 +237,7 @@ export default function CardFuncionario({
                 onClick={() =>
                   setOpenSec((prev) => (prev === s.key ? null : s.key))
                 }
-                className={`cursor-pointer px-4 py-2 rounded-lg border transition
+                className={`px-4 py-2 rounded-lg border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
                             ${
                               openSec === s.key
                                 ? "bg-white/20 border-white/20"

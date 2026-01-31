@@ -1,6 +1,6 @@
+import { memo, useState } from "react";
 import { postCargos } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
-import { useState } from "react";
 import { X } from "lucide-react";
 
 function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
@@ -61,7 +61,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
           <h2 className="text-lg font-semibold">Adicionar Novo Cargo</h2>
           <button
             type="button"
-            className="cursor-pointer inline-flex h-9 w-9 items-center justify-center
+            className="inline-flex h-9 w-9 items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30
                      rounded-xl bg-white/10 border border-white/10 hover:bg-white/20"
             title="Fechar"
             onClick={() => setAdicionando(false)}
@@ -115,14 +115,14 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
           <button
             type="button"
             onClick={() => setAdicionando(false)}
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10"
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={criarCargo}
-            className="cursor-pointer px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow"
+            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
           >
             Criar Função
           </button>
@@ -132,4 +132,4 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
   );
 }
 
-export default AdicionaCargoModal;
+export default memo(AdicionaCargoModal);
