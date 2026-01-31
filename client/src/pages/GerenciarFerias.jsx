@@ -31,7 +31,6 @@ function GerenciarFerias() {
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -40,6 +39,7 @@ function GerenciarFerias() {
       } else {
         mostrarAviso("erro", err.message || "Erro ao buscar férias", true);
       }
+      console.error(err);
     } finally {
       setCarregando(false);
     }
@@ -100,14 +100,14 @@ function GerenciarFerias() {
       {carregando && <Loading />}
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
         onClick={() => navigate("/home", { replace: true })}
       >
         <Undo2 size={20} />
       </button>
 
-      <div className="text-white flex flex-col items-center justify-center w-full max-w-4xl">
+      <div className="relative z-10 text-white flex flex-col items-center justify-center w-full max-w-4xl px-4">
         <div className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ function GerenciarFerias() {
             </div>
             <button
               onClick={abrirModalCriar}
-              className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/15 border border-green-400/30 text-green-300 hover:bg-green-500/25 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/15 border border-green-400/30 text-green-300 hover:bg-green-500/25 transition"
             >
               Novo Período
             </button>
@@ -153,7 +153,7 @@ function GerenciarFerias() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => abrirModalEditar(item)}
-                    className="cursor-pointer px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 hover:bg-blue-500/25 transition text-sm"
+                    className="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 hover:bg-blue-500/25 transition text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                   >
                     Editar
                   </button>

@@ -102,6 +102,7 @@ function ModalFerias({
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar férias", true);
       }
+      console.error(err);
     } finally {
       setCarregando(false);
     }
@@ -129,6 +130,7 @@ function ModalFerias({
       } else {
         mostrarAviso("erro", err.message || "Erro ao cancelar férias", true);
       }
+      console.error(err);
     } finally {
       setCarregando(false);
     }
@@ -153,7 +155,8 @@ function ModalFerias({
           </h2>
           <button
             onClick={() => setModalAberto(false)}
-            className="cursor-pointer p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Fechar"
           >
             <X size={20} />
           </button>
