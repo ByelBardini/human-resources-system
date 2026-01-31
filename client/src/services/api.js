@@ -22,13 +22,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      const { status, code, message } = error.response.data;
+      const data = error.response.data ?? {};
+      const status = data.status ?? error.response.status;
+      const message =
+        data.message ?? data.error ?? (typeof data === "string" ? data : undefined);
 
       if (status === 401 || status === 403) {
         redirecionarParaLogin();
       }
 
-      return Promise.reject({ status, code, message });
+      return Promise.reject({ status, code: data.code, message });
     } else if (error.request) {
       return Promise.reject({
         status: 503,
