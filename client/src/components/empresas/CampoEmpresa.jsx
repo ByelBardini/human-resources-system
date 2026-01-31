@@ -3,7 +3,7 @@ import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
 
 const CARD_CLASS = [
-  "group relative w-full overflow-hidden rounded-2xl px-5 py-4",
+  "group relative w-full overflow-hidden rounded-xl px-4 py-3",
   "bg-white/5 border border-white/10 backdrop-blur",
   "flex items-center justify-between text-slate-100",
   "shadow-lg transition",
@@ -33,7 +33,7 @@ const CardEmpresa = memo(function CardEmpresa({ empresa, onEscolher }) {
         className="pointer-events-none absolute inset-0 rounded-2xl transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out"
         style={{ background: cor }}
       />
-      <span className="relative z-[1] text-base md:text-lg font-semibold tracking-tight">
+      <span className="relative z-[1] text-sm md:text-base font-medium tracking-tight">
         {empresa.empresa_nome}
       </span>
     </motion.button>

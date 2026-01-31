@@ -8,7 +8,6 @@ import {
 } from "../../services/api/feriasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import CustomSelect from "../default/CustomSelect.jsx";
-import CustomDateInput from "../default/CustomDateInput.jsx";
 
 function ModalFerias({
   ferias,
@@ -193,9 +192,11 @@ function ModalFerias({
               <label className="block text-sm font-medium text-white/80 mb-2">
                 Data início
               </label>
-              <CustomDateInput
+              <input
+                type="date"
                 value={dataInicio}
                 onChange={(e) => setDataInicio(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
               />
             </div>
 
@@ -203,9 +204,11 @@ function ModalFerias({
               <label className="block text-sm font-medium text-white/80 mb-2">
                 Data fim
               </label>
-              <CustomDateInput
+              <input
+                type="date"
                 value={dataFim}
                 onChange={(e) => setDataFim(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
               />
             </div>
           </div>
