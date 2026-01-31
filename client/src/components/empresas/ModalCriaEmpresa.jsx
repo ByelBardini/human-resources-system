@@ -79,8 +79,7 @@ function ModalCriaEmpresa({
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      limparAviso();
-      console.error(err.message, err, true);
+      console.error(err.message, err);
     } finally {
       setCarregando(false);
     }

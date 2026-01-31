@@ -56,7 +56,7 @@ function CampoEmpresaGerenciamento({
 
         <button
           onClick={clica}
-          className="ml-1 inline-flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/20 transition"
+          className="ml-1 inline-flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/20 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
         >
           <Pencil size={16} />
           Editar

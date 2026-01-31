@@ -27,10 +27,9 @@ function GerenciarEmpresas() {
   const { temPermissao } = usePermissao();
 
   async function buscaEmpresas() {
+    setCarregando(true);
     try {
       const empresasData = await getTodasEmpresas();
-      
-      // Carregar imagens para cada empresa
       const empresasComImagens = await Promise.all(
         empresasData.map(async (empresa) => {
           try {
@@ -46,8 +45,6 @@ function GerenciarEmpresas() {
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.error(err);
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -55,8 +52,10 @@ function GerenciarEmpresas() {
         }, 1000);
       } else {
         mostrarAviso("erro", "Erro ao buscar empresas:", true);
-        console.error(err);
       }
+      console.error(err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -97,14 +96,14 @@ function GerenciarEmpresas() {
       {carregando && <Loading />}
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
         onClick={() => navigate("/home", { replace: true })}
       >
         <Undo2 size={20} />
       </button>
 
-      <div className="text-white flex flex-col items-center justify-center w-full max-w-4xl">
+      <div className="relative z-10 text-white flex flex-col items-center justify-center w-full max-w-4xl px-4">
         <div className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center gap-3 mb-4 justify-center">
             <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-400/30">
@@ -139,7 +138,7 @@ function GerenciarEmpresas() {
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setCria(true)}
-              className="cursor-pointer px-4 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-200 shadow"
+              className="px-4 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-200 shadow"
             >
               Adicionar Empresa
             </button>

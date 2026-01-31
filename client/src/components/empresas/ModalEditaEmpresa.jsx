@@ -96,8 +96,7 @@ function ModalEditaEmpresa({
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      limparAviso();
-      console.error(err.message, err, true);
+      console.error(err.message, err);
     } finally {
       setCarregando(false);
     }
@@ -226,11 +225,7 @@ function ModalEditaEmpresa({
                     onClick={() => {
                       setLogoFile(null);
                       setLogoPreview(null);
-                      if (logoPreview) {
-                        setLogoAtual(logoAtual);
-                      } else {
-                        setLogoAtual(null);
-                      }
+                      if (!logoPreview) setLogoAtual(null);
                     }}
                     className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white"
                   >
