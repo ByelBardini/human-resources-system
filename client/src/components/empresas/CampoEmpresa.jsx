@@ -11,17 +11,16 @@ export default function CampoEmpresa({ empresas = [], navigate }) {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-3">
       {empresas.map((empresa) => {
         const cor = empresa.empresa_cor || "black";
         return (
           <motion.button
             key={empresa.empresa_id}
-            layout
             whileHover={{ scale: 1.015, y: -1 }}
             onClick={() => escolherEmpresa(empresa)}
             className={[
-              "cursor-pointer group relative w-full overflow-hidden rounded-2xl px-5 py-4 my-3",
+              "group relative w-full overflow-hidden rounded-2xl px-5 py-4",
               "bg-white/5 border border-white/10 backdrop-blur",
               "flex items-center justify-between text-slate-100",
               "shadow-lg transition",

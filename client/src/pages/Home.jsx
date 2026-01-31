@@ -29,7 +29,7 @@ function Home() {
 
   const [empresas, setEmpresas] = useState([]);
 
-  async function deslogar() {
+  function deslogar() {
     localStorage.clear();
     navigate("/", { replace: true });
   }
@@ -65,6 +65,13 @@ function Home() {
     temPermissao("ponto.aprovar_justificativas") ||
     temPermissao("ponto.alterar_batidas");
 
+  const botoesAcao = [
+    { permissao: "usuarios.gerenciar", to: "/usuario", icon: UsersRound, title: "Gerenciar Usuários" },
+    { permissao: "sistema.gerenciar_empresas", to: "/gerenciar-empresas", icon: Building2, title: "Gerenciar Empresas" },
+    { permissao: "sistema.gerenciar_feriados", to: "/gerenciar-feriados", icon: Calendar, title: "Gerenciar Feriados" },
+    { permissao: "sistema.gerenciar_ferias", to: "/gerenciar-ferias", icon: CalendarDays, title: "Gerenciar Férias" },
+  ].filter((b) => temPermissao(b.permissao));
+
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
       <Background />
@@ -78,7 +85,7 @@ function Home() {
       )}
 
       <button
-        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Sair"
         onClick={deslogar}
       >
@@ -86,54 +93,27 @@ function Home() {
       </button>
 
       <div className="absolute top-6 left-6 flex gap-2 z-10">
-        {temPermissao("usuarios.gerenciar") && (
+        {botoesAcao.map(({ to, icon: Icon, title }) => (
           <button
-            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-            title="Gerenciar Usuários"
-            onClick={() => navigate("/usuario", { replace: true })}
+            key={to}
+            className="p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+            title={title}
+            onClick={() => navigate(to, { replace: true })}
           >
-            <UsersRound size={20} />
+            <Icon size={20} />
           </button>
-        )}
-        {temPermissao("sistema.gerenciar_empresas") && (
-          <button
-            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-            title="Gerenciar Empresas"
-            onClick={() => navigate("/gerenciar-empresas", { replace: true })}
-          >
-            <Building2 size={20} />
-          </button>
-        )}
-        {temPermissao("sistema.gerenciar_feriados") && (
-          <button
-            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-            title="Gerenciar Feriados"
-            onClick={() => navigate("/gerenciar-feriados", { replace: true })}
-          >
-            <Calendar size={20} />
-          </button>
-        )}
-        {temPermissao("sistema.gerenciar_ferias") && (
-          <button
-            className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-            title="Gerenciar Férias"
-            onClick={() => navigate("/gerenciar-ferias", { replace: true })}
-          >
-            <CalendarDays size={20} />
-          </button>
-        )}
+        ))}
       </div>
 
       {carregando && <Loading />}
 
-      <div className="overflow-x-hidden overflow-y-auto text-white">
-        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <h1 className="text-2xl font-semibold text-white mb-1 text-center pb-8">
+      <div className="relative z-10 flex justify-center items-center min-h-[60vh] overflow-x-hidden overflow-y-auto text-white px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-7">
+          <h1 className="text-2xl font-semibold text-white mb-1 text-center pb-6">
             Selecione a empresa desejada
           </h1>
           <CampoEmpresa empresas={empresas} navigate={navigate} />
 
-          {/* Botão de Gerenciar Pontos dos Funcionários */}
           {podeGerenciarPontos && (
             <div className="mt-6 pt-6 border-t border-white/10">
               <button
