@@ -1,20 +1,19 @@
+const ZERO = "00:00";
+
 /**
  * Converte horas decimais para formato hh:mm
  * @param {number} horas - Horas em formato decimal (ex: 8.5 = 8h30min)
  * @returns {string} Horas formatadas no formato hh:mm (ex: "08:30")
  */
 export function formatarHorasParaHHMM(horas) {
-  if (!horas && horas !== 0) return "00:00";
-  if (horas === 0) return "00:00";
-  
+  if (!horas && horas !== 0) return ZERO;
+  if (horas === 0) return ZERO;
+
   const horasAbs = Math.abs(horas);
-  const horasInteiras = Math.floor(horasAbs);
-  const minutos = Math.round((horasAbs - horasInteiras) * 60);
-  
-  const horasStr = String(horasInteiras).padStart(2, "0");
-  const minutosStr = String(minutos).padStart(2, "0");
-  
-  return `${horasStr}:${minutosStr}`;
+  const h = Math.floor(horasAbs);
+  const m = Math.round((horasAbs - h) * 60);
+
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 /**
@@ -23,11 +22,9 @@ export function formatarHorasParaHHMM(horas) {
  * @returns {string} Horas formatadas no formato +/-hh:mm (ex: "-08:30")
  */
 export function formatarHorasComSinal(horas) {
-  if (!horas && horas !== 0) return "00:00";
-  if (horas === 0) return "00:00";
-  
+  if (!horas && horas !== 0) return ZERO;
+  if (horas === 0) return ZERO;
+
   const sinal = horas >= 0 ? "+" : "-";
-  const horasFormatadas = formatarHorasParaHHMM(Math.abs(horas));
-  
-  return `${sinal}${horasFormatadas}`;
+  return sinal + formatarHorasParaHHMM(Math.abs(horas));
 }
