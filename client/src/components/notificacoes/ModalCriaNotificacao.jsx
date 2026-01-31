@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { X, UploadCloud, AlertTriangle } from "lucide-react";
 import { postNotificacao } from "../../services/api/notificacoesServices.js";
 import CustomSelect from "../default/CustomSelect.jsx";
+import CustomDateInput from "../default/CustomDateInput.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModalCriaNotificacao({
@@ -143,10 +144,8 @@ function ModalCriaNotificacao({
             {!esconderCampos && (
               <div>
                 <label className="block text-sm text-white/70 mb-1">Data</label>
-                <input
-                  type="date"
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                   outline-none focus:bg-white/15 [color-scheme:dark]"
+                <CustomDateInput
+                  value={data}
                   onChange={(e) => setData(e.target.value)}
                 />
               </div>
@@ -160,10 +159,8 @@ function ModalCriaNotificacao({
                   <label className="block text-sm text-white/70 mb-1">
                     Data de Início
                   </label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                   outline-none focus:bg-white/15 [color-scheme:dark]"
+                  <CustomDateInput
+                    value={data}
                     onChange={(e) => setData(e.target.value)}
                   />
                 </div>
@@ -172,10 +169,8 @@ function ModalCriaNotificacao({
                   <label className="block text-sm text-white/70 mb-1">
                     Data do Fim
                   </label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                   outline-none focus:bg-white/15 [color-scheme:dark]"
+                  <CustomDateInput
+                    value={dataFim ?? ""}
                     onChange={(e) => setDataFim(e.target.value)}
                   />
                 </div>

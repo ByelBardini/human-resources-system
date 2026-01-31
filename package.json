@@ -30,7 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
-    "react-day-picker": "^9.9.0",
+    "react-day-picker": "^9.13.0",
     "sequelize": "^6.37.7",
     "uuid": "^11.1.0"
   }

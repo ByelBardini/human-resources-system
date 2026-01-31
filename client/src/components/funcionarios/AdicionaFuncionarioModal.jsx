@@ -8,6 +8,7 @@ import {
 } from "../../services/api/funcionarioService.js";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService.js";
 import CustomSelect from "../default/CustomSelect.jsx";
+import CustomDateInput from "../default/CustomDateInput.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function AdicionaFuncionarioModal({
@@ -391,15 +392,11 @@ function AdicionaFuncionarioModal({
                 <label className="block text-sm text-white/70 mb-1">
                   Data de Nascimento
                 </label>
-                <input
-                  type="date"
-                  value={nascimento}
-                  min={"1900-01-01"}
+                <CustomDateInput
+                  value={nascimento ?? ""}
+                  min="1900-01-01"
                   max={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => {
-                    dataNascimento(e.target.value);
-                  }}
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
+                  onChange={(e) => dataNascimento(e.target.value)}
                 />
               </div>
 
@@ -407,13 +404,11 @@ function AdicionaFuncionarioModal({
                 <label className="block text-sm text-white/70 mb-1">
                   Data de Admissão
                 </label>
-                <input
-                  type="date"
+                <CustomDateInput
                   value={admissao}
-                  min={"1900-01-01"}
+                  min="1900-01-01"
                   max={new Date().toISOString().split("T")[0]}
                   onChange={(e) => dataAdmissao(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                 />
               </div>
 

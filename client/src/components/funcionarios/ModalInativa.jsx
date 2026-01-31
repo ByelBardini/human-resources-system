@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { X } from "lucide-react";
 import { inativarFuncionario } from "../../services/api/funcionarioService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import CustomDateInput from "../default/CustomDateInput.jsx";
 
 function ModalInativa({
   setInativando,
@@ -81,12 +82,10 @@ function ModalInativa({
             <label className="block text-sm text-white/70 mb-1">
               Data de desligamento
             </label>
-            <input
-              type="date"
-              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                         outline-none focus:bg-white/15 [color-scheme:dark]"
-              placeholder="Selecione a data"
+            <CustomDateInput
+              value={data}
               onChange={(e) => setData(e.target.value)}
+              placeholder="Selecione a data"
             />
           </div>
 
