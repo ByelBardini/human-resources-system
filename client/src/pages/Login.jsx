@@ -86,52 +86,110 @@ function Login() {
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -top-0 -left-0 w-[550px] h-screen bg-gradient-to-r from-black to-blue-950" />
-        <div className="absolute -top-0 -right-[550px] w-full h-screen bg-gradient-to-r from-blue-950 to-blue-700" />
-        <div className="absolute top-0 right-0 w-[800px] h-full flex justify-center items-center p-6">
-          <div className="relative w-[550px] h-[550px] flex justify-center items-center">
-            <div className="absolute left-10 bottom-10 w-80 h-80 rounded-full bg-red-500 blur-3xl animate-pulse"></div>
-            <div className="absolute right-10 bottom-10 w-50 h-80 rounded-full bg-orange-500 blur-3xl animate-pulse"></div>
-            <div className="absolute top-25 w-120 h-30 rounded-full bg-blue-100 blur-3xl animate-pulse"></div>
-            <motion.img
-              src={logoEmpresa}
-              alt="Logo da Empresa"
-              initial={{ scale: 1, rotate: 0 }}
-              animate={{
-                scale: [1, 1.04, 1, 0.96, 1],
-                rotate: [0, 3, 0, -3, 0],
-              }}
-              transition={{
-                duration: 10,
-                times: [0, 0.25, 0.5, 0.75, 1],
-                ease: "easeInOut",
-                repeat: Infinity,
-                repeatType: "mirror",
-              }}
-              className="relative z-10 transform-gpu"
-            />
-          </div>
-        </div>
+      {/* Background - gradientes mantidos */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-black via-blue-950 to-blue-700" />
+
+      {/* Blur orbs - cores em movimento */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <motion.div
+          className="absolute left-[10%] bottom-[20%] w-80 h-80 rounded-full bg-red-500 blur-3xl"
+          animate={{
+            x: [0, 40, -20, 0],
+            y: [0, -30, 20, 0],
+            opacity: [0.4, 0.7, 0.4],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute right-[15%] bottom-[25%] w-64 h-80 rounded-full bg-orange-500 blur-3xl"
+          animate={{
+            x: [0, -50, 30, 0],
+            y: [0, 25, -35, 0],
+            opacity: [0.5, 0.8, 0.5],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+        />
+        <motion.div
+          className="absolute right-[30%] top-[15%] w-96 h-32 rounded-full bg-blue-100 blur-3xl"
+          animate={{
+            x: [0, 60, -40, 0],
+            y: [0, 40, -20, 0],
+            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 9,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+        />
       </div>
 
       {carregando && <Loading />}
 
-      <div className="absolute -top-0 -left-0 w-[550px] h-screen flex justify-center items-center p-6">
-        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <h1 className="text-2xl font-semibold text-white mb-1 text-center">
+      {/* Card central - layout unificado */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-md flex flex-col items-center"
+      >
+        {/* Logo com animação mantida */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <motion.img
+            src={logoEmpresa}
+            alt="Logo da Empresa"
+            initial={{ scale: 1, rotate: 0 }}
+            animate={{
+              scale: [1, 1.04, 1, 0.96, 1],
+              rotate: [0, 3, 0, -3, 0],
+            }}
+            transition={{
+              duration: 10,
+              times: [0, 0.25, 0.5, 0.75, 1],
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "mirror",
+            }}
+            className="w-32 h-auto drop-shadow-2xl"
+          />
+        </motion.div>
+
+        {/* Formulário */}
+        <div className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6">
+          <h1 className="text-xl font-semibold text-white text-center mb-1">
             Entrar
           </h1>
-          <p className="text-sm text-white/70 mb-6 text-center">
+          <p className="text-sm text-white/70 text-center mb-6">
             Acesse o sistema de RH
           </p>
 
-          <form className="space-y-4">
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              logarSistema();
+            }}
+          >
             <div>
-              <label
-                htmlFor="login"
-                className="block text-sm text-white/80 mb-1"
-              >
+              <label htmlFor="login" className="block text-sm text-white/80 mb-1">
                 Login
               </label>
               <input
@@ -139,16 +197,14 @@ function Login() {
                 name="login"
                 type="text"
                 placeholder="Seu usuário"
-                className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+                className="w-full rounded-lg bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
                 onChange={(e) => setLogin(e.target.value)}
+                autoComplete="username"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="senha"
-                className="block text-sm text-white/80 mb-1"
-              >
+              <label htmlFor="senha" className="block text-sm text-white/80 mb-1">
                 Senha
               </label>
               <input
@@ -156,24 +212,25 @@ function Login() {
                 name="senha"
                 type="password"
                 placeholder="••••••••"
-                className="w-full rounded-xl bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
+                className="w-full rounded-lg bg-white/90 text-slate-900 placeholder-slate-500 px-4 py-3 outline-none border border-white/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/40 transition"
                 onChange={(e) => setSenha(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
 
             <button
-              type="button"
-              className="cursor-pointer w-full rounded-xl bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
-              onClick={logarSistema}
+              type="submit"
+              className="w-full rounded-lg bg-blue-600 text-white font-medium py-3 hover:bg-blue-500 active:bg-blue-700 transition shadow-lg shadow-blue-900/30"
             >
               Entrar
             </button>
           </form>
-          <p className="text-sm text-white/70 mt-4 text-center">
+
+          <p className="text-xs text-white/70 mt-4 text-center">
             Entre em contato com o setor de TI para conseguir seu login
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
