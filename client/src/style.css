@@ -34,6 +34,19 @@ button:disabled {
   -ms-overflow-style: none;
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.logo-glow {
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
 @keyframes expandX {
   0% {
     transform: scaleX(0);
@@ -111,45 +124,4 @@ button:disabled {
 
 .custom-select-dropdown::-webkit-scrollbar-thumb:hover {
   background: rgb(255 255 255 / 0.3);
-}
-
-/* Calendário customizado - tema escuro */
-.rdp-datepicker .rdp-root {
-  --rdp-accent-color: rgb(96 165 250);
-  --rdp-accent-background-color: rgb(255 255 255 / 0.15);
-  --rdp-day_button-border-radius: 0.5rem;
-  --rdp-day_button-height: 36px;
-  --rdp-day_button-width: 36px;
-  --rdp-today-color: rgb(96 165 250);
-  --rdp-outside-opacity: 0.4;
-}
-
-.rdp-datepicker .rdp-root {
-  color: rgb(255 255 255);
-}
-
-.rdp-datepicker .rdp-day_button:hover:not([disabled]):not(.rdp-selected) {
-  background-color: rgb(255 255 255 / 0.1);
-}
-
-.rdp-datepicker .rdp-selected .rdp-day_button {
-  background-color: rgb(96 165 250) !important;
-  color: white !important;
-}
-
-.rdp-datepicker .rdp-nav_button {
-  color: rgb(255 255 255);
-}
-
-.rdp-datepicker .rdp-nav_button:hover {
-  background-color: rgb(255 255 255 / 0.1);
-}
-
-.rdp-datepicker .rdp-weekday {
-  color: rgb(255 255 255 / 0.7);
-}
-
-.rdp-datepicker .rdp-caption_label {
-  color: rgb(255 255 255);
-  font-weight: 600;
 }
