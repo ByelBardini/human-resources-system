@@ -150,9 +150,7 @@ function ModalCargoUsuario({
       setModalAberto(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        console.error(err.message, err);
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
@@ -160,7 +158,6 @@ function ModalCargoUsuario({
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar cargo", true);
       }
-      limparAviso();
       console.error(err.message, err);
     } finally {
       setCarregando(false);

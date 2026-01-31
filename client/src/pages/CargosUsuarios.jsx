@@ -30,7 +30,6 @@ function CargosUsuarios() {
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -38,8 +37,8 @@ function CargosUsuarios() {
         }, 1000);
       } else {
         mostrarAviso("erro", "Erro ao buscar cargos:", true);
-        console.error(err);
       }
+      console.error(err);
     } finally {
       setCarregando(false);
     }
@@ -66,7 +65,6 @@ function CargosUsuarios() {
       setAtualizado(true);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -75,6 +73,7 @@ function CargosUsuarios() {
       } else {
         mostrarAviso("erro", err.message || "Erro ao inativar cargo", true);
       }
+      console.error(err);
     } finally {
       setCarregando(false);
     }
@@ -117,14 +116,14 @@ function CargosUsuarios() {
       {carregando && <Loading />}
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
         onClick={() => navigate("/usuario", { replace: true })}
       >
         <Undo2 size={20} />
       </button>
 
-      <div className="text-white flex flex-col gap-5 items-center justify-center w-full max-w-4xl">
+      <div className="relative z-10 text-white flex flex-col gap-5 items-center justify-center w-full max-w-4xl px-4">
         <div className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-semibold text-white">
@@ -132,7 +131,7 @@ function CargosUsuarios() {
             </h1>
             <button
               onClick={abrirModalCriar}
-              className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/15 border border-green-400/30 text-green-300 hover:bg-green-500/25 transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/15 border border-green-400/30 text-green-300 hover:bg-green-500/25 transition"
             >
               <Plus size={18} />
               Novo Cargo
@@ -187,7 +186,7 @@ function CargosUsuarios() {
                   <div className="flex items-center gap-2 ml-4">
                     <button
                       onClick={() => abrirModalEditar(cargo)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/20 transition"
+                      className="inline-flex items-center gap-1 rounded-lg bg-white/10 border border-white/20 px-3 py-1.5 text-sm text-white hover:bg-white/20 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                     >
                       <Edit size={16} />
                       Editar
@@ -200,7 +199,7 @@ function CargosUsuarios() {
                             cargo.cargo_usuario_nome
                           )
                         }
-                        className="inline-flex items-center gap-1 rounded-lg bg-red-500/15 border border-red-400/30 text-red-300 hover:bg-red-500/25 px-3 py-1.5 text-sm transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-red-500/15 border border-red-400/30 text-red-300 hover:bg-red-500/25 px-3 py-1.5 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                       >
                         <Trash2 size={16} />
                         Inativar
