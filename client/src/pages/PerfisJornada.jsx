@@ -2,7 +2,7 @@
 import { Undo2, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { listarPerfisJornada, criarPerfilJornada } from "../services/api/perfilJornadaService.js";
+import { listarPerfisJornada } from "../services/api/perfilJornadaService.js";
 import { useAviso } from "../context/AvisoContext.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
@@ -25,19 +25,19 @@ function PerfisJornada() {
       const data = await listarPerfisJornada();
       setPerfis(data.perfis || []);
       setAtualizado(false);
-      setCarregando(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCarregando(false);
         mostrarAviso("erro", err.message, true);
       }
+      console.error(err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -74,20 +74,20 @@ function PerfisJornada() {
       {carregando && <Loading />}
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
         onClick={() => navigate("/usuario", { replace: true })}
       >
         <Undo2 size={20} />
       </button>
 
-      <div className="text-white flex flex-col gap-5 items-center justify-center w-full max-w-6xl">
+      <div className="relative z-10 text-white flex flex-col gap-5 items-center justify-center w-full max-w-6xl px-4">
         <div className="w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-white">Perfis de Carga Horária</h1>
             <button
               onClick={() => setCria(true)}
-              className="cursor-pointer px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow flex items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             >
               <Plus size={18} />
               Criar Perfil

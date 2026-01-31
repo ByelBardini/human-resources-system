@@ -71,7 +71,7 @@ function RelatorioMensal() {
     { value: "falta_nao_justificada", label: "Falta Não Justificada" },
   ];
 
-  async function deslogar() {
+  function deslogar() {
     localStorage.clear();
     navigate("/", { replace: true });
   }
@@ -85,19 +85,19 @@ function RelatorioMensal() {
       ]);
       setRelatorio(relatorioData);
       setTotais(totaisData);
-      setCarregando(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCarregando(false);
         mostrarAviso("erro", err.message, true);
       }
+      console.error(err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -132,6 +132,7 @@ function RelatorioMensal() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
+      console.error(err);
     }
   }
 
@@ -179,6 +180,7 @@ function RelatorioMensal() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
+      console.error(err);
     }
   }
 
@@ -328,7 +330,7 @@ function RelatorioMensal() {
       <Background />
 
       <button
-        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Sair"
         onClick={deslogar}
       >
@@ -336,16 +338,16 @@ function RelatorioMensal() {
       </button>
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
-        onClick={() => navigate("/ponto")}
+        onClick={() => navigate("/ponto", { replace: true })}
       >
         <X size={20} />
       </button>
 
       {carregando && <Loading />}
 
-      <div className="overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16">
+      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16 px-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-semibold text-white">
@@ -355,7 +357,7 @@ function RelatorioMensal() {
               <button
                 onClick={() => mudarMes(-1)}
                 disabled={!podeMesAnterior()}
-                className={`p-2 rounded-lg border border-white/10 ${
+                className={`p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                   podeMesAnterior()
                     ? "bg-white/5 hover:bg-white/10 text-white"
                     : "bg-white/5 text-white/30 cursor-not-allowed"
@@ -369,7 +371,7 @@ function RelatorioMensal() {
               <button
                 onClick={() => mudarMes(1)}
                 disabled={!podeMesSeguinte()}
-                className={`p-2 rounded-lg border border-white/10 ${
+                className={`p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                   podeMesSeguinte()
                     ? "bg-white/5 hover:bg-white/10 text-white"
                     : "bg-white/5 text-white/30 cursor-not-allowed"
@@ -630,7 +632,7 @@ function RelatorioMensal() {
                               setBatidaData(dia.data);
                               setModalBatida(true);
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 transition-colors"
+                            className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
                           >
                             <Plus size={16} />
                             Adicionar Batida
@@ -646,7 +648,7 @@ function RelatorioMensal() {
                                 });
                                 setModalJustificativa(true);
                               }}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 transition-colors"
+                              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/50"
                             >
                               <FileText size={16} />
                               Justificar
@@ -750,14 +752,14 @@ function RelatorioMensal() {
                     setBatidaObservacao("");
                     setBatidaAnexo(null);
                   }}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAdicionarBatida}
                   disabled={carregando}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
                   Enviar
                 </button>
@@ -883,14 +885,14 @@ function RelatorioMensal() {
               <div className="flex gap-4 mt-6">
                 <button
                   onClick={fecharModalJustificativa}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCriarJustificativa}
                   disabled={carregando}
-                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                 >
                   {justificativaTipo === "falta_nao_justificada" ? "Registrar" : "Enviar"}
                 </button>

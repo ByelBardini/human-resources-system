@@ -59,8 +59,7 @@ function ModalCriaPerfilJornada({
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      limparAviso();
-      console.error(err.message, err, true);
+      console.error(err.message, err);
     } finally {
       setCarregando(false);
     }
@@ -94,7 +93,7 @@ function ModalCriaPerfilJornada({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Criar Perfil de Carga Horária</h2>
           <button
-            className="rounded-lg p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition"
+            className="rounded-lg p-2 bg-white/5 border border-white/10 hover:bg-white/10 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             aria-label="Fechar"
             onClick={() => setCria(false)}
             type="button"
@@ -167,7 +166,7 @@ function ModalCriaPerfilJornada({
           <button
             type="button"
             onClick={criaPerfil}
-            className="inline-flex items-center gap-2 rounded-lg border bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25 px-3 py-1.5 text-sm transition"
+            className="inline-flex items-center gap-2 rounded-lg border bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25 px-3 py-1.5 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400/50"
           >
             <Save size={16} />
             Salvar
