@@ -1,4 +1,4 @@
-import { X, Save, Power, RotateCcw } from "lucide-react";
+import { X, Power, RotateCcw } from "lucide-react";
 import {
   inativaUsuario as inativaUsuarioService,
   resetaSenha,
@@ -43,7 +43,7 @@ function ModalUsuario({
         }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
-        console.error(err.mesage, err);
+        console.error(err.message, err);
       }
     } finally {
       setCarregando(false);
@@ -176,11 +176,6 @@ function ModalUsuario({
             >
               <RotateCcw size={16} />
               Resetar senha
-            </button>
-
-            <button className="inline-flex items-center gap-2 rounded-lg border bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25 px-3 py-1.5 text-sm transition">
-              <Save size={16} />
-              Salvar
             </button>
           </div>
         </div>

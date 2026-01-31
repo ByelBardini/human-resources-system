@@ -25,7 +25,13 @@ function Usuario() {
 
   const { mostrarAviso, limparAviso } = useAviso();
 
+  const botoesAcao = [
+    { to: "/perfis-jornada", icon: Clock, title: "Gerenciar Perfis de Jornada" },
+    { to: "/cargos-usuarios", icon: Settings, title: "Gerenciar Cargos" },
+  ];
+
   async function buscaUsuarios() {
+    setCarregando(true);
     try {
       const [usuarios, funcionarios] = await Promise.all([
         getUsuario(),
@@ -36,8 +42,6 @@ function Usuario() {
       setAtualizado(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        console.error(err);
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -45,8 +49,10 @@ function Usuario() {
         }, 1000);
       } else {
         mostrarAviso("erro", "Erro ao buscar usuários:", true);
-        console.error(err);
       }
+      console.error(err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -81,7 +87,7 @@ function Usuario() {
       {carregando && <Loading />}
 
       <button
-        className="cursor-pointer absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Voltar"
         onClick={() => navigate("/home", { replace: true })}
       >
@@ -89,24 +95,19 @@ function Usuario() {
       </button>
 
       <div className="absolute top-6 right-6 flex gap-2 z-10">
-        <button
-          className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-          title="Gerenciar Perfis de Jornada"
-          onClick={() => navigate("/perfis-jornada", { replace: true })}
-        >
-          <Clock size={20} />
-        </button>
-        <button
-          className="cursor-pointer p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
-          title="Gerenciar Cargos"
-          onClick={() => navigate("/cargos-usuarios", { replace: true })}
-        >
-          <Settings size={20} />
-        </button>
+        {botoesAcao.map(({ to, icon: Icon, title }) => (
+          <button
+            key={to}
+            className="p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
+            title={title}
+            onClick={() => navigate(to, { replace: true })}
+          >
+            <Icon size={20} />
+          </button>
+        ))}
       </div>
 
-      <div className="text-white flex flex-row gap-6 items-start justify-center w-full max-w-6xl">
-        {/* Seção: Usuários do Sistema */}
+      <div className="relative z-10 text-white flex flex-row gap-6 items-start justify-center w-full max-w-6xl px-4">
         <div className="flex-1 max-w-xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center gap-3 mb-4 justify-center">
             <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-400/30">
@@ -141,14 +142,13 @@ function Usuario() {
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setCria(true)}
-              className="cursor-pointer px-4 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-200 shadow"
+              className="px-4 py-2 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 border border-blue-400/30 text-blue-200 shadow"
             >
               Adicionar Usuário
             </button>
           </div>
         </div>
 
-        {/* Seção: Funcionários */}
         <div className="flex-1 max-w-xl rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
           <div className="flex items-center gap-3 mb-4 justify-center">
             <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30">
@@ -184,7 +184,7 @@ function Usuario() {
           <div className="mt-6 flex justify-center">
             <button
               onClick={() => setCria(true)}
-              className="cursor-pointer px-4 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-200 shadow"
+              className="px-4 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-200 shadow"
             >
               Adicionar Funcionário
             </button>
