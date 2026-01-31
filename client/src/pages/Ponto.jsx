@@ -19,7 +19,7 @@ function Ponto() {
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
 
-  async function deslogar() {
+  function deslogar() {
     localStorage.clear();
     navigate("/", { replace: true });
   }
@@ -29,19 +29,19 @@ function Ponto() {
     try {
       const data = await getPontoHoje();
       setPontoData(data);
-      setCarregando(false);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
-        setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
           navigate("/", { replace: true });
         }, 1000);
       } else {
-        setCarregando(false);
         mostrarAviso("erro", err.message, true);
       }
+      console.error(err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -68,6 +68,7 @@ function Ponto() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
+      console.error(err);
     }
   }
 
@@ -143,7 +144,7 @@ function Ponto() {
       <Background />
 
       <button
-        className="cursor-pointer absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
         title="Sair"
         onClick={deslogar}
       >
@@ -152,7 +153,7 @@ function Ponto() {
 
       {carregando && <Loading />}
 
-      <div className="overflow-x-hidden overflow-y-auto text-white w-full max-w-2xl">
+      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-2xl px-4">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
           <h1 className="text-3xl font-semibold text-white mb-2 text-center">
             {pontoData.funcionario.nome}
@@ -174,7 +175,6 @@ function Ponto() {
             )}
           </div>
 
-          {/* Card de Banco de Horas em destaque */}
           <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ function Ponto() {
               {pontoData.funcionario?.batida_fora_empresa && (
                 <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
                   <label className="block text-white/70 text-sm mb-2">
-                    Foto obrigatoria da batida
+                    Foto obrigatória da batida
                   </label>
                   <input
                     type="file"
@@ -364,7 +364,6 @@ function Ponto() {
             </button>
           </div>
 
-          {/* Botão de gestão para aprovadores */}
           {(temPermissao("ponto.aprovar_justificativas") ||
             temPermissao("ponto.alterar_batidas")) && (
             <div className="mt-4">
