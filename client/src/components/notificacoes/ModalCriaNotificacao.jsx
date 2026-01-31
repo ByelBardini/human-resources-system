@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { X, UploadCloud, AlertTriangle } from "lucide-react";
 import { postNotificacao } from "../../services/api/notificacoesServices.js";
+import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModalCriaNotificacao({
@@ -129,31 +130,14 @@ function ModalCriaNotificacao({
               className={`col-span-1 ${esconderCampos ? "sm:col-span-2" : ""}`}
             >
               <label className="block text-sm text-white/70 mb-1">Tipo</label>
-              <select
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                           outline-none focus:bg-white/15"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value)}
-              >
-                <option value="" disabled hidden className="bg-slate-900">
-                  Selecione…
-                </option>
-                <option value={"falta"} className="bg-slate-900">
-                  Falta
-                </option>
-                <option value={"meia-falta"} className="bg-slate-900">
-                  Meia-falta
-                </option>
-                <option value={"atestado"} className="bg-slate-900">
-                  Atestado
-                </option>
-                <option value={"advertencia"} className="bg-slate-900">
-                  Advertência
-                </option>
-                <option value={"suspensao"} className="bg-slate-900">
-                  Suspensão
-                </option>
-              </select>
+              <CustomSelect value={tipo} onChange={(e) => setTipo(e.target.value)}>
+                <option hidden value="">Selecione…</option>
+                <option value="falta">Falta</option>
+                <option value="meia-falta">Meia-falta</option>
+                <option value="atestado">Atestado</option>
+                <option value="advertencia">Advertência</option>
+                <option value="suspensao">Suspensão</option>
+              </CustomSelect>
             </div>
 
             {!esconderCampos && (

@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { getSetores } from "../../services/api/setorService.js";
 import { putDescricao } from "../../services/api/descricaoService.js";
+import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function ModificaDescricaoModal({
@@ -127,23 +128,12 @@ function ModificaDescricaoModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
             <div>
               <label className="block text-sm text-white/70 mb-1">Setor</label>
-              <select
-                value={setor}
-                onChange={(e) => setSetor(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
-              >
-                <option hidden className="bg-slate-900">
-                  {descricao.setor.setor_nome != "" &&
-                  descricao.setor.setor_nome != null
-                    ? descricao.setor.setor_nome
-                    : "Selecione…"}
-                </option>
-                {setores.map((setor) => (
-                  <option value={setor.setor_id} className="bg-slate-900">
-                    {setor.setor_nome}
-                  </option>
+              <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
+                <option hidden value="">Selecione…</option>
+                {setores.map((s) => (
+                  <option key={s.setor_id} value={s.setor_id}>{s.setor_nome}</option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
 
             <div>

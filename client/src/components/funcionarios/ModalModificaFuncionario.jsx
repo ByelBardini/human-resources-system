@@ -2,6 +2,7 @@
 import { X, UploadCloud, Image } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import CustomSelect from "../default/CustomSelect.jsx";
 import {
   getCargoSetor,
   putFuncionario,
@@ -212,85 +213,44 @@ function ModalModificaFuncionario({
                   <label className="block text-sm text-white/70 mb-1">
                     Setor
                   </label>
-                  <select
-                    value={setor}
-                    onChange={(e) => setSetor(e.target.value)}
-                    className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 focus:border-white/30"
-                  >
+                  <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
                     {setores.map((s) => (
-                      <option
-                        key={s.setor_id}
-                        value={s.setor_id}
-                        className="bg-slate-900"
-                      >
+                      <option key={s.setor_id} value={s.setor_id}>
                         {s.setor_nome}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
                     Função
                   </label>
-                  <select
-                    value={cargo}
-                    onChange={(e) => setCargo(e.target.value)}
-                    className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 focus:border-white/30"
-                  >
+                  <CustomSelect value={cargo} onChange={(e) => setCargo(e.target.value)}>
                     {cargos.map((c) => (
-                      <option
-                        key={c.cargo_id}
-                        value={c.cargo_id}
-                        className="bg-slate-900"
-                      >
+                      <option key={c.cargo_id} value={c.cargo_id}>
                         {c.cargo_nome}
                       </option>
                     ))}
-                  </select>
+                  </CustomSelect>
                 </div>
 
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
                     Nível
                   </label>
-                  <select
-                    value={nivel}
-                    onChange={(e) => setNivel(e.target.value)}
-                    className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 focus:border-white/30"
-                  >
-                    <option hidden>{nivel}</option>
-                    <option value={"Inicial"} className="bg-slate-900">
-                      Inicial
-                    </option>
-                    <option value={"Júnior I"} className="bg-slate-900">
-                      Júnior I
-                    </option>
-                    <option value={"Júnior II"} className="bg-slate-900">
-                      Júnior II
-                    </option>
-                    <option value={"Júnior III"} className="bg-slate-900">
-                      Júnior III
-                    </option>
-                    <option value={"Pleno I"} className="bg-slate-900">
-                      Pleno I
-                    </option>
-                    <option value={"Pleno II"} className="bg-slate-900">
-                      Pleno II
-                    </option>
-                    <option value={"Pleno III"} className="bg-slate-900">
-                      Pleno III
-                    </option>
-                    <option value={"Sênior I"} className="bg-slate-900">
-                      Sênior I
-                    </option>
-                    <option value={"Sênior II"} className="bg-slate-900">
-                      Sênior II
-                    </option>
-                    <option value={"Sênior III"} className="bg-slate-900">
-                      Sênior III
-                    </option>
-                  </select>
+                  <CustomSelect value={nivel} onChange={(e) => setNivel(e.target.value)}>
+                    <option value="Inicial">Inicial</option>
+                    <option value="Júnior I">Júnior I</option>
+                    <option value="Júnior II">Júnior II</option>
+                    <option value="Júnior III">Júnior III</option>
+                    <option value="Pleno I">Pleno I</option>
+                    <option value="Pleno II">Pleno II</option>
+                    <option value="Pleno III">Pleno III</option>
+                    <option value="Sênior I">Sênior I</option>
+                    <option value="Sênior II">Sênior II</option>
+                    <option value="Sênior III">Sênior III</option>
+                  </CustomSelect>
                 </div>
 
                 <div className="sm:col-span-2 lg:col-span-1">

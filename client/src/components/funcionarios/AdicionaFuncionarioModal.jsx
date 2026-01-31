@@ -7,6 +7,7 @@ import {
   getCargoSetor,
 } from "../../services/api/funcionarioService.js";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService.js";
+import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
 function AdicionaFuncionarioModal({
@@ -308,92 +309,43 @@ function AdicionaFuncionarioModal({
                 <label className="block text-sm text-white/70 mb-1">
                   Setor
                 </label>
-                <select
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
-                  onChange={(e) => setSetor(e.target.value)}
-                  value={setor}
-                >
-                  <option className="bg-slate-900" hidden>
-                    Selecione…
-                  </option>
+                <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
+                  <option hidden value="">Selecione…</option>
                   {setores.map((s) => (
-                    <option
-                      key={s.setor_id}
-                      value={s.setor_id}
-                      className="bg-slate-900"
-                    >
-                      {s.setor_nome}
-                    </option>
+                    <option key={s.setor_id} value={s.setor_id}>{s.setor_nome}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div>
                 <label className="block text-sm text-white/70 mb-1">
                   Função
                 </label>
-                <select
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
-                  onChange={(e) => setCargo(e.target.value)}
-                  value={cargo}
-                >
-                  <option className="bg-slate-900" hidden>
-                    Selecione…
-                  </option>
+                <CustomSelect value={cargo} onChange={(e) => setCargo(e.target.value)}>
+                  <option hidden value="">Selecione…</option>
                   {cargos.map((c) => (
-                    <option
-                      key={c.cargo_id}
-                      value={c.cargo_id}
-                      className="bg-slate-900"
-                    >
-                      {c.cargo_nome}
-                    </option>
+                    <option key={c.cargo_id} value={c.cargo_id}>{c.cargo_nome}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div>
                 <label className="block text-sm text-white/70 mb-1">
                   Nível
                 </label>
-                <select
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
-                  onChange={(e) => setNivel(e.target.value)}
-                >
-                  <option className="bg-slate-900" hidden>
-                    Selecione…
-                  </option>
-                  <option value={"Inicial"} className="bg-slate-900">
-                    Inicial
-                  </option>
-                  <option value={"Júnior I"} className="bg-slate-900">
-                    Júnior I
-                  </option>
-                  <option value={"Júnior II"} className="bg-slate-900">
-                    Júnior II
-                  </option>
-                  <option value={"Júnior III"} className="bg-slate-900">
-                    Júnior III
-                  </option>
-                  <option value={"Pleno I"} className="bg-slate-900">
-                    Pleno I
-                  </option>
-                  <option value={"Pleno II"} className="bg-slate-900">
-                    Pleno II
-                  </option>
-                  <option value={"Pleno III"} className="bg-slate-900">
-                    Pleno III
-                  </option>
-                  <option value={"Sênior I"} className="bg-slate-900">
-                    Sênior I
-                  </option>
-                  <option value={"Sênior II"} className="bg-slate-900">
-                    Sênior II
-                  </option>
-                  <option value={"Sênior III"} className="bg-slate-900">
-                    Sênior III
-                  </option>
-                </select>
+                <CustomSelect value={nivel} onChange={(e) => setNivel(e.target.value)}>
+                  <option hidden value="">Selecione…</option>
+                  <option value="Inicial">Inicial</option>
+                  <option value="Júnior I">Júnior I</option>
+                  <option value="Júnior II">Júnior II</option>
+                  <option value="Júnior III">Júnior III</option>
+                  <option value="Pleno I">Pleno I</option>
+                  <option value="Pleno II">Pleno II</option>
+                  <option value="Pleno III">Pleno III</option>
+                  <option value="Sênior I">Sênior I</option>
+                  <option value="Sênior II">Sênior II</option>
+                  <option value="Sênior III">Sênior III</option>
+                </CustomSelect>
               </div>
 
               <div>
@@ -428,20 +380,11 @@ function AdicionaFuncionarioModal({
 
               <div>
                 <label className="block text-sm text-white/70 mb-1">Sexo</label>
-                <select
-                  className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
-                  onChange={(e) => setSexo(e.target.value)}
-                >
-                  <option className="bg-slate-900" hidden>
-                    Selecione…
-                  </option>
-                  <option value={"masculino"} className="bg-slate-900">
-                    Masculino
-                  </option>
-                  <option value={"feminino"} className="bg-slate-900">
-                    Feminino
-                  </option>
-                </select>
+                <CustomSelect value={sexo} onChange={(e) => setSexo(e.target.value)}>
+                  <option hidden value="">Selecione…</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </CustomSelect>
               </div>
 
               <div>
@@ -532,26 +475,19 @@ function AdicionaFuncionarioModal({
                         Nenhum perfil de jornada disponível.
                       </p>
                     ) : (
-                      <select
+                      <CustomSelect
                         value={perfilJornadaId}
                         onChange={(e) => setPerfilJornadaId(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-white outline-none focus:bg-white/15"
                       >
-                        <option className="bg-slate-900" hidden value="">
-                          Selecione um perfil...
-                        </option>
+                        <option hidden value="">Selecione um perfil...</option>
                         {perfisJornada
                           .filter((p) => p.perfil_jornada_ativo === 1)
                           .map((perfil) => (
-                            <option
-                              key={perfil.perfil_jornada_id}
-                              value={perfil.perfil_jornada_id}
-                              className="bg-slate-900"
-                            >
+                            <option key={perfil.perfil_jornada_id} value={perfil.perfil_jornada_id}>
                               {perfil.perfil_jornada_nome}
                             </option>
                           ))}
-                      </select>
+                      </CustomSelect>
                     )}
                   </div>
                 </>

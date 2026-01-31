@@ -6,6 +6,7 @@ import { useAviso } from "../../context/AvisoContext.jsx";
 import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
 import { getEmpresas } from "../../services/api/empresasService";
+import CustomSelect from "../default/CustomSelect.jsx";
 
 function ModalCriaUsuario({
   setCria,
@@ -225,7 +226,7 @@ function ModalCriaUsuario({
             <label className="block text-sm text-white/80 mb-1">
               Tipo de Perfil *
             </label>
-            <select
+            <CustomSelect
               value={tipoUsuario}
               onChange={(e) => {
                 setTipoUsuario(e.target.value);
@@ -233,18 +234,13 @@ function ModalCriaUsuario({
                   setCargoId("");
                 }
               }}
-              className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
             >
               <option hidden value="">
                 Selecione...
               </option>
-              <option className="bg-slate-900" value="usuario">
-                Usuário do Sistema
-              </option>
-              <option className="bg-slate-900" value="funcionario">
-                Funcionário
-              </option>
-            </select>
+              <option value="usuario">Usuário do Sistema</option>
+              <option value="funcionario">Funcionário</option>
+            </CustomSelect>
           </div>
 
           {tipoUsuario === "usuario" && (
@@ -252,24 +248,19 @@ function ModalCriaUsuario({
               <label className="block text-sm text-white/80 mb-1">
                 Cargo *
               </label>
-              <select
+              <CustomSelect
                 value={cargoId}
                 onChange={(e) => setCargoId(e.target.value)}
-                className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
               >
                 <option hidden value="">
                   Selecione um cargo...
                 </option>
                 {cargos.map((cargo) => (
-                  <option
-                    key={cargo.cargo_usuario_id}
-                    className="bg-slate-900"
-                    value={cargo.cargo_usuario_id}
-                  >
+                  <option key={cargo.cargo_usuario_id} value={cargo.cargo_usuario_id}>
                     {cargo.cargo_usuario_nome}
                   </option>
                 ))}
-              </select>
+              </CustomSelect>
             </div>
           )}
 
@@ -283,24 +274,19 @@ function ModalCriaUsuario({
                   Nenhuma empresa disponível.
                 </p>
               ) : (
-                <select
+                <CustomSelect
                   value={empresaId}
                   onChange={(e) => setEmpresaId(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
                 >
                   <option hidden value="">
                     Selecione uma empresa...
                   </option>
                   {empresas.map((empresa) => (
-                    <option
-                      key={empresa.empresa_id}
-                      className="bg-slate-900"
-                      value={empresa.empresa_id}
-                    >
+                    <option key={empresa.empresa_id} value={empresa.empresa_id}>
                       {empresa.empresa_nome}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               )}
             </div>
           )}
@@ -315,11 +301,10 @@ function ModalCriaUsuario({
                   Nenhum funcionário disponível nesta empresa.
                 </p>
               ) : (
-                <select
+                <CustomSelect
                   value={funcionarioId}
                   onChange={(e) => {
                     setFuncionarioId(e.target.value);
-                    // Auto-preencher nome se funcionário selecionado
                     const funcSelecionado = funcionariosSemUsuario.find(
                       f => f.funcionario_id === parseInt(e.target.value)
                     );
@@ -327,21 +312,16 @@ function ModalCriaUsuario({
                       setNome(funcSelecionado.funcionario_nome);
                     }
                   }}
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
                 >
                   <option hidden value="">
                     Selecione um funcionário...
                   </option>
                   {funcionariosSemUsuario.map((func) => (
-                    <option
-                      key={func.funcionario_id}
-                      className="bg-slate-900"
-                      value={func.funcionario_id}
-                    >
+                    <option key={func.funcionario_id} value={func.funcionario_id}>
                       {func.funcionario_nome}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               )}
             </div>
           )}
@@ -368,24 +348,19 @@ function ModalCriaUsuario({
                   </button>
                 </div>
               ) : (
-                <select
+                <CustomSelect
                   value={perfilJornadaId}
                   onChange={(e) => setPerfilJornadaId(e.target.value)}
-                  className="w-full rounded-lg bg-white/5 border border-white/15 px-3 py-2 outline-none focus:border-white/30"
                 >
                   <option hidden value="">
                     Selecione um perfil...
                   </option>
                   {perfisJornada.map((perfil) => (
-                    <option
-                      key={perfil.perfil_jornada_id}
-                      className="bg-slate-900"
-                      value={perfil.perfil_jornada_id}
-                    >
+                    <option key={perfil.perfil_jornada_id} value={perfil.perfil_jornada_id}>
                       {perfil.perfil_jornada_nome}
                     </option>
                   ))}
-                </select>
+                </CustomSelect>
               )}
             </div>
           )}

@@ -7,6 +7,7 @@ import {
   getUsuariosFerias,
 } from "../../services/api/feriasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import CustomSelect from "../default/CustomSelect.jsx";
 
 function ModalFerias({
   ferias,
@@ -167,31 +168,23 @@ function ModalFerias({
             <label className="block text-sm font-medium text-white/80 mb-2">
               Usuário
             </label>
-            <select
+            <CustomSelect
               value={usuarioSelecionado}
               onChange={(e) => setUsuarioSelecionado(e.target.value)}
               disabled={modoEdicao}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                colorScheme: "dark",
-              }}
             >
-              <option value="" style={{ backgroundColor: "#1e293b", color: "#ffffff" }}>
+              <option hidden value="">
                 Selecione um usuário
               </option>
               {usuarios.map((usuario) => (
-                <option
-                  key={usuario.usuario_id}
-                  value={usuario.usuario_id}
-                  style={{ backgroundColor: "#1e293b", color: "#ffffff" }}
-                >
+                <option key={usuario.usuario_id} value={usuario.usuario_id}>
                   {usuario.usuario_nome}
                   {usuario.empresa?.empresa_nome
                     ? ` - ${usuario.empresa.empresa_nome}`
                     : ""}
                 </option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
