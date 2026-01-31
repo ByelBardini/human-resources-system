@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
 
+const CORES_AVISO = { sucesso: "verde", erro: "vermelho", aviso: "amarelo" };
+
 export function useAviso() {
   const [aviso, setAviso] = useState(false);
   const [corAviso, setCorAviso] = useState("vermelho");
@@ -7,9 +9,7 @@ export function useAviso() {
   const [showButton, setShowButton] = useState(false);
 
   const mostrarAviso = useCallback((tipo, mensagem, comBotao = false) => {
-    const cores = { sucesso: "verde", erro: "vermelho", aviso: "amarelo" };
-
-    setCorAviso(cores[tipo] || "vermelho");
+    setCorAviso(CORES_AVISO[tipo] || "vermelho");
     setTextoAviso(mensagem);
     setShowButton(comBotao);
     setAviso(true);
