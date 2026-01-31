@@ -2,7 +2,7 @@ import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { postUsuario, getFuncionariosSemUsuario } from "../../services/api/usuariosServices";
-import { useAviso } from "../../context/AvisoContext";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
 import { getEmpresas } from "../../services/api/empresasService";

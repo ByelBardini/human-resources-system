@@ -54,7 +54,7 @@ function ModalAviso({
         {showButton && ( // 👈 só mostra quando você mandar
           <div className="flex items-center justify-center gap-3">
             <button
-              className={`cursor-pointer rounded-xl ${
+              className={`rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
                 cor === "amarelo"
                   ? "bg-amber-300 shadow-amber-900/30 hover:bg-amber-500 active:bg-amber-700 transition"
                   : cor === "vermelho"

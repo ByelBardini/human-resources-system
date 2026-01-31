@@ -12,7 +12,7 @@ function FiltroNotificacoes({
   setFiltroAtivo,
   setFiltradas,
 }) {
-  const {mostrarAviso} = useAviso();
+  const { mostrarAviso } = useAviso();
   const [valido, setValido] = useState(false);
 
   async function busca() {
@@ -22,7 +22,7 @@ function FiltroNotificacoes({
       setFiltradas(filtrados);
       setFiltroAtivo(true);
     } catch (err) {
-      mostrarAviso("erro", err.message, true)
+      mostrarAviso("erro", err.message, true);
       console.error(err.message, err);
     }
   }

@@ -1,9 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useAviso } from "../context/AvisoContext.jsx";
 import Background from "../components/default/Background.jsx";
 import Loading from "../components/default/Loading.jsx";
-import ModalAviso from "../components/default/ModalAviso.jsx";
 import ModalConfirmacao from "../components/default/ModalConfirmacao.jsx";
 import Header from "../components/menu/Header.jsx";
 import MenuTela from "../components/menu/MenuTela.jsx";
@@ -12,7 +10,6 @@ import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.js
 import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
 
 function Empresa() {
-  const { aviso, corAviso, textoAviso, limparAviso } = useAviso();
   const navigate = useNavigate();
 
   const [adicionandoCargo, setAdicionandoCargo] = useState(false);
@@ -96,11 +93,6 @@ function Empresa() {
           onClickSim={onSimConfirmacao}
           onClickNao={() => setConfirmacao(false)}
         />
-      )}
-
-      {/* Aviso */}
-      {aviso && (
-        <ModalAviso texto={textoAviso} cor={corAviso} onClick={limparAviso} />
       )}
 
       {/* Carregando */}

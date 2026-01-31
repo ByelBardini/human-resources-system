@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import { useAviso as useAvisoHook } from "../hooks/useAvisos.js";
 import ModalAviso from "../components/default/ModalAviso.jsx";
 
-const AvisoContext = createContext();
+const AvisoContext = createContext(null);
 
 export function AvisoProvider({ children }) {
   const aviso = useAvisoHook();
@@ -25,7 +25,7 @@ export function AvisoProvider({ children }) {
 
 export function useAviso() {
   const context = useContext(AvisoContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAviso deve ser usado dentro de um AvisoProvider");
   }
   return context;

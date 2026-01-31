@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useAviso } from "../../context/AvisoContext";
+import { useAviso } from "../../context/AvisoContext.jsx";
 import { Download, XCircle, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 
