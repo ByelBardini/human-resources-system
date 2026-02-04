@@ -1,11 +1,13 @@
 import fs from "fs";
 import path from "path";
 import express from "express";
+import verificaToken from "../middlewares/verificaToken.js";
+import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 const router = express.Router();
 const uploadRoot = path.join(process.cwd(), "uploads");
 
-router.get("/download", (req, res) => {
+router.get("/download", verificaToken, asyncHandler((req, res) => {
   const rel = String(req.query.path || "");
   const full = path.join(
     process.cwd(),
@@ -17,6 +19,6 @@ router.get("/download", (req, res) => {
   }
 
   res.download(full, path.basename(full));
-});
+}));
 
 export default router;

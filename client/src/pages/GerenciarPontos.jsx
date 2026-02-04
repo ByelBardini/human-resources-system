@@ -80,6 +80,10 @@ function GerenciarPontos() {
   const [modalReprovar, setModalReprovar] = useState(null);
   const [motivoReprovar, setMotivoReprovar] = useState("");
 
+  // Modal de aprovar atestado (solicita quantidade de dias)
+  const [modalAprovarAtestado, setModalAprovarAtestado] = useState(null);
+  const [diasAtestado, setDiasAtestado] = useState("");
+
   // Modal de fechar banco
   const [modalFecharBanco, setModalFecharBanco] = useState(false);
 
@@ -110,6 +114,37 @@ function GerenciarPontos() {
     link.remove();
   }
 
+  async function baixarAnexoJustificativa(pathParaDownload) {
+    if (!pathParaDownload) return;
+    const token = localStorage.getItem("token");
+    const url = `${
+      import.meta.env.VITE_API_BASE_URL
+    }/download?path=${encodeURIComponent(pathParaDownload)}`;
+    try {
+      const resp = await fetch(url, {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!resp.ok) {
+        mostrarAviso("erro", "Erro ao baixar o anexo", true);
+        return;
+      }
+      const blob = await resp.blob();
+      const nome =
+        pathParaDownload.split("/").pop()?.split("\\").pop() || "atestado.pdf";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = nome;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      mostrarAviso("erro", "Erro ao baixar o anexo", true);
+      console.error(err);
+    }
+  }
+
   const tiposJustificativa = {
     esqueceu_bater: "Esqueceu de bater ponto",
     entrada_atrasada: "Entrada atrasada",
@@ -119,6 +154,7 @@ function GerenciarPontos() {
     horas_extras: "Horas Extras",
     outros: "Outros",
     falta_nao_justificada: "Falta não justificada",
+    atestado: "Atestado",
   };
 
   async function deslogar() {
@@ -195,10 +231,10 @@ function GerenciarPontos() {
     }
   }
 
-  async function handleAprovarJustificativa(id) {
+  async function handleAprovarJustificativa(id, dados = {}) {
     setCarregando(true);
     try {
-      await aprovarJustificativa(id);
+      await aprovarJustificativa(id, dados);
       mostrarAviso("sucesso", "Justificativa aprovada com sucesso!");
       setTimeout(() => {
         limparAviso();
@@ -211,6 +247,19 @@ function GerenciarPontos() {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
     }
+  }
+
+  async function handleConfirmarAprovarAtestado() {
+    const dias = parseInt(diasAtestado, 10);
+    if (!Number.isInteger(dias) || dias < 1) {
+      mostrarAviso("erro", "Informe a quantidade de dias do atestado (número inteiro maior que zero)", true);
+      return;
+    }
+    await handleAprovarJustificativa(modalAprovarAtestado.justificativa_id, {
+      dias_atestado: dias,
+    });
+    setModalAprovarAtestado(null);
+    setDiasAtestado("");
   }
 
   async function handleRecusarJustificativa(id) {
@@ -1043,10 +1092,32 @@ function GerenciarPontos() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
+                              {(j.justificativa_anexo_download_path ||
+                                j.justificativa_anexo_caminho) && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    baixarAnexoJustificativa(
+                                      j.justificativa_anexo_download_path ||
+                                        j.justificativa_anexo_caminho
+                                    )
+                                  }
+                                  className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                  title="Baixar anexo (atestado)"
+                                >
+                                  <Download size={18} />
+                                </button>
+                              )}
                               <button
                                 onClick={() =>
-                                  handleAprovarJustificativa(j.justificativa_id)
+                                  j.justificativa_tipo === "atestado"
+                                    ? setModalAprovarAtestado({
+                                        justificativa_id: j.justificativa_id,
+                                        funcionario_nome:
+                                          j.funcionario?.funcionario_nome || "Funcionário",
+                                      })
+                                    : handleAprovarJustificativa(j.justificativa_id)
                                 }
                                 className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30"
                                 title="Aprovar"
@@ -1577,6 +1648,60 @@ function GerenciarPontos() {
                   className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
                   {modalReprovar.acao === "invalidar" ? "Invalidar" : "Reprovar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Aprovar Atestado - informar quantidade de dias */}
+      {modalAprovarAtestado && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              Aprovar Atestado
+            </h2>
+            <p className="text-white/70 mb-4">
+              Informe quantos dias de atestado para{" "}
+              <strong className="text-white">
+                {modalAprovarAtestado.funcionario_nome}
+              </strong>
+              . Durante este período o funcionário não poderá bater ponto e as
+              horas faltantes não serão consideradas.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Quantidade de dias (obrigatório)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={diasAtestado}
+                  onChange={(e) => setDiasAtestado(e.target.value)}
+                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white"
+                  placeholder="Ex: 3"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setModalAprovarAtestado(null);
+                    setDiasAtestado("");
+                  }}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmarAprovarAtestado}
+                  disabled={carregando}
+                  className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-green-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Aprovar
                 </button>
               </div>
             </div>

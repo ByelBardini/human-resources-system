@@ -9,6 +9,7 @@ import {
   Ferias,
   Empresa,
   Funcionario,
+  Notificacao,
 } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
@@ -246,6 +247,27 @@ async function isEmFerias(usuario_id, data) {
   return !!periodo;
 }
 
+// Função para verificar se o usuário está em período de atestado médico
+async function isEmAtestado(usuario_id, data) {
+  const usuario = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_funcionario_id"],
+  });
+  if (!usuario?.usuario_funcionario_id) return false;
+
+  const dataStr = formatarDataStr(getDataBrasilia(data));
+
+  const atestado = await Notificacao.findOne({
+    where: {
+      notificacao_funcionario_id: usuario.usuario_funcionario_id,
+      notificacao_tipo: "atestado",
+      notificacao_data: { [Op.lte]: dataStr },
+      notificacao_data_final: { [Op.gte]: dataStr },
+    },
+  });
+
+  return !!atestado;
+}
+
 // Função para verificar se uma data é feriado ou domingo
 async function isFeriadoOuDomingo(usuario_id, data) {
   // Verificar se é domingo (0 = domingo)
@@ -480,12 +502,13 @@ export async function getRelatorioMensal(req, res) {
     const data = new Date(ano, mes - 1, dia);
     const dataStr = data.toISOString().split("T")[0];
 
-    // Verificar se é feriado/domingo ou férias
+    // Verificar se é feriado/domingo, férias ou atestado
     const nomeFeriado = await getNomeFeriado(usuario_id, data);
     const eFeriadoOuDomingo = nomeFeriado !== null;
     const feriasPeriodo = await getFeriasPeriodo(usuario_id, data);
     const emFerias = !!feriasPeriodo;
-    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+    const emAtestado = await isEmAtestado(usuario_id, data);
+    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
 
     // Buscar batidas do dia
     const batidasDoDia = batidasPorDia[dataStr] || [];
@@ -525,11 +548,11 @@ export async function getRelatorioMensal(req, res) {
       // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
       horasExtras = horasTrabalhadas * 2;
       horasNegativas = 0;
-    } else if (emFerias) {
-      // Em férias: não considerar horas negativas
+    } else if (emFerias || emAtestado) {
+      // Em férias ou atestado: não considerar horas negativas
       horasExtras = horasTrabalhadas;
       horasNegativas = 0;
-      } else {
+    } else {
         // Em dias normais: calcular normalmente
         if (horasPrevistas === null || horasPrevistas === 0) {
           // Se não há horas previstas, todas as horas trabalhadas são extras
@@ -739,7 +762,8 @@ export async function getTotaisMensais(req, res) {
     const nomeFeriado = await getNomeFeriado(usuario_id, data);
     const eFeriadoOuDomingo = nomeFeriado !== null;
     const emFerias = await isEmFerias(usuario_id, data);
-    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+    const emAtestado = await isEmAtestado(usuario_id, data);
+    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
     const horasPrevistas = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, data);
 
     // Calcular horários previstos para verificação de divergências
@@ -776,7 +800,7 @@ export async function getTotaisMensais(req, res) {
       // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
       horasExtras = horasTrabalhadas * 2;
       horasNegativas = 0;
-    } else if (emFerias) {
+    } else if (emFerias || emAtestado) {
       // Em férias: não considerar horas negativas
       horasExtras = horasTrabalhadas;
       horasNegativas = 0;
@@ -950,10 +974,11 @@ export async function getTotaisMensais(req, res) {
         (b) => b.status !== "recusada" && b.status !== "pendente"
       );
       
-      // Verificar se é feriado/domingo ou férias
+      // Verificar se é feriado/domingo, férias ou atestado
       const eFeriadoOuDomingo = await isFeriadoOuDomingo(usuario_id, data);
       const emFerias = await isEmFerias(usuario_id, data);
-      const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+      const emAtestado = await isEmAtestado(usuario_id, data);
+      const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
       const horasPrevistas = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, data);
       
       // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), não conta horas negativas
@@ -970,8 +995,8 @@ export async function getTotaisMensais(req, res) {
         // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
         horasExtrasDia = horasTrabalhadasDia * 2;
         horasNegativasDia = 0;
-      } else if (emFerias) {
-        // Em férias: não considerar horas negativas
+      } else if (emFerias || emAtestado) {
+        // Em férias ou atestado: não considerar horas negativas
         horasExtrasDia = horasTrabalhadasDia;
         horasNegativasDia = 0;
       } else {

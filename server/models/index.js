@@ -465,9 +465,9 @@ Funcionario.afterUpdate(async (instance, options) => {
 //Logging Notificações
 
 Notificacao.afterCreate(async (instance, options) => {
-  console.log("AAAAAAAAAAAAAAAAAAAAAAAAA");
   try {
-    const usuario_id = options?.usuario_id || null;
+    const usuario_id = options?.usuario_id ?? null;
+    if (usuario_id == null) return;
 
     await Log.create(
       {

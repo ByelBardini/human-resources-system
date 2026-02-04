@@ -32,7 +32,8 @@ Justificativa.init(
         "consulta_medica",
         "horas_extras",
         "outros",
-        "falta_nao_justificada"
+        "falta_nao_justificada",
+        "atestado"
       ),
       allowNull: false,
     },

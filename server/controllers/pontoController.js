@@ -1,3 +1,4 @@
+import path from "path";
 import {
   Usuario,
   BatidaPonto,
@@ -9,10 +10,12 @@ import {
   Feriado,
   Ferias,
   Funcionario,
+  Notificacao,
 } from "../models/index.js";
 import { Op } from "sequelize";
 import { ApiError } from "../middlewares/ApiError.js";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
+import { verificarECriarFalta } from "./justificativaController.js";
 
 // Constante para tolerância em minutos
 const TOLERANCIA_MINUTOS = 10;
@@ -225,6 +228,54 @@ async function isEmFerias(usuario_id, data) {
   return !!periodo;
 }
 
+// Função para obter período de atestado ativo (retorna null se não houver)
+async function getAtestadoPeriodo(usuario_id, data) {
+  const usuario = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_funcionario_id"],
+  });
+  if (!usuario?.usuario_funcionario_id) return null;
+
+  const dataBrasilia = getDataBrasilia(data);
+  const dataStr = formatarDataStr(dataBrasilia);
+
+  const atestado = await Notificacao.findOne({
+    where: {
+      notificacao_funcionario_id: usuario.usuario_funcionario_id,
+      notificacao_tipo: "atestado",
+      notificacao_data: { [Op.lte]: dataStr },
+      notificacao_data_final: { [Op.gte]: dataStr },
+    },
+    order: [["notificacao_data", "DESC"]],
+  });
+
+  if (!atestado) return null;
+  return {
+    data_inicio: atestado.notificacao_data,
+    data_fim: atestado.notificacao_data_final,
+  };
+}
+
+// Função para verificar se o usuário está em período de atestado médico
+async function isEmAtestado(usuario_id, data) {
+  const periodo = await getAtestadoPeriodo(usuario_id, data);
+  return !!periodo;
+}
+
+// Função para verificar se o funcionário está em período de atestado (por funcionario_id)
+async function isEmAtestadoPorFuncionario(funcionario_id, data) {
+  if (!funcionario_id) return false;
+  const dataStr = formatarDataStr(getDataBrasilia(data));
+  const atestado = await Notificacao.findOne({
+    where: {
+      notificacao_funcionario_id: funcionario_id,
+      notificacao_tipo: "atestado",
+      notificacao_data: { [Op.lte]: dataStr },
+      notificacao_data_final: { [Op.gte]: dataStr },
+    },
+  });
+  return !!atestado;
+}
+
 // Função para obter horas previstas do dia
 export function getHorasPrevistasDia(perfil, data) {
   if (!perfil) return null;
@@ -357,10 +408,11 @@ function verificarDivergencias(
 
 // Função para calcular e salvar resumo do dia
 export async function calcularESalvarDia(usuario_id, data, batidas, perfil) {
-  // Verificar se é feriado/domingo ou férias
+  // Verificar se é feriado/domingo, férias ou atestado
   const eFeriadoOuDomingo = await isFeriadoOuDomingo(usuario_id, data);
   const eEmFerias = await isEmFerias(usuario_id, data);
-  const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+  const eEmAtestado = await isEmAtestado(usuario_id, data);
+  const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
 
   let horasPrevistas = null;
   let entradaPrevista = null;
@@ -396,8 +448,8 @@ export async function calcularESalvarDia(usuario_id, data, batidas, perfil) {
     // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
     horasExtras = horasTrabalhadas * 2;
     horasNegativas = 0;
-  } else if (eEmFerias) {
-    // Em férias: não considerar horas negativas
+  } else if (eEmFerias || eEmAtestado) {
+    // Em férias ou atestado: não considerar horas negativas
     horasExtras = horasTrabalhadas;
     horasNegativas = 0;
   } else {
@@ -549,6 +601,13 @@ export async function registrarBatida(req, res) {
     throw ApiError.badRequest("Usuário está em férias e não pode registrar ponto.");
   }
 
+  const emAtestado = await isEmAtestado(usuario_id, dataAtual);
+  if (emAtestado) {
+    throw ApiError.badRequest(
+      "Usuário está em período de atestado médico e não pode registrar ponto."
+    );
+  }
+
   // Buscar batidas do dia
   const inicioDia = new Date(dataAtual);
   inicioDia.setHours(0, 0, 0, 0);
@@ -626,7 +685,9 @@ export async function getPontoHoje(req, res) {
   const eFeriadoOuDomingo = nomeFeriado !== null;
   const feriasPeriodo = await getFeriasPeriodo(usuario_id, dataAtual);
   const emFerias = !!feriasPeriodo;
-  const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+  const atestadoPeriodo = await getAtestadoPeriodo(usuario_id, dataAtual);
+  const emAtestado = !!atestadoPeriodo;
+  const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
   const horasPrevistas = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, dataAtual);
 
   // Calcular horas trabalhadas em tempo real baseado nas batidas válidas
@@ -640,8 +701,8 @@ export async function getPontoHoje(req, res) {
     // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
     horasExtrasCalculadas = horasTrabalhadasCalculadas * 2;
     horasNegativasCalculadas = 0;
-  } else if (emFerias) {
-    // Em férias: não considerar horas negativas
+  } else if (emFerias || emAtestado) {
+    // Em férias ou atestado: não considerar horas negativas
     horasExtrasCalculadas = horasTrabalhadasCalculadas;
     horasNegativasCalculadas = 0;
   } else {
@@ -809,10 +870,11 @@ export async function getPontoHoje(req, res) {
         (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
       );
       
-      // Verificar se é feriado/domingo ou férias
+      // Verificar se é feriado/domingo, férias ou atestado
       const eFeriadoOuDomingo = await isFeriadoOuDomingo(usuario_id, dataDia);
       const eEmFerias = await isEmFerias(usuario_id, dataDia);
-      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+      const eEmAtestado = await isEmAtestado(usuario_id, dataDia);
+      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
       const horasPrevistasDia = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, dataDia);
 
       // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), não conta horas negativas
@@ -829,7 +891,7 @@ export async function getPontoHoje(req, res) {
         // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
         horasExtrasDia = horasTrabalhadasDia * 2;
         horasNegativasDia = 0;
-      } else if (eEmFerias) {
+      } else if (eEmFerias || eEmAtestado) {
         // Em férias: não considerar horas negativas
         horasExtrasDia = horasTrabalhadasDia;
         horasNegativasDia = 0;
@@ -896,6 +958,8 @@ export async function getPontoHoje(req, res) {
     feriado: nomeFeriado || null,
     emFerias,
     ferias: feriasPeriodo,
+    emAtestado,
+    atestado: atestadoPeriodo,
     batidas: batidas.map((b) => ({
       id: b.batida_id,
       tipo: b.batida_tipo,
@@ -1326,12 +1390,13 @@ export async function getHistoricoFuncionario(req, res) {
       continue;
     }
 
-    // Verificar se é feriado/domingo ou férias
+    // Verificar se é feriado/domingo, férias ou atestado
     const nomeFeriado = await getNomeFeriado(id, data);
     const eFeriadoOuDomingo = nomeFeriado !== null;
     const feriasPeriodoDia = await getFeriasPeriodo(id, data);
     const emFerias = !!feriasPeriodoDia;
-    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+    const emAtestado = await isEmAtestado(id, data);
+    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
 
     const batidasDoDia = batidasPorDia[dataStr] || [];
     const horasPrevistasDia = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, data);
@@ -1352,8 +1417,8 @@ export async function getHistoricoFuncionario(req, res) {
       // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
       horasExtras = horasTrabalhadas * 2;
       horasNegativas = 0;
-    } else if (emFerias) {
-      // Em férias: não considerar horas negativas
+    } else if (emFerias || emAtestado) {
+      // Em férias ou atestado: não considerar horas negativas
       horasExtras = horasTrabalhadas;
       horasNegativas = 0;
     } else {
@@ -1558,10 +1623,11 @@ export async function getHistoricoFuncionario(req, res) {
         (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
       );
       
-      // Verificar se é feriado/domingo ou férias
+      // Verificar se é feriado/domingo, férias ou atestado
       const eFeriadoOuDomingo = await isFeriadoOuDomingo(id, data);
       const eEmFerias = await isEmFerias(id, data);
-      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+      const eEmAtestado = await isEmAtestado(id, data);
+      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
       const horasPrevistasDia = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, data);
 
       // Se o dia tem justificativa aprovada (exceto falta_nao_justificada e horas_extras), não conta horas negativas
@@ -1578,8 +1644,8 @@ export async function getHistoricoFuncionario(req, res) {
         // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
         horasExtrasDia = horasTrabalhadasDia * 2;
         horasNegativasDia = 0;
-      } else if (eEmFerias) {
-        // Em férias: não considerar horas negativas
+      } else if (eEmFerias || eEmAtestado) {
+        // Em férias ou atestado: não considerar horas negativas
         horasExtrasDia = horasTrabalhadasDia;
         horasNegativasDia = 0;
       } else {
@@ -1771,16 +1837,29 @@ export async function getPendentes(req, res) {
     return usuarioAtivo && funcionarioAtivo;
   });
 
-  // Mapear para formato compatível com frontend
-  const justificativasMapeadas = justificativasFiltradas.map((j) => ({
-    ...j.toJSON(),
-    funcionario: j.usuario
-      ? {
-          funcionario_id: j.usuario.usuario_id,
-          funcionario_nome: j.usuario.usuario_nome,
-        }
-      : null,
-  }));
+  // Mapear para formato compatível com frontend (incluir path normalizado do anexo para download)
+  const justificativasMapeadas = justificativasFiltradas.map((j) => {
+    const json = j.toJSON();
+    let anexoDownloadPath = json.justificativa_anexo_caminho;
+    if (anexoDownloadPath) {
+      const raw = anexoDownloadPath;
+      const rel =
+        path.isAbsolute(raw) || raw.includes(":\\")
+          ? path.relative(process.cwd(), raw)
+          : raw;
+      anexoDownloadPath = rel.replace(/\\/g, "/").replace(/^\.\/?/, "");
+    }
+    return {
+      ...json,
+      justificativa_anexo_download_path: anexoDownloadPath || null,
+      funcionario: j.usuario
+        ? {
+            funcionario_id: j.usuario.usuario_id,
+            funcionario_nome: j.usuario.usuario_nome,
+          }
+        : null,
+    };
+  });
 
   const batidasMapeadas = batidasFiltradas.map((b) => ({
     ...b.toJSON(),
@@ -1878,6 +1957,10 @@ export async function reprovarBatida(req, res) {
   }
   await batida.save();
 
+  const dataBatida = new Date(batida.batida_data_hora);
+  const dataStr = dataBatida.toISOString().split("T")[0];
+  await verificarECriarFalta(batida.batida_usuario_id, dataStr);
+
   return res.status(200).json({
     batida,
     mensagem: "Batida reprovada",
@@ -1938,6 +2021,8 @@ export async function invalidarBatida(req, res) {
 
   const perfil = await getPerfilJornadaUsuario(batidaUsuarioId);
   await calcularESalvarDia(batidaUsuarioId, data, batidasValidas, perfil);
+
+  await verificarECriarFalta(batidaUsuarioId, dataStr);
 
   return res.status(200).json({
     batida,
@@ -2125,10 +2210,11 @@ export async function recalcularBancoHoras(req, res) {
 
       const batidasDoDia = batidasPorDiaMes[dataStr] || [];
       
-      // Verificar se é feriado/domingo ou férias
+      // Verificar se é feriado/domingo, férias ou atestado
       const eFeriadoOuDomingo = await isFeriadoOuDomingo(funcionario_id, dataDia);
       const eEmFerias = await isEmFerias(funcionario_id, dataDia);
-      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+      const eEmAtestado = await isEmAtestado(funcionario_id, dataDia);
+      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
       const horasPrevistasDia = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, dataDia);
 
       // Se o dia foi justificado como falta, não conta como negativo
@@ -2146,7 +2232,7 @@ export async function recalcularBancoHoras(req, res) {
         // Em feriados/domingos: todas as horas trabalhadas são extras e dobradas
         horasExtrasDia = horasTrabalhadasDia * 2;
         horasNegativasDia = 0;
-      } else if (eEmFerias) {
+      } else if (eEmFerias || eEmAtestado) {
         // Em férias: não considerar horas negativas
         horasExtrasDia = horasTrabalhadasDia;
         horasNegativasDia = 0;
@@ -2708,10 +2794,11 @@ export async function exportarPontoExcel(req, res) {
 
     const batidasDoDia = batidasPorDia[dataStr] || [];
     
-    // Verificar se é feriado/domingo ou férias
+    // Verificar se é feriado/domingo, férias ou atestado (funcionario_id é usuario_id nesta rota)
     const eFeriadoOuDomingo = await isFeriadoOuDomingo(funcionario_id, data);
     const eEmFerias = await isEmFerias(funcionario_id, data);
-    const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+    const eEmAtestado = await isEmAtestado(funcionario_id, data);
+    const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
     const horasPrevistasDia = eDiaNaoUtil ? null : getHorasPrevistasDia(perfil, data);
 
     let horasTrabalhadas = 0;
@@ -2719,7 +2806,7 @@ export async function exportarPontoExcel(req, res) {
     let horasNegativas = 0;
     let saldoDia = 0;
 
-    if (diaValido && !diasJustificados.has(dataStr) && !eEmFerias) {
+    if (diaValido && !diasJustificados.has(dataStr) && !eEmFerias && !eEmAtestado) {
       horasTrabalhadas = calcularHorasTrabalhadas(batidasDoDia);
 
       if (eFeriadoOuDomingo) {
@@ -2774,6 +2861,9 @@ export async function exportarPontoExcel(req, res) {
     if (eEmFerias) {
       celulaSaldo.value = "Férias";
       celulaSaldo.font = { color: { argb: "FFFFA500" }, italic: true, bold: true }; // Laranja
+    } else if (eEmAtestado) {
+      celulaSaldo.value = "Atestado";
+      celulaSaldo.font = { color: { argb: "FF4169E1" }, italic: true, bold: true }; // Azul
     } else if (diaValido && !diasJustificados.has(dataStr)) {
       const horasAbs = Math.abs(saldoDia);
       const horasInt = Math.floor(horasAbs);
@@ -2914,9 +3004,10 @@ export async function exportarPontoExcel(req, res) {
 
       if (diasJustificadosMes.has(dataStr)) continue;
 
-      // Verificar se é férias e pular se for
+      // Verificar se é férias ou atestado e pular se for
       const eEmFerias = await isEmFerias(funcionario_id, dataDia);
-      if (eEmFerias) continue;
+      const eEmAtestado = await isEmAtestado(funcionario_id, dataDia);
+      if (eEmFerias || eEmAtestado) continue;
 
       const batidasDoDia = batidasPorDiaMes[dataStr] || [];
       
@@ -3848,12 +3939,13 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
       continue;
     }
 
-    // Verificar se é feriado/domingo ou férias
+    // Verificar se é feriado/domingo, férias ou atestado
     const nomeFeriado = await getNomeFeriado(id, data);
     const eFeriadoOuDomingo = nomeFeriado !== null;
     const feriasPeriodoDia = await getFeriasPeriodo(id, data);
     const emFerias = !!feriasPeriodoDia;
-    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias;
+    const emAtestado = await isEmAtestado(id, data);
+    const eDiaNaoUtil = eFeriadoOuDomingo || emFerias || emAtestado;
 
     const batidasDoDia = batidasPorDia[dataStr] || [];
     const horasPrevistasDia = eDiaNaoUtil
@@ -3875,7 +3967,7 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
     if (eFeriadoOuDomingo) {
       horasExtras = horasTrabalhadas * 2;
       horasNegativas = 0;
-    } else if (emFerias) {
+    } else if (emFerias || emAtestado) {
       horasExtras = horasTrabalhadas;
       horasNegativas = 0;
     } else {
@@ -4097,10 +4189,11 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
         (b) => b.batida_status !== "recusada" && b.batida_status !== "pendente"
       );
 
-      // Verificar se é feriado/domingo ou férias
+      // Verificar se é feriado/domingo, férias ou atestado
       const eFeriadoOuDomingo = await isFeriadoOuDomingo(id, dataDia);
       const eEmFerias = await isEmFerias(id, dataDia);
-      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias;
+      const eEmAtestado = await isEmAtestado(id, dataDia);
+      const eDiaNaoUtil = eFeriadoOuDomingo || eEmFerias || eEmAtestado;
       const horasPrevistasDia = eDiaNaoUtil
         ? null
         : getHorasPrevistasDia(perfil, dataDia);
@@ -4118,7 +4211,7 @@ export async function getHistoricoFuncionarioDesligado(req, res) {
       if (eFeriadoOuDomingo) {
         horasExtrasDia = horasTrabalhadasDia * 2;
         horasNegativasDia = 0;
-      } else if (eEmFerias) {
+      } else if (eEmFerias || eEmAtestado) {
         horasExtrasDia = horasTrabalhadasDia;
         horasNegativasDia = 0;
       } else {

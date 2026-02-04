@@ -50,6 +50,10 @@ function Ponto() {
       mostrarAviso("erro", "Você está em férias e não pode registrar ponto.", true);
       return;
     }
+    if (pontoData?.emAtestado) {
+      mostrarAviso("erro", "Você está em período de atestado médico e não pode registrar ponto.", true);
+      return;
+    }
     if (pontoData?.funcionario?.batida_fora_empresa && !fotoFile) {
       mostrarAviso("erro", "Foto obrigatoria para registrar a batida.", true);
       return;
@@ -173,6 +177,12 @@ function Ponto() {
                 {formatarDataCurta(pontoData.ferias.data_fim)}
               </p>
             )}
+            {pontoData.emAtestado && pontoData.atestado && (
+              <p className="text-sky-400 text-sm mt-1">
+                Em atestado médico: {formatarDataCurta(pontoData.atestado.data_inicio)} até{" "}
+                {formatarDataCurta(pontoData.atestado.data_fim)}
+              </p>
+            )}
           </div>
 
           <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
@@ -286,21 +296,44 @@ function Ponto() {
             )}
           </div>
 
-          {pontoData.emFerias ? (
-            <div className="w-full bg-amber-500/20 border border-amber-400/30 rounded-lg p-6 text-center">
+          {pontoData.emFerias || pontoData.emAtestado ? (
+            <div
+              className={`w-full border rounded-lg p-6 text-center ${
+                pontoData.emFerias
+                  ? "bg-amber-500/20 border-amber-400/30"
+                  : "bg-sky-500/20 border-sky-400/30"
+              }`}
+            >
               <div className="flex flex-col items-center gap-3">
-                <CalendarDays className="text-amber-300" size={32} />
+                <CalendarDays
+                  className={pontoData.emFerias ? "text-amber-300" : "text-sky-300"}
+                  size={32}
+                />
                 <div>
-                  <p className="text-amber-200 font-semibold text-lg mb-1">
-                    Você está em férias
+                  <p
+                    className={`font-semibold text-lg mb-1 ${
+                      pontoData.emFerias ? "text-amber-200" : "text-sky-200"
+                    }`}
+                  >
+                    {pontoData.emFerias ? "Você está em férias" : "Você está em período de atestado médico"}
                   </p>
-                  {pontoData.ferias && (
+                  {pontoData.emFerias && pontoData.ferias && (
                     <p className="text-amber-300/80 text-sm">
                       Período: {formatarDataCurta(pontoData.ferias.data_inicio)} até{" "}
                       {formatarDataCurta(pontoData.ferias.data_fim)}
                     </p>
                   )}
-                  <p className="text-amber-200/70 text-sm mt-2">
+                  {pontoData.emAtestado && pontoData.atestado && (
+                    <p className="text-sky-300/80 text-sm">
+                      Período: {formatarDataCurta(pontoData.atestado.data_inicio)} até{" "}
+                      {formatarDataCurta(pontoData.atestado.data_fim)}
+                    </p>
+                  )}
+                  <p
+                    className={`text-sm mt-2 ${
+                      pontoData.emFerias ? "text-amber-200/70" : "text-sky-200/70"
+                    }`}
+                  >
                     Não é possível registrar ponto durante este período
                   </p>
                 </div>

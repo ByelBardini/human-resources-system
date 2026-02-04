@@ -26,6 +26,7 @@ function Justificativa() {
   // Tipos para horas negativas
   const tiposHorasNegativas = [
     { value: "falta_justificada", label: "Falta Justificada" },
+    { value: "atestado", label: "Atestado" },
     { value: "falta_nao_justificada", label: "Falta Não Justificada" },
   ];
 
@@ -39,6 +40,7 @@ function Justificativa() {
     horas_extras: "Horas Extras",
     outros: "Outros",
     falta_nao_justificada: "Falta não justificada",
+    atestado: "Atestado",
   };
 
   function deslogar() {
@@ -50,17 +52,59 @@ function Justificativa() {
     setCarregando(true);
     try {
       const agora = new Date();
-      const mes = agora.getMonth() + 1;
-      const ano = agora.getFullYear();
+      const mesAtual = agora.getMonth() + 1;
+      const anoAtual = agora.getFullYear();
 
-      const [relatorioData, justificativasData] = await Promise.all([
-        getRelatorioMensal(mes, ano),
-        listarJustificativas(mes, ano),
-      ]);
+      // Buscar mês atual + últimos 11 meses (12 meses no total) para que todos os dias divergentes apareçam para justificação
+      const MESES_PARA_BUSCAR = 12;
+      const mesesAnos = [];
+      let mes = mesAtual;
+      let ano = anoAtual;
+      for (let i = 0; i < MESES_PARA_BUSCAR; i++) {
+        mesesAnos.push({ mes, ano });
+        mes--;
+        if (mes < 1) {
+          mes = 12;
+          ano--;
+        }
+      }
 
-      const diasDiv = relatorioData.dias.filter((dia) => dia.status === "divergente");
-      setDiasDivergentes(diasDiv);
-      setJustificativas(justificativasData.justificativas || []);
+      const promisesRelatorio = mesesAnos.map(({ mes: m, ano: a }) => getRelatorioMensal(m, a));
+      const promisesJustificativas = mesesAnos.map(({ mes: m, ano: a }) => listarJustificativas(m, a));
+
+      const resultadosRelatorios = await Promise.all(promisesRelatorio);
+      const resultadosJustificativas = await Promise.all(promisesJustificativas);
+
+      // Mínimo de 1 minuto para considerar que há horas a justificar (evita valores 0,0001 que exibem "00:00")
+      const MIN_HORAS_PARA_JUSTIFICAR = 1 / 60;
+
+      function temHorasAJustificar(dia) {
+        const extras = Number(dia.horasExtras ?? dia.horas_extras ?? 0) || 0;
+        const negativas = Number(dia.horasNegativas ?? dia.horas_negativas ?? 0) || 0;
+        return extras >= MIN_HORAS_PARA_JUSTIFICAR || negativas >= MIN_HORAS_PARA_JUSTIFICAR;
+      }
+
+      const diasDiv = [];
+      resultadosRelatorios.forEach((relatorioData) => {
+        const dias = (relatorioData.dias || []).filter(
+          (dia) => dia.status === "divergente" && temHorasAJustificar(dia)
+        );
+        diasDiv.push(...dias);
+      });
+      diasDiv.sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : 0));
+
+      const todasJustificativas = [];
+      resultadosJustificativas.forEach((data) => {
+        todasJustificativas.push(...(data.justificativas || []));
+      });
+
+      // Exibir apenas dias divergentes que ainda não possuem justificativa e que tenham horas a justificar
+      const diasPendentes = diasDiv.filter((dia) => {
+        if (todasJustificativas.some((j) => j.justificativa_data === dia.data)) return false;
+        return temHorasAJustificar(dia);
+      });
+      setDiasDivergentes(diasPendentes);
+      setJustificativas(todasJustificativas);
     } catch (err) {
       if (err.status == 401 || err.status == 403) {
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
@@ -92,6 +136,12 @@ function Justificativa() {
       return;
     }
 
+    // Para atestado, anexo é obrigatório
+    if (ehHorasNegativas && tipoJustificativa === "atestado" && !anexo) {
+      mostrarAviso("erro", "Anexo do atestado médico é obrigatório", true);
+      return;
+    }
+
     // Para horas extras, descrição é obrigatória
     if (ehHorasExtras && !descricao.trim()) {
       mostrarAviso("erro", "Descrição é obrigatória para justificar horas extras", true);
@@ -106,11 +156,15 @@ function Justificativa() {
         descricao: descricao,
       };
 
-      await criarJustificativa(payload, anexo);
+      const anexoEnviar = ehHorasExtras || tipoJustificativa === "atestado" || tipoJustificativa === "falta_justificada" ? anexo : null;
+      await criarJustificativa(payload, anexoEnviar);
       
-      const mensagem = tipoJustificativa === "falta_nao_justificada" 
-        ? "Falta não justificada registrada!" 
-        : "Justificativa criada com sucesso!";
+      const mensagem =
+        tipoJustificativa === "falta_nao_justificada"
+          ? "Falta não justificada registrada!"
+          : tipoJustificativa === "atestado"
+            ? "Atestado enviado para aprovação!"
+            : "Justificativa criada com sucesso!";
       mostrarAviso("sucesso", mensagem);
       
       setTimeout(() => {
@@ -204,45 +258,47 @@ function Justificativa() {
           </h1>
 
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Dias Divergentes</h2>
+            <h2 className="text-xl font-semibold text-white mb-2">Dias Divergentes</h2>
+            <p className="text-white/60 text-sm mb-4">
+              Todos os dias divergentes dos últimos 12 meses aparecem abaixo. Cada um deve ser justificado.
+            </p>
             {diasDivergentes.length === 0 ? (
               <p className="text-white/70 text-center py-4">
-                Nenhum dia divergente encontrado neste mês
+                Nenhum dia divergente encontrado nos últimos 12 meses
               </p>
             ) : (
               <div className="space-y-2">
-                {diasDivergentes.map((dia) => {
-                  const temJustificativa = justificativas.some(
-                    (j) => j.justificativa_data === dia.data
-                  );
-                  return (
-                    <div
-                      key={dia.data}
-                      className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="text-white font-semibold">{formatarData(dia.data)}</p>
-                        <p className="text-white/70 text-sm">
-                          Extras: {formatarHorasParaHHMM(dia.horasExtras)}
-                        </p>
+                {diasDivergentes.map((dia) => (
+                  <div
+                    key={dia.data}
+                    className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-white font-semibold">{formatarData(dia.data)}</p>
+                      <div className="text-white/70 text-sm space-y-0.5">
+                        {(dia.horasExtras ?? dia.horas_extras) > 0 && (
+                          <p>Extras: {formatarHorasParaHHMM(dia.horasExtras ?? dia.horas_extras ?? 0)}</p>
+                        )}
+                        {(dia.horasNegativas ?? dia.horas_negativas) > 0 && (
+                          <p className="text-red-300">Negativas: -{formatarHorasParaHHMM(dia.horasNegativas ?? dia.horas_negativas ?? 0)}</p>
+                        )}
                       </div>
-                      <button
-                        onClick={() => {
-                          setDiaSelecionado(dia.data);
-                          setDadosDiaSelecionado({
-                            horasExtras: dia.horasExtras,
-                            horasNegativas: dia.horasNegativas,
-                          });
-                          setMostrarModal(true);
-                        }}
-                        disabled={temJustificativa}
-                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500/50 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-                      >
-                        {temJustificativa ? "Já justificado" : "Justificar"}
-                      </button>
                     </div>
-                  );
-                })}
+                    <button
+                      onClick={() => {
+                        setDiaSelecionado(dia.data);
+                        setDadosDiaSelecionado({
+                          horasExtras: dia.horasExtras,
+                          horasNegativas: dia.horasNegativas,
+                        });
+                        setMostrarModal(true);
+                      }}
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                    >
+                      Justificar
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -332,6 +388,11 @@ function Justificativa() {
                                 Será enviado para aprovação. Se aprovado, o dia não será considerado como falta.
                               </p>
                             )}
+                            {tipo.value === "atestado" && (
+                              <p className="text-white/50 text-xs mt-1">
+                                Envie o atestado médico em anexo. Será enviado para aprovação.
+                              </p>
+                            )}
                             {tipo.value === "falta_nao_justificada" && (
                               <p className="text-white/50 text-xs mt-1">
                                 As horas negativas serão mantidas no banco de horas.
@@ -354,6 +415,27 @@ function Justificativa() {
                         rows={3}
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                         placeholder="Descreva o motivo da ausência..."
+                      />
+                    </div>
+                  )}
+
+                  {tipoJustificativa === "atestado" && (
+                    <div>
+                      <label className="block text-white/70 text-sm mb-2">
+                        Anexo do atestado médico (obrigatório)
+                      </label>
+                      <input
+                        type="file"
+                        onChange={(e) => setAnexo(e.target.files[0] || null)}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
+                        accept="image/*,.pdf,.doc,.docx"
+                      />
+                      <textarea
+                        value={descricao}
+                        onChange={(e) => setDescricao(e.target.value)}
+                        rows={2}
+                        className="w-full mt-2 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
+                        placeholder="Descrição (opcional)"
                       />
                     </div>
                   )}
@@ -413,7 +495,11 @@ function Justificativa() {
                   disabled={carregando}
                   className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  {tipoJustificativa === "falta_nao_justificada" ? "Registrar" : "Enviar"}
+                  {tipoJustificativa === "falta_nao_justificada"
+                    ? "Registrar"
+                    : tipoJustificativa === "atestado"
+                      ? "Enviar Atestado"
+                      : "Enviar"}
                 </button>
               </div>
             </div>

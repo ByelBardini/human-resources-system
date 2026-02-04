@@ -39,10 +39,14 @@ function CampoNotificacao({
   const temDataFinal = tipo === "suspensao" || tipo === "atestado";
 
   async function baixar(caminho) {
+    const token = localStorage.getItem("token");
     const url = `${
       import.meta.env.VITE_API_BASE_URL
     }/download?path=${encodeURIComponent(caminho)}`;
-    const resp = await fetch(url, { credentials: "include" });
+    const resp = await fetch(url, {
+      credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     if (!resp.ok) {
       mostrarAviso("erro", "Erro ao realizar o download", true);
       return;

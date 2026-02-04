@@ -31,9 +31,9 @@ export async function listarJustificativas(mes, ano) {
   }
 }
 
-export async function aprovarJustificativa(id) {
+export async function aprovarJustificativa(id, dados = {}) {
   try {
-    const response = await api.put(`/justificativa/aprovar/${id}`);
+    const response = await api.put(`/justificativa/aprovar/${id}`, dados);
     return response.data;
   } catch (err) {
     throw handleApiError(err, "Erro ao aprovar justificativa:");

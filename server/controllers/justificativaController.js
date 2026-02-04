@@ -1,3 +1,4 @@
+import path from "path";
 import {
   Usuario,
   Justificativa,
@@ -174,6 +175,7 @@ async function atualizarDiaAposJustificativa(diaTrabalhado, tipo, aprovada) {
   switch (tipo) {
     case "falta_justificada":
     case "consulta_medica":
+    case "atestado":
       if (aprovada) {
         // Falta justificada aprovada: zerar horas (dia considera como 0, não conta negativo)
         diaTrabalhado.dia_horas_trabalhadas = 0;
@@ -212,6 +214,94 @@ async function atualizarDiaAposJustificativa(diaTrabalhado, tipo, aprovada) {
   await diaTrabalhado.save();
 }
 
+// Verifica se deve criar notificação de falta e cria se necessário
+export async function verificarECriarFalta(usuario_id, data) {
+  if (!usuario_id || !data) return;
+
+  const usuario = await Usuario.findByPk(usuario_id, {
+    attributes: ["usuario_id", "usuario_funcionario_id"],
+  });
+  if (!usuario?.usuario_funcionario_id) return;
+
+  const funcionario_id = usuario.usuario_funcionario_id;
+  const dataParsed = typeof data === "string" ? parseDateOnly(data) : new Date(data);
+  const dataStr = formatarDataStr(dataParsed);
+  if (!dataStr) return;
+
+  // Considerar apenas dias úteis (não feriado/domingo e com horas previstas > 0)
+  const eFeriadoOuDomingo = await isFeriadoOuDomingo(usuario_id, dataParsed);
+  if (eFeriadoOuDomingo) return;
+
+  const perfil = await getPerfilJornadaUsuario(usuario_id);
+  const horasPrevistas = getHorasPrevistasDia(perfil, dataParsed);
+  if (!horasPrevistas || horasPrevistas <= 0) return;
+
+  const inicioDia = new Date(dataParsed);
+  inicioDia.setHours(0, 0, 0, 0);
+  const fimDia = new Date(dataParsed);
+  fimDia.setHours(23, 59, 59, 999);
+
+  const [batidas, justificativas] = await Promise.all([
+    BatidaPonto.findAll({
+      where: {
+        batida_usuario_id: usuario_id,
+        batida_data_hora: { [Op.between]: [inicioDia, fimDia] },
+      },
+      order: [["batida_data_hora", "ASC"]],
+    }),
+    Justificativa.findAll({
+      where: {
+        justificativa_usuario_id: usuario_id,
+        justificativa_data: dataStr,
+      },
+    }),
+  ]);
+
+  const batidasValidas = batidas.filter(
+    (b) => b.batida_status === "normal" || b.batida_status === "aprovada"
+  );
+
+  // Caso 1: Nenhuma batida válida E (justificativa recusada OU falta_nao_justificada)
+  const temJustificativaRecusada = justificativas.some(
+    (j) => j.justificativa_status === "recusada"
+  );
+  const temFaltaNaoJustificada = justificativas.some(
+    (j) => j.justificativa_tipo === "falta_nao_justificada"
+  );
+
+  // Caso 2: Todas batidas manuais recusadas (batida_observacao != null) E nenhuma válida
+  const batidasManuais = batidas.filter((b) => b.batida_observacao != null);
+  const todasManuaisRecusadas =
+    batidas.length > 0 &&
+    batidasManuais.length === batidas.length &&
+    batidas.every((b) => b.batida_status === "recusada");
+
+  const deveCriarFalta =
+    batidasValidas.length === 0 &&
+    (temJustificativaRecusada || temFaltaNaoJustificada || todasManuaisRecusadas);
+
+  if (!deveCriarFalta) return;
+
+  // Evitar duplicatas
+  const dataInicio = `${dataStr} 00:00:00`;
+  const dataFim = `${dataStr} 23:59:59`;
+  const existente = await Notificacao.findOne({
+    where: {
+      notificacao_funcionario_id: funcionario_id,
+      notificacao_tipo: "falta",
+      notificacao_data: { [Op.between]: [dataInicio, dataFim] },
+    },
+  });
+  if (existente) return;
+
+  await Notificacao.create({
+    notificacao_funcionario_id: funcionario_id,
+    notificacao_tipo: "falta",
+    notificacao_data: dataInicio,
+    notificacao_descricao: "Falta detectada automaticamente pelo sistema",
+  });
+}
+
 function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
 }
@@ -244,6 +334,10 @@ export async function criarJustificativa(req, res) {
 
   if (!data || !tipo) {
     throw ApiError.badRequest("Data e tipo são obrigatórios");
+  }
+
+  if (tipo === "atestado" && !anexoCaminho) {
+    throw ApiError.badRequest("Anexo do atestado médico é obrigatório para justificativa tipo atestado");
   }
 
   // Verificar se o dia é divergente (calcular em tempo real)
@@ -390,6 +484,7 @@ export async function criarJustificativa(req, res) {
       },
     });
     await atualizarDiaAposJustificativa(diaTrabalhado, tipo, true);
+    await verificarECriarFalta(usuario_id, dataJustificativa);
   }
 
   // Registrar automaticamente atestado em notificações se:
@@ -460,12 +555,14 @@ export async function aprovarJustificativa(req, res) {
 
   const usuario_id = getUsuarioId(req);
   const { id } = req.params;
+  const { dias_atestado } = req.body || {};
 
   const justificativa = await Justificativa.findByPk(id, {
     include: [
       {
         model: Usuario,
         as: "usuario",
+        attributes: ["usuario_id", "usuario_nome", "usuario_funcionario_id"],
       },
     ],
   });
@@ -496,8 +593,68 @@ export async function aprovarJustificativa(req, res) {
   // Atualizar status do dia conforme o tipo de justificativa
   await atualizarDiaAposJustificativa(diaTrabalhado, justificativa.justificativa_tipo, true);
 
+  // Registrar atestado em notificações quando justificativa tipo "atestado" for aprovada
+  if (
+    justificativa.justificativa_tipo === "atestado" &&
+    justificativa.justificativa_anexo_caminho
+  ) {
+    const dias = parseInt(dias_atestado, 10);
+    if (!Number.isInteger(dias) || dias < 1) {
+      throw ApiError.badRequest(
+        "Para aprovar atestado, informe a quantidade de dias (número inteiro maior que zero)"
+      );
+    }
+
+    const funcionarioId =
+      justificativa.usuario?.usuario_funcionario_id ??
+      (await Usuario.findByPk(justificativa.justificativa_usuario_id, {
+        attributes: ["usuario_funcionario_id"],
+      }).then((u) => u?.usuario_funcionario_id ?? null));
+
+    if (funcionarioId) {
+      try {
+        const rawPath = justificativa.justificativa_anexo_caminho;
+        const relPath =
+          path.isAbsolute(rawPath) || rawPath.includes(":\\")
+            ? path.relative(process.cwd(), rawPath)
+            : rawPath;
+        const notificacaoAnexo = relPath.replace(/\\/g, "/").replace(/^\.\/?/, "");
+
+        const dataInicio = new Date(justificativa.justificativa_data);
+        const dataFim = new Date(dataInicio);
+        dataFim.setDate(dataFim.getDate() + dias - 1);
+
+        const pad = (n) => String(n).padStart(2, "0");
+        const dataInicioStr = `${dataInicio.getFullYear()}-${pad(dataInicio.getMonth() + 1)}-${pad(dataInicio.getDate())} 00:00:00`;
+        const dataFimStr = `${dataFim.getFullYear()}-${pad(dataFim.getMonth() + 1)}-${pad(dataFim.getDate())} 23:59:59`;
+
+        await Notificacao.create({
+          notificacao_funcionario_id: funcionarioId,
+          notificacao_tipo: "atestado",
+          notificacao_data: dataInicioStr,
+          notificacao_data_final: dataFimStr,
+          notificacao_descricao:
+            justificativa.justificativa_descricao ||
+            `Atestado médico (${dias} dia${dias > 1 ? "s" : ""})`,
+          notificacao_imagem_caminho: notificacaoAnexo,
+        });
+      } catch (err) {
+        if (err instanceof ApiError) throw err;
+        console.error("Erro ao registrar atestado na aprovação:", err);
+      }
+    }
+  }
+
   // Processar justificativa aprovada (para tipos que precisam criar batidas, etc.)
-  if (!["falta_justificada", "consulta_medica", "falta_nao_justificada", "horas_extras"].includes(justificativa.justificativa_tipo)) {
+  if (
+    ![
+      "falta_justificada",
+      "consulta_medica",
+      "falta_nao_justificada",
+      "horas_extras",
+      "atestado",
+    ].includes(justificativa.justificativa_tipo)
+  ) {
     await processarJustificativaAprovada(justificativa, usuario_id);
   }
 
@@ -541,6 +698,11 @@ export async function recusarJustificativa(req, res) {
 
   // Atualizar status do dia (não é mais divergente, mas mantém as horas)
   await atualizarDiaAposJustificativa(diaTrabalhado, justificativa.justificativa_tipo, false);
+
+  await verificarECriarFalta(
+    justificativa.justificativa_usuario_id,
+    justificativa.justificativa_data
+  );
 
   return res.status(200).json({
     justificativa,
