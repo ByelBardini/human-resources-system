@@ -620,13 +620,17 @@ export async function aprovarJustificativa(req, res) {
             : rawPath;
         const notificacaoAnexo = relPath.replace(/\\/g, "/").replace(/^\.\/?/, "");
 
-        const dataInicio = new Date(justificativa.justificativa_data);
+        // Usar parseDateOnly para evitar problema de timezone (justificativa_data vem como YYYY-MM-DD)
+        const dataInicio = parseDateOnly(justificativa.justificativa_data);
+        if (!dataInicio) {
+          throw ApiError.badRequest("Data da justificativa inválida para calcular período do atestado");
+        }
         const dataFim = new Date(dataInicio);
         dataFim.setDate(dataFim.getDate() + dias - 1);
 
         const pad = (n) => String(n).padStart(2, "0");
-        const dataInicioStr = `${dataInicio.getFullYear()}-${pad(dataInicio.getMonth() + 1)}-${pad(dataInicio.getDate())} 00:00:00`;
-        const dataFimStr = `${dataFim.getFullYear()}-${pad(dataFim.getMonth() + 1)}-${pad(dataFim.getDate())} 23:59:59`;
+        const dataInicioStr = `${dataInicio.getFullYear()}-${pad(dataInicio.getMonth() + 1)}-${pad(dataInicio.getDate())}`;
+        const dataFimStr = `${dataFim.getFullYear()}-${pad(dataFim.getMonth() + 1)}-${pad(dataFim.getDate())}`;
 
         await Notificacao.create({
           notificacao_funcionario_id: funcionarioId,

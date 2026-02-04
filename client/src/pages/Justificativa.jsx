@@ -230,11 +230,11 @@ function Justificativa() {
   }, []);
 
   return (
-    <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
+    <div className="relative min-h-[100dvh] w-screen flex justify-center items-start sm:items-center p-4 sm:p-6 pb-8 overflow-hidden">
       <Background />
 
       <button
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
         title="Sair"
         onClick={deslogar}
       >
@@ -242,7 +242,7 @@ function Justificativa() {
       </button>
 
       <button
-        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
         title="Voltar"
         onClick={() => navigate("/ponto", { replace: true })}
       >
@@ -251,19 +251,19 @@ function Justificativa() {
 
       {carregando && <Loading />}
 
-      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-4xl px-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
-          <h1 className="text-3xl font-semibold text-white mb-6 text-center">
+      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-4xl px-2 sm:px-4 pt-14 sm:pt-0 pb-24 sm:pb-0">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-3xl font-semibold text-white mb-4 sm:mb-6 text-center">
             Justificativas
           </h1>
 
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white mb-2">Dias Divergentes</h2>
-            <p className="text-white/60 text-sm mb-4">
-              Todos os dias divergentes dos últimos 12 meses aparecem abaixo. Cada um deve ser justificado.
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-2">Dias Divergentes</h2>
+            <p className="text-white/60 text-xs sm:text-sm mb-3 sm:mb-4">
+              Dias divergentes dos últimos 12 meses. Cada um deve ser justificado.
             </p>
             {diasDivergentes.length === 0 ? (
-              <p className="text-white/70 text-center py-4">
+              <p className="text-white/70 text-center py-4 text-sm sm:text-base">
                 Nenhum dia divergente encontrado nos últimos 12 meses
               </p>
             ) : (
@@ -271,11 +271,11 @@ function Justificativa() {
                 {diasDivergentes.map((dia) => (
                   <div
                     key={dia.data}
-                    className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center justify-between"
+                    className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                   >
-                    <div>
-                      <p className="text-white font-semibold">{formatarData(dia.data)}</p>
-                      <div className="text-white/70 text-sm space-y-0.5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white font-semibold text-sm sm:text-base">{formatarData(dia.data)}</p>
+                      <div className="text-white/70 text-xs sm:text-sm space-y-0.5">
                         {(dia.horasExtras ?? dia.horas_extras) > 0 && (
                           <p>Extras: {formatarHorasParaHHMM(dia.horasExtras ?? dia.horas_extras ?? 0)}</p>
                         )}
@@ -293,7 +293,7 @@ function Justificativa() {
                         });
                         setMostrarModal(true);
                       }}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                      className="bg-blue-500 hover:bg-blue-600 active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-lg transition-all touch-manipulation min-h-[44px] flex-shrink-0"
                     >
                       Justificar
                     </button>
@@ -303,10 +303,10 @@ function Justificativa() {
             )}
           </div>
 
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Justificativas Enviadas</h2>
+          <div className="mt-4 sm:mt-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">Justificativas Enviadas</h2>
             {justificativas.length === 0 ? (
-              <p className="text-white/70 text-center py-4">
+              <p className="text-white/70 text-center py-4 text-sm sm:text-base">
                 Nenhuma justificativa enviada
               </p>
             ) : (
@@ -314,21 +314,21 @@ function Justificativa() {
                 {justificativas.map((j) => (
                   <div
                     key={j.justificativa_id}
-                    className="bg-white/5 rounded-lg p-4 border border-white/10"
+                    className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-white font-semibold">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
+                      <p className="text-white font-semibold text-sm sm:text-base">
                         {formatarData(j.justificativa_data)}
                       </p>
-                      <span className={getStatusColor(j.justificativa_status)}>
+                      <span className={`text-xs sm:text-sm ${getStatusColor(j.justificativa_status)}`}>
                         {getStatusLabel(j.justificativa_status)}
                       </span>
                     </div>
-                    <p className="text-white/70 text-sm mb-1">
+                    <p className="text-white/70 text-xs sm:text-sm mb-1">
                       Tipo: {tiposJustificativaLabels[j.justificativa_tipo] || j.justificativa_tipo}
                     </p>
                     {j.justificativa_descricao && (
-                      <p className="text-white/70 text-sm">{j.justificativa_descricao}</p>
+                      <p className="text-white/70 text-xs sm:text-sm break-words">{j.justificativa_descricao}</p>
                     )}
                   </div>
                 ))}
@@ -339,9 +339,9 @@ function Justificativa() {
       </div>
 
       {mostrarModal && dadosDiaSelecionado && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
-            <h2 className="text-2xl font-semibold text-white mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl border border-white/10 border-t sm:border p-4 sm:p-6 pb-8 sm:pb-6 w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-y-auto">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white mb-4">
               {dadosDiaSelecionado.horasNegativas > 0 ? "Justificar Ausência" : "Justificar Horas Extras"}
             </h2>
 
@@ -483,17 +483,17 @@ function Justificativa() {
                 </>
               )}
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-3 sm:gap-4 mt-6">
                 <button
                   onClick={fecharModal}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCriarJustificativa}
                   disabled={carregando}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   {tipoJustificativa === "falta_nao_justificada"
                     ? "Registrar"

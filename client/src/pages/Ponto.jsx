@@ -136,7 +136,7 @@ function Ponto() {
 
   if (!pontoData) {
     return (
-      <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
+      <div className="relative min-h-[100dvh] w-screen flex justify-center items-center p-4 sm:p-6 overflow-hidden">
         <Background />
         {carregando && <Loading />}
       </div>
@@ -144,11 +144,11 @@ function Ponto() {
   }
 
   return (
-    <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
+    <div className="relative min-h-[100dvh] w-screen flex justify-center items-start sm:items-center p-4 sm:p-6 pb-8 overflow-hidden">
       <Background />
 
       <button
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
         title="Sair"
         onClick={deslogar}
       >
@@ -157,13 +157,13 @@ function Ponto() {
 
       {carregando && <Loading />}
 
-      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-2xl px-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
-          <h1 className="text-3xl font-semibold text-white mb-2 text-center">
+      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-2xl px-2 sm:px-4 pt-14 sm:pt-0 pb-24 sm:pb-0">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-3xl font-semibold text-white mb-2 text-center break-words">
             {pontoData.funcionario.nome}
           </h1>
-          <div className="text-center mb-6">
-            <p className="text-white/70 capitalize">
+          <div className="text-center mb-4 sm:mb-6">
+            <p className="text-white/70 capitalize text-sm sm:text-base">
               {formatarData(pontoData.dataAtual)}
             </p>
             {pontoData.feriado && (
@@ -185,16 +185,16 @@ function Ponto() {
             )}
           </div>
 
-          <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white/10 rounded-lg">
-                  <Wallet className="text-indigo-300" size={24} />
+          <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-4 sm:p-5 border border-indigo-500/30 mb-4 sm:mb-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex-shrink-0 p-2 sm:p-3 bg-white/10 rounded-lg">
+                  <Wallet className="text-indigo-300" size={22} />
                 </div>
-                <div>
-                  <p className="text-white/70 text-sm">Saldo Banco de Horas</p>
+                <div className="min-w-0">
+                  <p className="text-white/70 text-xs sm:text-sm">Saldo Banco de Horas</p>
                   <p
-                    className={`text-2xl font-bold ${
+                    className={`text-lg sm:text-2xl font-bold truncate ${
                       pontoData.bancoHoras >= 0
                         ? "text-green-400"
                         : "text-red-400"
@@ -204,38 +204,38 @@ function Ponto() {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="flex-shrink-0 text-right">
                 <p className="text-white/50 text-xs">
                   {pontoData.bancoHoras >= 0
-                    ? "Horas a compensar"
-                    : "Horas devidas"}
+                    ? "A compensar"
+                    : "Devidas"}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-              <p className="text-white/70 text-sm mb-1">Jornada Prevista</p>
-              <p className="text-2xl font-semibold text-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+              <p className="text-white/70 text-xs sm:text-sm mb-1">Jornada Prevista</p>
+              <p className="text-xl sm:text-2xl font-semibold text-white">
                 {pontoData.jornadaPrevista}
               </p>
             </div>
 
             {pontoData.resumo && (
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <p className="text-white/70 text-sm mb-1">Status</p>
+              <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                <p className="text-white/70 text-xs sm:text-sm mb-1">Status</p>
                 <div className="flex items-center gap-2">
                   {pontoData.resumo.status === "normal" ? (
                     <>
-                      <CheckCircle className="text-green-400" size={20} />
+                      <CheckCircle className="text-green-400 flex-shrink-0" size={20} />
                       <span className="text-green-400 font-semibold">
                         Normal
                       </span>
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="text-yellow-400" size={20} />
+                      <AlertCircle className="text-yellow-400 flex-shrink-0" size={20} />
                       <span className="text-yellow-400 font-semibold">
                         Divergente
                       </span>
@@ -247,28 +247,28 @@ function Ponto() {
           </div>
 
           {pontoData.resumo && (
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
-                <p className="text-white/70 text-sm mb-1">Trabalhadas</p>
-                <p className="text-xl font-semibold text-white">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 text-center">
+                <p className="text-white/70 text-xs sm:text-sm mb-1">Trabalhadas</p>
+                <p className="text-lg sm:text-xl font-semibold text-white">
                   {formatarHorasParaHHMM(pontoData.resumo.horasTrabalhadas)}
                 </p>
               </div>
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10 text-center">
-                <p className="text-white/70 text-sm mb-1">Extras</p>
-                <p className="text-xl font-semibold text-green-400">
+              <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 text-center">
+                <p className="text-white/70 text-xs sm:text-sm mb-1">Extras</p>
+                <p className="text-lg sm:text-xl font-semibold text-green-400">
                   {formatarHorasParaHHMM(pontoData.resumo.horasExtras)}
                 </p>
               </div>
             </div>
           )}
 
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">
               Batidas Registradas
             </h2>
             {pontoData.batidas.length === 0 ? (
-              <p className="text-white/70 text-center py-4">
+              <p className="text-white/70 text-center py-4 text-sm sm:text-base">
                 Nenhuma batida registrada hoje
               </p>
             ) : (
@@ -276,20 +276,20 @@ function Ponto() {
                 {pontoData.batidas.map((batida, index) => (
                   <div
                     key={batida.id}
-                    className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center justify-between"
+                    className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <Clock className="text-white/70" size={20} />
-                      <div>
-                        <p className="text-white font-semibold capitalize">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Clock className="text-white/70 flex-shrink-0" size={20} />
+                      <div className="min-w-0">
+                        <p className="text-white font-semibold capitalize text-sm sm:text-base">
                           {batida.tipo === "entrada" ? "Entrada" : "Saída"}
                         </p>
-                        <p className="text-white/70 text-sm">
+                        <p className="text-white/70 text-xs sm:text-sm">
                           {formatarHora(batida.dataHora)}
                         </p>
                       </div>
                     </div>
-                    <span className="text-white/50 text-sm">#{index + 1}</span>
+                    <span className="text-white/50 text-xs sm:text-sm flex-shrink-0">#{index + 1}</span>
                   </div>
                 ))}
               </div>
@@ -344,26 +344,26 @@ function Ponto() {
               <button
                 onClick={handleRegistrarPonto}
                 disabled={carregando}
-                className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-500 hover:bg-blue-600 active:scale-[0.98] disabled:bg-blue-500/50 text-white font-semibold py-4 sm:py-4 px-4 sm:px-6 rounded-xl transition-all flex items-center justify-center gap-2 touch-manipulation min-h-[52px] text-base"
               >
-                <Clock size={20} />
+                <Clock size={22} />
                 Registrar Ponto (
                 {pontoData.proximaBatida === "entrada" ? "Entrada" : "Saída"})
               </button>
 
               {pontoData.funcionario?.batida_fora_empresa && (
-                <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
-                  <label className="block text-white/70 text-sm mb-2">
+                <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-3 sm:p-4">
+                  <label className="block text-white/70 text-xs sm:text-sm mb-2">
                     Foto obrigatória da batida
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={onSelectFoto}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:cursor-pointer"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 sm:px-4 py-2 text-white text-sm file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-white/10 file:text-white file:text-sm file:cursor-pointer touch-manipulation"
                   />
                   {fotoFile && (
-                    <p className="mt-2 text-xs text-white/70">
+                    <p className="mt-2 text-xs text-white/70 truncate">
                       Selecionado:{" "}
                       <span className="text-white/90">{fotoFile.name}</span>
                     </p>
@@ -373,7 +373,7 @@ function Ponto() {
                       <img
                         src={fotoPreview}
                         alt="Pre-visualizacao"
-                        className="h-24 w-24 rounded-lg object-cover border border-white/10"
+                        className="h-20 w-20 sm:h-24 sm:w-24 rounded-lg object-cover border border-white/10"
                       />
                     </div>
                   )}
@@ -382,16 +382,16 @@ function Ponto() {
             </>
           )}
 
-          <div className="mt-6 flex gap-4">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={() => navigate("/justificativa")}
-              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 font-semibold py-3 px-4 rounded-lg transition-colors border border-yellow-500/30"
+              className="flex-1 bg-yellow-500/20 hover:bg-yellow-500/30 active:scale-[0.98] text-yellow-400 font-semibold py-3 sm:py-3 px-4 rounded-xl transition-all border border-yellow-500/30 touch-manipulation min-h-[48px]"
             >
               Justificativas
             </button>
             <button
               onClick={() => navigate("/relatorio-mensal")}
-              className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 font-semibold py-3 px-4 rounded-lg transition-colors border border-purple-500/30"
+              className="flex-1 bg-purple-500/20 hover:bg-purple-500/30 active:scale-[0.98] text-purple-400 font-semibold py-3 sm:py-3 px-4 rounded-xl transition-all border border-purple-500/30 touch-manipulation min-h-[48px]"
             >
               Histórico
             </button>
@@ -399,10 +399,10 @@ function Ponto() {
 
           {(temPermissao("ponto.aprovar_justificativas") ||
             temPermissao("ponto.alterar_batidas")) && (
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <button
                 onClick={() => navigate("/gerenciar-pontos")}
-                className="w-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-semibold py-3 px-4 rounded-lg transition-colors border border-emerald-500/30"
+                className="w-full bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-[0.98] text-emerald-400 font-semibold py-3 px-4 rounded-xl transition-all border border-emerald-500/30 touch-manipulation min-h-[48px]"
               >
                 Gerenciar Pontos
               </button>

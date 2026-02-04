@@ -326,11 +326,11 @@ function RelatorioMensal() {
   }, [mes, ano]);
 
   return (
-    <div className="relative min-h-screen w-screen flex justify-center items-start p-6 overflow-hidden">
+    <div className="relative min-h-[100dvh] w-screen flex justify-center items-start p-4 sm:p-6 pb-8 overflow-hidden">
       <Background />
 
       <button
-        className="absolute top-6 right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
         title="Sair"
         onClick={deslogar}
       >
@@ -338,7 +338,7 @@ function RelatorioMensal() {
       </button>
 
       <button
-        className="absolute top-6 left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg z-10"
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
         title="Voltar"
         onClick={() => navigate("/ponto", { replace: true })}
       >
@@ -347,33 +347,33 @@ function RelatorioMensal() {
 
       {carregando && <Loading />}
 
-      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16 px-4">
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold text-white">
+      <div className="relative z-10 overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-14 sm:mt-16 px-2 sm:px-4 pb-24 sm:pb-0">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-3xl font-semibold text-white text-center sm:text-left">
               Histórico do Ponto
             </h1>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center gap-2 sm:gap-4">
               <button
                 onClick={() => mudarMes(-1)}
                 disabled={!podeMesAnterior()}
-                className={`p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                className={`p-2.5 sm:p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 touch-manipulation ${
                   podeMesAnterior()
-                    ? "bg-white/5 hover:bg-white/10 text-white"
+                    ? "bg-white/5 hover:bg-white/10 active:scale-95 text-white"
                     : "bg-white/5 text-white/30 cursor-not-allowed"
                 }`}
               >
                 <ChevronLeft size={20} />
               </button>
-              <span className="text-xl font-semibold min-w-[180px] text-center">
+              <span className="text-base sm:text-xl font-semibold min-w-[140px] sm:min-w-[180px] text-center">
                 {meses[mes - 1]} {ano}
               </span>
               <button
                 onClick={() => mudarMes(1)}
                 disabled={!podeMesSeguinte()}
-                className={`p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                className={`p-2.5 sm:p-2 rounded-lg border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 touch-manipulation ${
                   podeMesSeguinte()
-                    ? "bg-white/5 hover:bg-white/10 text-white"
+                    ? "bg-white/5 hover:bg-white/10 active:scale-95 text-white"
                     : "bg-white/5 text-white/30 cursor-not-allowed"
                 }`}
               >
@@ -385,14 +385,14 @@ function RelatorioMensal() {
           {totais && (
             <>
               {/* Card de Banco de Horas em destaque */}
-              <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-5 border border-indigo-500/30 mb-6">
+              <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-xl p-4 sm:p-5 border border-indigo-500/30 mb-4 sm:mb-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white/70 text-sm">
+                  <div className="min-w-0">
+                    <p className="text-white/70 text-xs sm:text-sm">
                       Saldo Total do Banco de Horas
                     </p>
                     <p
-                      className={`text-3xl font-bold ${
+                      className={`text-2xl sm:text-3xl font-bold truncate ${
                         totais.bancoHoras >= 0
                           ? "text-green-400"
                           : "text-red-400"
@@ -404,51 +404,51 @@ function RelatorioMensal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">
                     Total Trabalhadas
                   </p>
-                  <p className="text-2xl font-semibold text-white">
+                  <p className="text-lg sm:text-2xl font-semibold text-white truncate">
                     {formatarHorasParaHHMM(totais.horasTrabalhadas)}
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">Total Extras</p>
-                  <p className="text-2xl font-semibold text-green-400">
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">Total Extras</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-green-400 truncate">
                     {formatarHorasParaHHMM(totais.horasExtras)}
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">Dias Divergentes</p>
-                  <p className="text-2xl font-semibold text-yellow-400">
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 col-span-2 sm:col-span-1">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">Dias Divergentes</p>
+                  <p className="text-lg sm:text-2xl font-semibold text-yellow-400">
                     {totais.diasDivergentes}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">
-                    Justificativas Pendentes
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">
+                    Just. Pendentes
                   </p>
-                  <p className="text-2xl font-semibold text-yellow-400">
+                  <p className="text-lg sm:text-2xl font-semibold text-yellow-400">
                     {totais.justificativasPendentes}
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">
-                    Justificativas Aprovadas
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">
+                    Just. Aprovadas
                   </p>
-                  <p className="text-2xl font-semibold text-green-400">
+                  <p className="text-lg sm:text-2xl font-semibold text-green-400">
                     {totais.justificativasAprovadas}
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                  <p className="text-white/70 text-sm mb-1">
+                <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 col-span-2 sm:col-span-1">
+                  <p className="text-white/70 text-xs sm:text-sm mb-1">
                     Batidas Pendentes
                   </p>
-                  <p className="text-2xl font-semibold text-orange-400">
+                  <p className="text-lg sm:text-2xl font-semibold text-orange-400">
                     {totais.batidasPendentes || 0}
                   </p>
                 </div>
@@ -470,13 +470,13 @@ function RelatorioMensal() {
                   >
                     {/* Linha principal */}
                     <div
-                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors"
+                      className="p-3 sm:p-4 flex items-center justify-between gap-2 cursor-pointer hover:bg-white/5 active:bg-white/5 transition-colors touch-manipulation"
                       onClick={() => toggleDia(dia.data)}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
+                      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 flex-wrap">
+                        <div className="flex flex-col min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-white font-semibold w-16">
+                            <span className="text-white font-semibold w-12 sm:w-16 text-sm sm:text-base">
                               {formatarData(dia.data)}
                             </span>
                             <span className="text-white/50 text-xs">
@@ -484,16 +484,16 @@ function RelatorioMensal() {
                             </span>
                           </div>
                           {dia.feriado && (
-                            <span className="text-purple-400 text-xs mt-0.5">
+                            <span className="text-purple-400 text-xs mt-0.5 truncate max-w-[120px] sm:max-w-none">
                               {dia.feriado}
                             </span>
                           )}
                         </div>
-                        <span className="text-white/70 w-24">
+                        <span className="text-white/70 w-16 sm:w-24 text-xs sm:text-base">
                           {formatarHorasParaHHMM(dia.horasTrabalhadas)} trab.
                         </span>
                         <span
-                          className={`w-20 font-semibold ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}
+                          className={`w-14 sm:w-20 font-semibold text-sm sm:text-base ${dia.saldoDia >= 0 ? 'text-green-400' : 'text-red-400'}`}
                         >
                           {formatarSaldo(dia.saldoDia)}
                         </span>
@@ -527,8 +527,8 @@ function RelatorioMensal() {
                           return null;
                         })()}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/50 text-sm">
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-white/50 text-xs sm:text-sm hidden sm:inline">
                           {dia.batidas.length} batida(s)
                         </span>
                         {isExpanded ? (
@@ -541,8 +541,8 @@ function RelatorioMensal() {
 
                     {/* Área expandida */}
                     {isExpanded && (
-                      <div className="border-t border-white/10 p-4 bg-white/5">
-                        <p className="text-white/70 text-sm mb-4 capitalize">
+                      <div className="border-t border-white/10 p-3 sm:p-4 bg-white/5">
+                        <p className="text-white/70 text-xs sm:text-sm mb-3 sm:mb-4 capitalize">
                           {formatarDataCompleta(dia.data)}
                         </p>
 
@@ -569,7 +569,7 @@ function RelatorioMensal() {
                               Nenhuma batida registrada
                             </p>
                           ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                               {dia.batidas.map((batida, idx) => (
                                 <div
                                   key={batida.id || idx}
@@ -597,7 +597,7 @@ function RelatorioMensal() {
                         </div>
 
                         {/* Resumo do dia */}
-                        <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
                           {dia.horasExtras > 0 && (
                             <div className="text-center">
                               <p className="text-white/50 text-xs">Extras</p>
@@ -625,14 +625,14 @@ function RelatorioMensal() {
                         </div>
 
                         {/* Ações */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setBatidaData(dia.data);
                               setModalBatida(true);
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/50"
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 active:scale-[0.98] text-blue-400 border border-blue-500/30 transition-all touch-manipulation min-h-[44px]"
                           >
                             <Plus size={16} />
                             Adicionar Batida
@@ -648,7 +648,7 @@ function RelatorioMensal() {
                                 });
                                 setModalJustificativa(true);
                               }}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/50"
+                              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-yellow-500/20 hover:bg-yellow-500/30 active:scale-[0.98] text-yellow-400 border border-yellow-500/30 transition-all touch-manipulation min-h-[44px]"
                             >
                               <FileText size={16} />
                               Justificar
@@ -667,8 +667,8 @@ function RelatorioMensal() {
 
       {/* Modal de Adicionar Batida */}
       {modalBatida && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl border border-white/10 border-t sm:border p-4 sm:p-6 pb-8 sm:pb-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-semibold text-white mb-4">
               Adicionar Batida
             </h2>
@@ -744,7 +744,7 @@ function RelatorioMensal() {
                 ⚠️ Esta batida ficará pendente até ser aprovada por um gestor.
               </p>
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-3 sm:gap-4 mt-6">
                 <button
                   onClick={() => {
                     setModalBatida(false);
@@ -752,14 +752,14 @@ function RelatorioMensal() {
                     setBatidaObservacao("");
                     setBatidaAnexo(null);
                   }}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleAdicionarBatida}
                   disabled={carregando}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   Enviar
                 </button>
@@ -771,8 +771,8 @@ function RelatorioMensal() {
 
       {/* Modal de Justificativa */}
       {modalJustificativa && diaSelecionado && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-gray-800 rounded-t-2xl sm:rounded-2xl border border-white/10 border-t sm:border p-4 sm:p-6 pb-8 sm:pb-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-semibold text-white mb-4">
               {diaSelecionado.horasNegativas > 0 ? "Justificar Ausência" : "Justificar Horas Extras"}
             </h2>
@@ -882,17 +882,17 @@ function RelatorioMensal() {
                 </>
               )}
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex gap-3 sm:gap-4 mt-6">
                 <button
                   onClick={fecharModalJustificativa}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleCriarJustificativa}
                   disabled={carregando}
-                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 disabled:bg-yellow-500/50 active:scale-[0.98] text-white font-semibold py-3 px-4 rounded-lg transition-all touch-manipulation min-h-[48px]"
                 >
                   {justificativaTipo === "falta_nao_justificada" ? "Registrar" : "Enviar"}
                 </button>
