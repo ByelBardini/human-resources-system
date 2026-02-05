@@ -395,7 +395,7 @@ function Justificativa() {
                             )}
                             {tipo.value === "falta_nao_justificada" && (
                               <p className="text-white/50 text-xs mt-1">
-                                As horas negativas serão mantidas no banco de horas.
+                                Não precisa de aprovação — é registrada e aprovada na hora. As horas negativas permanecem no banco de horas.
                               </p>
                             )}
                           </div>

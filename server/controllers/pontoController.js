@@ -965,6 +965,8 @@ export async function getPontoHoje(req, res) {
       tipo: b.batida_tipo,
       dataHora: b.batida_data_hora,
       status: b.batida_status,
+      alterada: Boolean(b.batida_alterada),
+      alteradoEm: b.batida_data_alteracao || null,
     })),
     proximaBatida,
     resumo:
@@ -1355,6 +1357,10 @@ export async function getHistoricoFuncionario(req, res) {
       batida_data_hora: b.batida_data_hora,
       batida_status: b.batida_status,
       batida_foto_caminho: b.batida_foto_caminho,
+      batida_alterada: !!b.batida_alterada,
+      batida_data_hora_original: b.batida_data_hora_original || null,
+      batida_alterado_por_id: b.batida_alterado_por_id || null,
+      batida_data_alteracao: b.batida_data_alteracao || null,
     });
   });
 
@@ -2424,6 +2430,95 @@ export async function recalcularDia(req, res) {
   });
 }
 
+// Alterar horário de uma batida (apenas admin com ponto.alterar_batidas)
+export async function alterarHorarioBatida(req, res) {
+  requirePermissao(req, "ponto.alterar_batidas");
+
+  const usuario_id = getUsuarioId(req);
+  const { id: batida_id } = req.params;
+  const { data_hora, tipo } = req.body;
+
+  if (!data_hora) {
+    throw ApiError.badRequest("data_hora é obrigatória");
+  }
+
+  // O tipo (entrada/saída) não pode ser alterado; apenas o horário
+  if (tipo !== undefined) {
+    throw ApiError.badRequest(
+      "Não é permitido alterar o tipo da batida (entrada/saída); apenas o horário pode ser alterado"
+    );
+  }
+
+  const batida = await BatidaPonto.findByPk(batida_id);
+  if (!batida) {
+    throw ApiError.notFound("Batida não encontrada");
+  }
+
+  if (!["normal", "aprovada"].includes(batida.batida_status)) {
+    throw ApiError.badRequest(
+      "Só é possível alterar horário de batidas com status normal ou aprovada"
+    );
+  }
+
+  const novaDataHoraReq = new Date(data_hora);
+  if (Number.isNaN(novaDataHoraReq.getTime())) {
+    throw ApiError.badRequest("data_hora inválida");
+  }
+
+  // Manter a DATA da batida e alterar apenas a HORA (não é permitido alterar o dia)
+  const dataDaBatida = getDataBrasilia(batida.batida_data_hora);
+  const novaDataHora = new Date(
+    dataDaBatida.getFullYear(),
+    dataDaBatida.getMonth(),
+    dataDaBatida.getDate(),
+    novaDataHoraReq.getHours(),
+    novaDataHoraReq.getMinutes(),
+    novaDataHoraReq.getSeconds(),
+    novaDataHoraReq.getMilliseconds()
+  );
+
+  // Na primeira alteração, guardar horário original
+  if (!batida.batida_alterada) {
+    batida.batida_data_hora_original = batida.batida_data_hora;
+  }
+
+  batida.batida_data_hora = novaDataHora;
+  batida.batida_alterada = 1;
+  batida.batida_alterado_por_id = usuario_id;
+  batida.batida_data_alteracao = new Date();
+  // batida_tipo (entrada/saída) nunca é alterado; permanece o original
+  await batida.save();
+
+  const dataBatida = getDataBrasilia(novaDataHora);
+  const inicioDia = new Date(dataBatida);
+  inicioDia.setHours(0, 0, 0, 0);
+  const fimDia = new Date(dataBatida);
+  fimDia.setHours(23, 59, 59, 999);
+
+  const todasBatidas = await BatidaPonto.findAll({
+    where: {
+      batida_usuario_id: batida.batida_usuario_id,
+      batida_data_hora: {
+        [Op.between]: [inicioDia, fimDia],
+      },
+    },
+    order: [["batida_data_hora", "ASC"]],
+  });
+
+  const perfil = await getPerfilJornadaUsuario(batida.batida_usuario_id);
+  await calcularESalvarDia(
+    batida.batida_usuario_id,
+    dataBatida,
+    todasBatidas,
+    perfil
+  );
+
+  return res.status(200).json({
+    mensagem: "Horário da batida alterado com sucesso",
+    batida: batida,
+  });
+}
+
 // Exportar batidas de ponto para Excel
 export async function exportarPontoExcel(req, res) {
   requirePermissao(req, "ponto.alterar_batidas");
@@ -2850,6 +2945,9 @@ export async function exportarPontoExcel(req, res) {
           minute: "2-digit",
           timeZone: "America/Sao_Paulo",
         });
+        if (batidasDoDia[i].batida_alterada) {
+          celula.value += " (alterada)";
+        }
       } else {
         celula.value = "-";
       }
@@ -3435,6 +3533,9 @@ async function gerarExcelFuncionario(funcionario_id, mes, ano) {
           minute: "2-digit",
           timeZone: "America/Sao_Paulo",
         });
+        if (batidasDoDia[i].batida_alterada) {
+          celula.value += " (alterada)";
+        }
       } else {
         celula.value = "-";
       }

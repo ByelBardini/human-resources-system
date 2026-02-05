@@ -273,25 +273,44 @@ function Ponto() {
               </p>
             ) : (
               <div className="space-y-2">
-                {pontoData.batidas.map((batida, index) => (
-                  <div
-                    key={batida.id}
-                    className="bg-white/5 rounded-lg p-3 sm:p-4 border border-white/10 flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Clock className="text-white/70 flex-shrink-0" size={20} />
-                      <div className="min-w-0">
-                        <p className="text-white font-semibold capitalize text-sm sm:text-base">
-                          {batida.tipo === "entrada" ? "Entrada" : "Saída"}
-                        </p>
-                        <p className="text-white/70 text-xs sm:text-sm">
-                          {formatarHora(batida.dataHora)}
-                        </p>
+                {pontoData.batidas.map((batida, index) => {
+                  const alterada = Boolean(batida.alterada ?? batida.batida_alterada);
+                  return (
+                    <div
+                      key={batida.id}
+                      className={`rounded-lg p-3 sm:p-4 border flex items-center justify-between gap-3 ${
+                        alterada
+                          ? "bg-amber-500/10 border-amber-400/30"
+                          : "bg-white/5 border-white/10"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Clock className="text-white/70 flex-shrink-0" size={20} />
+                        <div className="min-w-0">
+                          <p className="text-white font-semibold capitalize text-sm sm:text-base">
+                            {batida.tipo === "entrada" ? "Entrada" : "Saída"}
+                          </p>
+                          <p className="text-white/70 text-xs sm:text-sm">
+                            {formatarHora(batida.dataHora)}
+                          </p>
+                          {alterada && (
+                            <p className="text-amber-400 text-xs font-semibold mt-1.5">
+                              Horário alterado pelo RH
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {alterada && (
+                          <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-500/30 text-amber-300 border border-amber-400/40">
+                            Alterado
+                          </span>
+                        )}
+                        <span className="text-white/50 text-xs sm:text-sm">#{index + 1}</span>
                       </div>
                     </div>
-                    <span className="text-white/50 text-xs sm:text-sm flex-shrink-0">#{index + 1}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -399,12 +418,19 @@ function Ponto() {
 
           {(temPermissao("ponto.aprovar_justificativas") ||
             temPermissao("ponto.alterar_batidas")) && (
-            <div className="mt-3 sm:mt-4">
+            <div className="mt-3 sm:mt-4 space-y-3">
               <button
                 onClick={() => navigate("/gerenciar-pontos")}
                 className="w-full bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-[0.98] text-emerald-400 font-semibold py-3 px-4 rounded-xl transition-all border border-emerald-500/30 touch-manipulation min-h-[48px]"
               >
                 Gerenciar Pontos
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open("/calculadora-horas", "CalculadoraHoras", "width=420,height=520,scrollbars=no,resizable=yes")}
+                className="w-full bg-slate-500/20 hover:bg-slate-500/30 active:scale-[0.98] text-slate-300 font-semibold py-3 px-4 rounded-xl transition-all border border-slate-500/30 touch-manipulation min-h-[48px]"
+              >
+                Calculadora de horas
               </button>
             </div>
           )}

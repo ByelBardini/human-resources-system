@@ -483,6 +483,7 @@ export async function getRelatorioMensal(req, res) {
       dataHora: b.batida_data_hora,
       status: b.batida_status,
       batida_foto_caminho: b.batida_foto_caminho,
+      alterada: Boolean(b.batida_alterada),
     });
   });
 

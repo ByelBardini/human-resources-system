@@ -76,6 +76,19 @@ export async function adicionarBatida(
 
 // Funções de Gestão (para aprovadores)
 
+export async function alterarHorarioBatida(batidaId, dataHora) {
+  try {
+    const response = await api.put(
+      `/ponto/gestao/batida/${batidaId}/alterar-horario`,
+      { data_hora: dataHora },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (err) {
+    throw handleApiError(err, "Erro ao alterar horário da batida:");
+  }
+}
+
 export async function getGestaoEmpresas() {
   try {
     const response = await api.get("/ponto/gestao/empresas");

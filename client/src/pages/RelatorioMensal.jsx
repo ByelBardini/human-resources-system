@@ -570,28 +570,38 @@ function RelatorioMensal() {
                             </p>
                           ) : (
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                              {dia.batidas.map((batida, idx) => (
-                                <div
-                                  key={batida.id || idx}
-                                  className={`p-2 rounded border ${
-                                    batida.status === "pendente"
-                                      ? "bg-orange-500/10 border-orange-500/30"
-                                      : "bg-white/5 border-white/10"
-                                  }`}
-                                >
-                                  <p className="text-white text-sm font-medium capitalize">
-                                    {batida.tipo}
-                                  </p>
-                                  <p className="text-white/70 text-xs">
-                                    {formatarHora(batida.dataHora)}
-                                  </p>
-                                  {batida.status === "pendente" && (
-                                    <p className="text-orange-400 text-xs mt-1">
-                                      Aguardando aprovação
+                              {dia.batidas.map((batida, idx) => {
+                                const alterada = Boolean(batida.alterada ?? batida.batida_alterada);
+                                return (
+                                  <div
+                                    key={batida.id || idx}
+                                    className={`p-2 rounded border ${
+                                      alterada
+                                        ? "bg-amber-500/10 border-amber-400/30"
+                                        : batida.status === "pendente"
+                                          ? "bg-orange-500/10 border-orange-500/30"
+                                          : "bg-white/5 border-white/10"
+                                    }`}
+                                  >
+                                    <p className="text-white text-sm font-medium capitalize">
+                                      {batida.tipo}
                                     </p>
-                                  )}
-                                </div>
-                              ))}
+                                    <p className="text-white/70 text-xs">
+                                      {formatarHora(batida.dataHora)}
+                                    </p>
+                                    {batida.status === "pendente" && (
+                                      <p className="text-orange-400 text-xs mt-1">
+                                        Aguardando aprovação
+                                      </p>
+                                    )}
+                                    {alterada && (
+                                      <p className="text-amber-400 text-xs font-medium mt-1">
+                                        Horário alterado pelo RH
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -815,7 +825,7 @@ function RelatorioMensal() {
                             )}
                             {tipo.value === "falta_nao_justificada" && (
                               <p className="text-white/50 text-xs mt-1">
-                                As horas negativas serão mantidas no banco de horas.
+                                Não precisa de aprovação — é registrada e aprovada na hora. As horas negativas permanecem no banco de horas.
                               </p>
                             )}
                           </div>

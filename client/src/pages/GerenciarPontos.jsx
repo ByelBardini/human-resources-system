@@ -15,6 +15,8 @@ import {
   Building2,
   RefreshCw,
   Download,
+  Pencil,
+  Calculator,
 } from "lucide-react";
 import {
   getGestaoEmpresas,
@@ -24,6 +26,7 @@ import {
   aprovarBatida,
   reprovarBatida,
   invalidarBatida,
+  alterarHorarioBatida,
   fecharBancoHoras,
   recalcularBancoHoras,
   exportarPontoExcel,
@@ -86,6 +89,10 @@ function GerenciarPontos() {
 
   // Modal de fechar banco
   const [modalFecharBanco, setModalFecharBanco] = useState(false);
+
+  // Modal de alterar horário da batida (apenas hora, não a data)
+  const [modalAlterarHorario, setModalAlterarHorario] = useState(null);
+  const [novaHoraAlterar, setNovaHoraAlterar] = useState("");
 
   const meses = [
     "Janeiro",
@@ -315,6 +322,33 @@ function GerenciarPontos() {
       setTimeout(() => {
         limparAviso();
         buscarPendentes();
+        if (funcionarioSelecionado) {
+          buscarHistoricoFuncionario(funcionarioSelecionado.id);
+        }
+      }, 1000);
+    } catch (err) {
+      setCarregando(false);
+      mostrarAviso("erro", err.message, true);
+    }
+  }
+
+  async function handleAlterarHorarioBatida() {
+    if (!modalAlterarHorario || !novaHoraAlterar) return;
+
+    const d = new Date(modalAlterarHorario.dataHoraAtual);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const dataHora = `${y}-${m}-${day}T${novaHoraAlterar}:00`;
+
+    setCarregando(true);
+    try {
+      await alterarHorarioBatida(modalAlterarHorario.batidaId, dataHora);
+      mostrarAviso("sucesso", "Horário da batida alterado com sucesso!");
+      setModalAlterarHorario(null);
+      setNovaHoraAlterar("");
+      setTimeout(() => {
+        limparAviso();
         if (funcionarioSelecionado) {
           buscarHistoricoFuncionario(funcionarioSelecionado.id);
         }
@@ -614,18 +648,29 @@ function GerenciarPontos() {
 
       <div className="overflow-x-hidden overflow-y-auto text-white w-full max-w-6xl mt-16">
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
             <h1 className="text-3xl font-semibold text-white">
               Gerenciar Pontos
             </h1>
-            <button
-              onClick={handleExportarTodosPontos}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border border-indigo-500/30 transition-colors"
-              title="Baixar todos os pontos de todas as empresas"
-            >
-              <Download size={18} />
-              Baixar Todos os Pontos
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.open("/calculadora-horas", "CalculadoraHoras", "width=420,height=520,scrollbars=no,resizable=yes")}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 border border-slate-500/30 transition-colors"
+                title="Calculadora de horas"
+              >
+                <Calculator size={18} />
+                Calculadora de horas
+              </button>
+              <button
+                onClick={handleExportarTodosPontos}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 border border-indigo-500/30 transition-colors"
+                title="Baixar todos os pontos de todas as empresas"
+              >
+                <Download size={18} />
+                Baixar Todos os Pontos
+              </button>
+            </div>
           </div>
 
           {/* Abas */}
@@ -956,6 +1001,11 @@ function GerenciarPontos() {
                                                         Recusada
                                                       </span>
                                                     )}
+                                                    {b.batida_alterada && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300">
+                                                        Alterada
+                                                      </span>
+                                                    )}
                                                     {b.batida_foto_caminho && (
                                                       <button
                                                         type="button"
@@ -987,6 +1037,30 @@ function GerenciarPontos() {
                                                           title="Invalidar"
                                                         >
                                                           <XCircle size={14} />
+                                                        </button>
+                                                      )}
+                                                    {temPermissao(
+                                                      "ponto.alterar_batidas"
+                                                    ) &&
+                                                      (b.batida_status === "normal" ||
+                                                        b.batida_status === "aprovada") && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => {
+                                                            const d = new Date(b.batida_data_hora);
+                                                            const h = String(d.getHours()).padStart(2, "0");
+                                                            const min = String(d.getMinutes()).padStart(2, "0");
+                                                            setModalAlterarHorario({
+                                                              batidaId: b.batida_id,
+                                                              dataHoraAtual: b.batida_data_hora,
+                                                              tipo: b.batida_tipo,
+                                                            });
+                                                            setNovaHoraAlterar(`${h}:${min}`);
+                                                          }}
+                                                          className="p-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                                          title="Alterar horário"
+                                                        >
+                                                          <Pencil size={14} />
                                                         </button>
                                                       )}
                                                   </div>
@@ -1502,6 +1576,11 @@ function GerenciarPontos() {
                                                         Recusada
                                                       </span>
                                                     )}
+                                                    {b.batida_alterada && (
+                                                      <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/30 text-amber-300">
+                                                        Alterada
+                                                      </span>
+                                                    )}
                                                     {b.batida_foto_caminho && (
                                                       <button
                                                         type="button"
@@ -1533,6 +1612,30 @@ function GerenciarPontos() {
                                                           title="Invalidar"
                                                         >
                                                           <XCircle size={14} />
+                                                        </button>
+                                                      )}
+                                                    {temPermissao(
+                                                      "ponto.alterar_batidas"
+                                                    ) &&
+                                                      (b.batida_status === "normal" ||
+                                                        b.batida_status === "aprovada") && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => {
+                                                            const d = new Date(b.batida_data_hora);
+                                                            const h = String(d.getHours()).padStart(2, "0");
+                                                            const min = String(d.getMinutes()).padStart(2, "0");
+                                                            setModalAlterarHorario({
+                                                              batidaId: b.batida_id,
+                                                              dataHoraAtual: b.batida_data_hora,
+                                                              tipo: b.batida_tipo,
+                                                            });
+                                                            setNovaHoraAlterar(`${h}:${min}`);
+                                                          }}
+                                                          className="p-1 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30"
+                                                          title="Alterar horário"
+                                                        >
+                                                          <Pencil size={14} />
                                                         </button>
                                                       )}
                                                   </div>
@@ -1648,6 +1751,68 @@ function GerenciarPontos() {
                   className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
                   {modalReprovar.acao === "invalidar" ? "Invalidar" : "Reprovar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Alterar Horário da Batida (apenas hora; tipo entrada/saída não pode ser alterado) */}
+      {modalAlterarHorario && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+            <h2 className="text-2xl font-semibold text-white mb-4">
+              Alterar horário da batida
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Batida atual (somente leitura — tipo e data não podem ser alterados)
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    modalAlterarHorario.dataHoraAtual
+                      ? (modalAlterarHorario.tipo === "entrada" ? "Entrada" : "Saída") +
+                        " - " +
+                        formatarHora(modalAlterarHorario.dataHoraAtual)
+                      : ""
+                  }
+                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white/80"
+                />
+                <p className="text-white/50 text-xs mt-1">
+                  O tipo (Entrada/Saída) é fixo; apenas o horário pode ser alterado.
+                </p>
+              </div>
+              <div>
+                <label className="block text-white/70 text-sm mb-2">
+                  Novo horário (apenas hora)
+                </label>
+                <input
+                  type="time"
+                  value={novaHoraAlterar}
+                  onChange={(e) => setNovaHoraAlterar(e.target.value)}
+                  className="w-full bg-gray-700 border border-white/10 rounded-lg px-4 py-2 text-white"
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setModalAlterarHorario(null);
+                    setNovaHoraAlterar("");
+                  }}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleAlterarHorarioBatida}
+                  disabled={carregando || !novaHoraAlterar}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  Salvar
                 </button>
               </div>
             </div>

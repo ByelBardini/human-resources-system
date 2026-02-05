@@ -11,6 +11,7 @@ import {
   aprovarBatida,
   reprovarBatida,
   invalidarBatida,
+  alterarHorarioBatida,
   fecharBancoHoras,
   recalcularBancoHoras,
   aprovarBatidasDia,
@@ -57,6 +58,10 @@ router.put("/ponto/gestao/batida/:id/reprovar", asyncHandler(reprovarBatida));
 router.put(
   "/ponto/gestao/batida/:id/invalidar",
   asyncHandler(invalidarBatida)
+);
+router.put(
+  "/ponto/gestao/batida/:id/alterar-horario",
+  asyncHandler(alterarHorarioBatida)
 );
 router.post(
   "/ponto/gestao/funcionario/:funcionario_id/fechar-banco",

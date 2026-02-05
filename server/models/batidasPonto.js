@@ -57,6 +57,26 @@ BatidaPonto.init(
       allowNull: true,
       defaultValue: null,
     },
+    batida_alterada: {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    batida_data_hora_original: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
+    batida_alterado_por_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+    },
+    batida_data_alteracao: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     sequelize,
