@@ -410,7 +410,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.sexo}
                       onChange={(e) => setFiltros((f) => ({ ...f, sexo: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       <option value="masculino">Masculino</option>
@@ -422,7 +422,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.ponto_online}
                       onChange={(e) => setFiltros((f) => ({ ...f, ponto_online: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       <option value="sim">Sim</option>
@@ -434,7 +434,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.setor_id}
                       onChange={(e) => setFiltros((f) => ({ ...f, setor_id: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       {setores.map((s) => (
@@ -447,7 +447,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.cargo_id}
                       onChange={(e) => setFiltros((f) => ({ ...f, cargo_id: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       {cargos.map((c) => (
@@ -460,7 +460,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.nivel_id}
                       onChange={(e) => setFiltros((f) => ({ ...f, nivel_id: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       {niveis.map((n) => (
@@ -473,7 +473,7 @@ function EmitirRelatorios({ navigate }) {
                     <select
                       value={filtros.mes_aniversario}
                       onChange={(e) => setFiltros((f) => ({ ...f, mes_aniversario: e.target.value }))}
-                      className="w-full rounded-lg border border-white/15 bg-white/10 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30"
+                      className="w-full rounded-lg border border-white/15 bg-slate-800 text-white text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-white/30 [&>option]:bg-slate-800 [&>option]:text-white"
                     >
                       <option value="">Todos</option>
                       {MESES.map((m, i) => (
