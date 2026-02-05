@@ -39,6 +39,7 @@ export async function registrarUsuario(req, res) {
     tipo_usuario,
     funcionario_id,
     batida_fora_empresa,
+    bate_ponto,
   } = req.body;
   requirePermissao(req, "usuarios.gerenciar");
 
@@ -160,7 +161,7 @@ export async function registrarUsuario(req, res) {
       throw ApiError.internal("Erro ao registrar usuário");
     }
   } else {
-    // Usuário normal precisa de cargo
+    // Usuário do sistema precisa de cargo
     if (!usuario_cargo_id) {
       throw ApiError.badRequest("Cargo é obrigatório para usuários do sistema.");
     }
@@ -171,6 +172,61 @@ export async function registrarUsuario(req, res) {
       throw ApiError.badRequest("Cargo inválido ou inativo.");
     }
 
+    const batidaPonto = parseBooleanFlag(bate_ponto);
+    let funcionarioId = null;
+    let empresaId = null;
+    let perfilJornadaId = null;
+
+    if (batidaPonto) {
+      if (!perfil_jornada_id) {
+        throw ApiError.badRequest("Perfil de carga horária é obrigatório quando o usuário bate ponto.");
+      }
+      if (!empresa_id) {
+        throw ApiError.badRequest("Empresa é obrigatória quando o usuário bate ponto.");
+      }
+      if (!funcionario_id) {
+        throw ApiError.badRequest("É obrigatório vincular a um funcionário quando o usuário bate ponto.");
+      }
+
+      const funcionario = await Funcionario.findByPk(funcionario_id);
+      if (!funcionario) {
+        throw ApiError.badRequest("Funcionário não encontrado.");
+      }
+      if (funcionario.funcionario_empresa_id !== parseInt(empresa_id)) {
+        throw ApiError.badRequest("O funcionário selecionado não pertence à empresa escolhida.");
+      }
+      if (funcionario.funcionario_ativo === 0) {
+        throw ApiError.badRequest("O funcionário selecionado está inativo.");
+      }
+
+      const usuarioExistente = await Usuario.findOne({
+        where: { usuario_funcionario_id: funcionario_id },
+      });
+      if (usuarioExistente) {
+        throw ApiError.badRequest("Este funcionário já possui um usuário vinculado.");
+      }
+
+      const perfilJornada = await PerfilJornada.findByPk(perfil_jornada_id);
+      if (!perfilJornada || perfilJornada.perfil_jornada_ativo === 0) {
+        throw ApiError.badRequest("Perfil de carga horária inválido ou inativo.");
+      }
+
+      const empresa = await Empresa.findByPk(empresa_id);
+      if (!empresa) {
+        throw ApiError.badRequest("Empresa não encontrada.");
+      }
+
+      const batidaForaEmpresa = parseBooleanFlag(batida_fora_empresa);
+      await funcionario.update(
+        { funcionario_batida_fora_empresa: batidaForaEmpresa ? 1 : 0 },
+        { usuario_id: requireUser(req).usuario_id }
+      );
+
+      funcionarioId = funcionario_id;
+      empresaId = empresa_id;
+      perfilJornadaId = perfil_jornada_id;
+    }
+
     const senhaHash = bcrypt.hashSync("12345", 10);
 
     try {
@@ -179,11 +235,31 @@ export async function registrarUsuario(req, res) {
         usuario_login,
         usuario_senha: senhaHash,
         usuario_cargo_id,
-        usuario_funcionario_id: null,
-        usuario_perfil_jornada_id: null,
-        usuario_empresa_id: null,
+        usuario_funcionario_id: funcionarioId,
+        usuario_perfil_jornada_id: perfilJornadaId,
+        usuario_empresa_id: empresaId,
         usuario_data_criacao: new Date(),
       });
+
+      if (batidaPonto) {
+        const permissaoRegistrarPonto = await Permissao.findOne({
+          where: { permissao_codigo: "ponto.registrar" },
+        });
+        if (permissaoRegistrarPonto) {
+          const temPermissao = await CargoPermissao.findOne({
+            where: {
+              cargo_usuario_id: usuario_cargo_id,
+              permissao_id: permissaoRegistrarPonto.permissao_id,
+            },
+          });
+          if (!temPermissao) {
+            await CargoPermissao.create({
+              cargo_usuario_id: usuario_cargo_id,
+              permissao_id: permissaoRegistrarPonto.permissao_id,
+            });
+          }
+        }
+      }
 
       return res.status(201).json({ message: "Usuário registrado com sucesso!" });
     } catch (err) {
@@ -198,7 +274,33 @@ export async function registrarUsuario(req, res) {
 
 export async function resetaSenhaUsuario(req, res) {
   const { id } = req.params;
-  requirePermissao(req, "usuarios.gerenciar");
+  const usuario = requireUser(req);
+  const permissoes = usuario.permissoes || [];
+
+  const usuarioAlvo = await Usuario.findByPk(id, {
+    attributes: ["usuario_id", "usuario_funcionario_id"],
+  });
+  if (!usuarioAlvo) {
+    throw ApiError.badRequest("Usuário não encontrado.");
+  }
+
+  const ehFuncionario = !!usuarioAlvo.usuario_funcionario_id;
+  const podeGerenciar = permissoes.includes("usuarios.gerenciar");
+  const podeGerenciarFuncionarios = permissoes.includes("usuarios.gerenciar_funcionarios");
+
+  if (ehFuncionario) {
+    if (!podeGerenciar && !podeGerenciarFuncionarios) {
+      throw ApiError.forbidden(
+        "Você não tem permissão para resetar senha de usuários funcionários."
+      );
+    }
+  } else {
+    if (!podeGerenciar) {
+      throw ApiError.forbidden(
+        "Você não tem permissão para realizar esta ação. Permissão necessária: usuarios.gerenciar"
+      );
+    }
+  }
 
   const nova_senha = bcrypt.hashSync("12345", 10);
 
@@ -256,28 +358,21 @@ export async function getUsuarios(req, res) {
   requirePermissao(req, "usuarios.visualizar");
 
   try {
-    // Buscar apenas usuários do sistema (sem perfil de jornada - não são funcionários)
+    // Buscar usuários do sistema: cargo diferente de "Usuário Básico" (inclui admins que batem ponto)
     const usuarios = await Usuario.findAll({
-      where: {
-        usuario_perfil_jornada_id: null,
-      },
       include: [
         {
           model: CargoUsuario,
           as: "cargo",
           attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+          where: { cargo_usuario_nome: { [Op.ne]: "Usuário Básico" } },
+          required: true,
         },
       ],
       order: [["usuario_nome", "ASC"]],
     });
 
-    if (!usuarios || usuarios.length === 0) {
-      throw ApiError.notFound(
-        "Falha ao buscar usuários, fale com um administrador do sistema"
-      );
-    }
-
-    return res.status(200).json(usuarios);
+    return res.status(200).json(usuarios || []);
   } catch (err) {
     if (err instanceof ApiError) throw err;
     console.error("Erro ao buscar usuários:", err);
@@ -285,7 +380,7 @@ export async function getUsuarios(req, res) {
   }
 }
 
-// Buscar usuários do tipo funcionário
+// Buscar usuários do tipo funcionário (cargo Usuário Básico)
 export async function getUsuariosFuncionarios(req, res) {
   requirePermissao(req, "usuarios.visualizar");
 
@@ -307,6 +402,8 @@ export async function getUsuariosFuncionarios(req, res) {
           model: CargoUsuario,
           as: "cargo",
           attributes: ["cargo_usuario_id", "cargo_usuario_nome"],
+          where: { cargo_usuario_nome: "Usuário Básico" },
+          required: true,
         },
         {
           model: PerfilJornada,

@@ -75,6 +75,10 @@ export async function login(req, res) {
       expiresIn: "8h",
     });
 
+    const pode_bater_ponto =
+      !!usuario.usuario_funcionario_id &&
+      permissoes.includes("ponto.registrar");
+
     const resposta = {
       usuario_id: usuario.usuario_id,
       usuario_nome: usuario.usuario_nome,
@@ -84,6 +88,7 @@ export async function login(req, res) {
       permissoes: permissoes,
       empresas: empresas,
       token: token,
+      pode_bater_ponto,
     };
 
     return res.status(200).json(resposta);

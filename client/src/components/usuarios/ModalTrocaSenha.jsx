@@ -18,7 +18,7 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
     try {
       await trocaSenha(senha);
 
-      mostrarAviso("Sucesso", "Sua senha foi alterada com sucesso!", true);
+      mostrarAviso("sucesso", "Sua senha foi alterada com sucesso!", true);
       localStorage.setItem("usuario_troca_senha", 0);
 
       setTrocaSenha(false);

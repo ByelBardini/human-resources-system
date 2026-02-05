@@ -40,6 +40,7 @@ function Login() {
         permissoes,
         empresas,
         usuario_id,
+        pode_bater_ponto,
       } = await logar(login, senha);
 
       localStorage.setItem("token", token);
@@ -50,6 +51,7 @@ function Login() {
       localStorage.setItem("permissoes", JSON.stringify(permissoes));
       localStorage.setItem("empresas", JSON.stringify(empresas || []));
       localStorage.setItem("usuario_troca_senha", usuario_troca_senha);
+      localStorage.setItem("pode_bater_ponto", String(!!pode_bater_ponto));
 
       setCarregando(false);
       mostrarAviso("sucesso", "Login realizado com sucesso!");

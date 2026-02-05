@@ -228,12 +228,12 @@ function AdicionaFuncionarioModal({
     >
       <div className="absolute inset-0 bg-black/80" />
 
-      <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
+      <div className="relative z-10 w-full min-h-full flex items-center justify-center p-4 overflow-y-auto">
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl overflow-hidden"
+          className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col"
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0">
             <h2 className="text-white text-lg font-semibold">
               Adicionar Novo Funcionário
             </h2>
@@ -247,7 +247,7 @@ function AdicionaFuncionarioModal({
             </button>
           </div>
 
-          <div className="px-6 py-5 max-h-[70vh] overflow-auto">
+          <div className="px-6 py-5 flex-1 min-h-0 overflow-y-auto">
             <div className="mb-6">
               <label className="block text-sm text-white/70 mb-2">Foto</label>
 
@@ -495,7 +495,7 @@ function AdicionaFuncionarioModal({
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-white/10 flex justify-end gap-3">
+          <div className="px-6 py-4 border-t border-white/10 flex justify-end gap-3 flex-shrink-0">
             <button
               onClick={() => setAdicionandoFunc(false)}
               type="button"

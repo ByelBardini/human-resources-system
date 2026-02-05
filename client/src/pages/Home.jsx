@@ -183,18 +183,32 @@ function Home() {
             <p className="text-sm text-white/40 text-center py-4">Nenhuma empresa disponível</p>
           )}
 
-          {podeGerenciarPontos && (
-            <div className="mt-5 pt-5 border-t border-white/10">
-              <button
-                onClick={() => navigate("/gerenciar-pontos")}
-                className="w-full flex items-center justify-between gap-2 py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400/95 border border-emerald-500/30 transition-colors font-medium tracking-tight text-sm group"
-              >
-                <span className="flex items-center gap-2">
-                  <Clock size={18} />
-                  Pontos dos Funcionários
-                </span>
-                <ChevronRight size={18} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+          {(podeGerenciarPontos || localStorage.getItem("pode_bater_ponto") === "true") && (
+            <div className="mt-5 pt-5 border-t border-white/10 space-y-3">
+              {localStorage.getItem("pode_bater_ponto") === "true" && (
+                <button
+                  onClick={() => navigate("/ponto")}
+                  className="w-full flex items-center justify-between gap-2 py-2.5 px-4 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400/95 border border-blue-500/30 transition-colors font-medium tracking-tight text-sm group"
+                >
+                  <span className="flex items-center gap-2">
+                    <Clock size={18} />
+                    Batida de Ponto
+                  </span>
+                  <ChevronRight size={18} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
+              {podeGerenciarPontos && (
+                <button
+                  onClick={() => navigate("/gerenciar-pontos")}
+                  className="w-full flex items-center justify-between gap-2 py-2.5 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400/95 border border-emerald-500/30 transition-colors font-medium tracking-tight text-sm group"
+                >
+                  <span className="flex items-center gap-2">
+                    <Clock size={18} />
+                    Pontos dos Funcionários
+                  </span>
+                  <ChevronRight size={18} className="opacity-60 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              )}
             </div>
           )}
 

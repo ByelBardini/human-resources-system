@@ -7,6 +7,7 @@ import { useAviso } from "../context/AvisoContext.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
+import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function Ponto() {
@@ -15,6 +16,7 @@ function Ponto() {
   const { temPermissao } = usePermissao();
 
   const [carregando, setCarregando] = useState(false);
+  const [trocaSenha, setTrocaSenha] = useState(false);
   const [pontoData, setPontoData] = useState(null);
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
@@ -124,8 +126,12 @@ function Ponto() {
   }
 
   useEffect(() => {
-    buscarPontoHoje();
+    setTrocaSenha(localStorage.getItem("usuario_troca_senha") == 1);
     document.title = "Ponto - Sistema RH";
+  }, []);
+
+  useEffect(() => {
+    buscarPontoHoje();
   }, []);
 
   useEffect(() => {
@@ -138,6 +144,13 @@ function Ponto() {
     return (
       <div className="relative min-h-[100dvh] w-screen flex justify-center items-center p-4 sm:p-6 overflow-hidden">
         <Background />
+        {trocaSenha && (
+          <ModalTrocaSenha
+            setTrocaSenha={setTrocaSenha}
+            setCarregando={setCarregando}
+            navigate={navigate}
+          />
+        )}
         {carregando && <Loading />}
       </div>
     );
@@ -146,6 +159,14 @@ function Ponto() {
   return (
     <div className="relative min-h-[100dvh] w-screen flex justify-center items-start sm:items-center p-4 sm:p-6 pb-8 overflow-hidden">
       <Background />
+
+      {trocaSenha && (
+        <ModalTrocaSenha
+          setTrocaSenha={setTrocaSenha}
+          setCarregando={setCarregando}
+          navigate={navigate}
+        />
+      )}
 
       <button
         className="absolute top-4 right-4 sm:top-6 sm:right-6 p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 active:scale-95 transition-all shadow-lg z-10 touch-manipulation"
@@ -424,13 +445,6 @@ function Ponto() {
                 className="w-full bg-emerald-500/20 hover:bg-emerald-500/30 active:scale-[0.98] text-emerald-400 font-semibold py-3 px-4 rounded-xl transition-all border border-emerald-500/30 touch-manipulation min-h-[48px]"
               >
                 Gerenciar Pontos
-              </button>
-              <button
-                type="button"
-                onClick={() => window.open("/calculadora-horas", "CalculadoraHoras", "width=420,height=520,scrollbars=no,resizable=yes")}
-                className="w-full bg-slate-500/20 hover:bg-slate-500/30 active:scale-[0.98] text-slate-300 font-semibold py-3 px-4 rounded-xl transition-all border border-slate-500/30 touch-manipulation min-h-[48px]"
-              >
-                Calculadora de horas
               </button>
             </div>
           )}
