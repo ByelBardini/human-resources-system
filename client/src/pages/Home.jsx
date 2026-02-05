@@ -7,6 +7,7 @@ import {
   Calendar,
   CalendarDays,
   ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react";
 import { getEmpresas, getEmpresaImagem } from "../services/api/empresasService.js";
 import { useState, useEffect } from "react";
@@ -88,6 +89,12 @@ function Home() {
     { permissao: "sistema.gerenciar_empresas", to: "/gerenciar-empresas", icon: Building2, title: "Gerenciar Empresas" },
     { permissao: "sistema.gerenciar_feriados", to: "/gerenciar-feriados", icon: Calendar, title: "Gerenciar Feriados" },
     { permissao: "sistema.gerenciar_ferias", to: "/gerenciar-ferias", icon: CalendarDays, title: "Gerenciar Férias" },
+    {
+      permissao: "sistema.emitir_relatorios",
+      to: "/emitir-relatorios",
+      icon: FileSpreadsheet,
+      title: "Emitir relatórios",
+    },
   ].filter((b) => temPermissao(b.permissao));
 
   return (
@@ -111,12 +118,12 @@ function Home() {
       </button>
 
       <div className="absolute top-6 left-6 flex gap-2 z-10">
-        {botoesAcao.map(({ to, icon: Icon, title }) => (
+        {botoesAcao.map(({ to, icon: Icon, title, onClick }) => (
           <button
-            key={to}
+            key={to ?? title}
             className="p-3 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors shadow-lg"
             title={title}
-            onClick={() => navigate(to, { replace: true })}
+            onClick={onClick ?? (() => navigate(to, { replace: true }))}
           >
             <Icon size={20} />
           </button>

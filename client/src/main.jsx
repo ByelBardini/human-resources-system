@@ -15,6 +15,7 @@ import GerenciarPontos from "./pages/GerenciarPontos.jsx";
 import GerenciarEmpresas from "./pages/GerenciarEmpresas.jsx";
 import GerenciarFeriados from "./pages/GerenciarFeriados.jsx";
 import GerenciarFerias from "./pages/GerenciarFerias.jsx";
+import EmitirRelatorios from "./pages/EmitirRelatorios.jsx";
 import CalculadoraHoras from "./pages/CalculadoraHoras.jsx";
 import { AvisoProvider } from "./context/AvisoContext.jsx";
 
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: "/gerenciar-ferias",
         element: <GerenciarFerias />,
+      },
+      {
+        path: "/emitir-relatorios",
+        element: <EmitirRelatorios />,
       },
       {
         path: "/calculadora-horas",

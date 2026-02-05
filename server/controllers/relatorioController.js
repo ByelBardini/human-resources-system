@@ -10,9 +10,17 @@ import {
   Empresa,
   Funcionario,
   Notificacao,
+  Cargo,
+  Nivel,
+  Descricao,
+  Setor,
+  CargoPermissao,
+  CargoPermissaoEmpresa,
+  Permissao,
 } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
 import { Op } from "sequelize";
+import sequelize from "../config/database.js";
 
 // Constante para tolerância em minutos
 const TOLERANCIA_MINUTOS = 10;
@@ -140,6 +148,25 @@ function requirePermissao(req, codigoPermissao) {
     );
   }
   return usuario;
+}
+
+async function getEmpresasPermitidasParaPermissao(usuario, codigoPermissao) {
+  const permissao = await Permissao.findOne({
+    where: { permissao_codigo: codigoPermissao },
+  });
+  if (!permissao) return null;
+  const cargoPermissao = await CargoPermissao.findOne({
+    where: {
+      cargo_usuario_id: usuario.usuario_cargo_id,
+      permissao_id: permissao.permissao_id,
+    },
+    include: [{ model: CargoPermissaoEmpresa, as: "empresasConfiguradas" }],
+  });
+  if (!cargoPermissao) return null;
+  if (!cargoPermissao.empresasConfiguradas || cargoPermissao.empresasConfiguradas.length === 0) {
+    return null;
+  }
+  return cargoPermissao.empresasConfiguradas.map((ec) => ec.empresa_id);
 }
 
 // Função para formatar data DATEONLY para string YYYY-MM-DD
@@ -1045,4 +1072,366 @@ export async function getTotaisMensais(req, res) {
     ...totais,
     bancoHoras: bancoHorasAcumulado,
   });
+}
+
+// --- Relatórios exportáveis (permissão sistema.emitir_relatorios) ---
+
+export async function getEmpresasRelatorios(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  const where = { empresa_ativo: 1 };
+  if (empresasPermitidas !== null && empresasPermitidas.length > 0) {
+    where.empresa_id = { [Op.in]: empresasPermitidas };
+  }
+  const empresas = await Empresa.findAll({
+    where,
+    attributes: ["empresa_id", "empresa_nome"],
+    order: [["empresa_nome", "ASC"]],
+  });
+  return res.status(200).json(empresas);
+}
+
+export async function exportarFuncoes(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const empresa_id = parseInt(req.params.empresa_id, 10);
+  if (!empresa_id) throw ApiError.badRequest("Necessário ID da empresa.");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(empresa_id)) {
+    throw ApiError.forbidden("Você não tem permissão para emitir relatórios desta empresa.");
+  }
+  const cargos = await Cargo.findAll({
+    where: { cargo_empresa_id: empresa_id, cargo_ativo: 1 },
+    attributes: ["cargo_id", "cargo_nome"],
+    order: [["cargo_nome", "ASC"]],
+    include: [
+      {
+        model: Descricao,
+        as: "descricoes",
+        limit: 1,
+        required: false,
+        include: [{ model: Setor, as: "setor", attributes: ["setor_nome"] }],
+      },
+    ],
+  });
+  const qtdPorCargo = await Promise.all(
+    cargos.map((c) =>
+      Funcionario.count({
+        where: { funcionario_cargo_id: c.cargo_id, funcionario_ativo: 1 },
+      })
+    )
+  );
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Funções", { headerFooter: { firstHeader: "Funções" } });
+  sheet.columns = [
+    { header: "Função", key: "cargo_nome", width: 30 },
+    { header: "Setor", key: "setor_nome", width: 20 },
+    { header: "Escolaridade", key: "escolaridade", width: 25 },
+    { header: "Treinamento", key: "treinamento", width: 25 },
+    { header: "Comportamentos", key: "comportamentos", width: 25 },
+    { header: "Técnicas", key: "tecnicas", width: 25 },
+    { header: "Experiência", key: "experiencia", width: 25 },
+    { header: "Responsabilidades", key: "responsabilidades", width: 25 },
+    { header: "Qtd. funcionários", key: "qtd_funcionarios", width: 15 },
+  ];
+  sheet.getRow(1).font = { bold: true };
+  cargos.forEach((c, i) => {
+    const desc = c.descricoes && c.descricoes[0];
+    sheet.addRow({
+      cargo_nome: c.cargo_nome,
+      setor_nome: desc?.setor?.setor_nome ?? "",
+      escolaridade: desc?.descricao_escolaridade ?? "",
+      treinamento: desc?.descricao_treinamento ?? "",
+      comportamentos: desc?.descricao_comportamentos ?? "",
+      tecnicas: desc?.descricao_tecnicas ?? "",
+      experiencia: desc?.descricao_experiencia ?? "",
+      responsabilidades: desc?.descricao_responsabilidades ?? "",
+      qtd_funcionarios: qtdPorCargo[i] ?? 0,
+    });
+  });
+  const lastRowF = 1 + cargos.length;
+  const lastColF = 9;
+  for (let c = 1; c <= lastColF; c++) {
+    const cell = sheet.getCell(1, c);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+  }
+  const empresa = await Empresa.findByPk(empresa_id, { attributes: ["empresa_nome"] });
+  const nomeEmpresa = (empresa?.empresa_nome || "empresa").replace(/[^a-zA-Z0-9\s_-]/g, "").trim().replace(/\s+/g, "_") || "empresa";
+  const nomeArquivo = `funcoes_${nomeEmpresa}.xlsx`;
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivo}"; filename*=UTF-8''${encodeURIComponent(nomeArquivo)}`);
+  await workbook.xlsx.write(res);
+  res.end();
+}
+
+export async function getCargosRelatorio(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const empresa_id = parseInt(req.params.empresa_id, 10);
+  if (!empresa_id) throw ApiError.badRequest("Necessário ID da empresa.");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(empresa_id)) {
+    throw ApiError.forbidden("Você não tem permissão para emitir relatórios desta empresa.");
+  }
+  const cargos = await Cargo.findAll({
+    where: { cargo_empresa_id: empresa_id, cargo_ativo: 1 },
+    attributes: ["cargo_id", "cargo_nome"],
+    order: [["cargo_nome", "ASC"]],
+  });
+  return res.status(200).json(cargos);
+}
+
+export async function exportarProjecaoSalarial(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const { empresa_id, cargo_ids } = req.body;
+  if (!empresa_id) throw ApiError.badRequest("Necessário empresa_id.");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(parseInt(empresa_id))) {
+    throw ApiError.forbidden("Você não tem permissão para emitir relatórios desta empresa.");
+  }
+  const ids = Array.isArray(cargo_ids) ? cargo_ids.map((id) => parseInt(id, 10)).filter(Boolean) : [];
+  const whereCargo = { cargo_empresa_id: empresa_id, cargo_ativo: 1 };
+  if (ids.length > 0) whereCargo.cargo_id = { [Op.in]: ids };
+  const cargos = await Cargo.findAll({
+    where: whereCargo,
+    attributes: ["cargo_id", "cargo_nome"],
+    order: [
+      ["cargo_nome", "ASC"],
+      [{ model: Nivel, as: "niveis" }, "nivel_id", "ASC"],
+    ],
+    include: [
+      { model: Nivel, as: "niveis", attributes: ["nivel_nome", "nivel_salario"] },
+    ],
+  });
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Projeção Salarial");
+  const niveisOrdenados = ["Inicial", "Júnior I", "Júnior II", "Júnior III", "Pleno I", "Pleno II", "Pleno III", "Sênior I", "Sênior II", "Sênior III"];
+  sheet.columns = [
+    { header: "Função", key: "cargo_nome", width: 25 },
+    ...niveisOrdenados.map((n) => ({ header: n, key: `nivel_${n}`, width: 14 })),
+  ];
+  sheet.getRow(1).font = { bold: true };
+  cargos.forEach((c) => {
+    const row = { cargo_nome: c.cargo_nome };
+    (c.niveis || []).forEach((n) => {
+      row[`nivel_${n.nivel_nome}`] = n.nivel_salario;
+    });
+    sheet.addRow(row);
+  });
+  const lastRowP = 1 + cargos.length;
+  const lastColP = 1 + niveisOrdenados.length;
+  for (let c = 1; c <= lastColP; c++) {
+    const cell = sheet.getCell(1, c);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+  }
+  for (let col = 2; col <= lastColP; col++) {
+    sheet.getColumn(col).numFmt = '"R$"#,##0.00';
+  }
+  const empresa = await Empresa.findByPk(empresa_id, { attributes: ["empresa_nome"] });
+  const nomeEmpresa = (empresa?.empresa_nome || "empresa").replace(/[^a-zA-Z0-9\s_-]/g, "").trim().replace(/\s+/g, "_") || "empresa";
+  const nomeArquivo = `projecao_salarial_${nomeEmpresa}.xlsx`;
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivo}"; filename*=UTF-8''${encodeURIComponent(nomeArquivo)}`);
+  await workbook.xlsx.write(res);
+  res.end();
+}
+
+// Apenas campos tinyint exibidos no relatório (Ativo não é exibido)
+const CAMPOS_TINYINT_FUNCIONARIO = ["funcionario_batida_fora_empresa"];
+
+// Formata data para exportação Excel: dd/mm/yyyy
+function formatarDataExport(v) {
+  if (v == null || v === "") return "";
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v.trim())) {
+    const [year, month, day] = v.trim().split("T")[0].split("-");
+    return `${day}/${month}/${year}`;
+  }
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) return "";
+    const day = String(v.getDate()).padStart(2, "0");
+    const month = String(v.getMonth() + 1).padStart(2, "0");
+    const year = v.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return v;
+}
+
+const CAMPOS_FUNCIONARIO = [
+  { key: "funcionario_id", label: "ID" },
+  { key: "funcionario_nome", label: "Nome" },
+  { key: "funcionario_cpf", label: "CPF" },
+  { key: "funcionario_celular", label: "Celular" },
+  { key: "funcionario_sexo", label: "Sexo" },
+  { key: "funcionario_data_nascimento", label: "Data nascimento" },
+  { key: "funcionario_data_admissao", label: "Data admissão" },
+  { key: "funcionario_observacao", label: "Observação" },
+  { key: "funcionario_data_desligamento", label: "Data desligamento" },
+  { key: "funcionario_motivo_inativa", label: "Motivo inativação" },
+  { key: "funcionario_gasto_desligamento", label: "Gasto desligamento" },
+  { key: "funcionario_ativo", label: "Ativo" },
+  { key: "funcionario_batida_fora_empresa", label: "Batida fora empresa" },
+  { key: "setor_nome", label: "Setor" },
+  { key: "cargo_nome", label: "Cargo" },
+  { key: "nivel_nome", label: "Nível" },
+  { key: "nivel_salario", label: "Salário" },
+];
+
+export async function getSetoresNiveisRelatorio(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const empresa_id = parseInt(req.params.empresa_id, 10);
+  if (!empresa_id) throw ApiError.badRequest("Necessário ID da empresa.");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(empresa_id)) {
+    throw ApiError.forbidden("Você não tem permissão para emitir relatórios desta empresa.");
+  }
+  const [setores, niveis] = await Promise.all([
+    Setor.findAll({
+      where: { setor_empresa_id: empresa_id },
+      attributes: ["setor_id", "setor_nome"],
+      order: [["setor_nome", "ASC"]],
+    }),
+    Nivel.findAll({
+      attributes: ["nivel_id", "nivel_nome"],
+      include: [{ model: Cargo, as: "cargo", where: { cargo_empresa_id: empresa_id }, attributes: [] }],
+      order: [["nivel_id", "ASC"]],
+    }),
+  ]);
+  const niveisUnicos = [...new Map(niveis.map((n) => [n.nivel_id, n])).values()];
+  return res.status(200).json({ setores, niveis: niveisUnicos });
+}
+
+// Campos de funcionário disponíveis para relatório (sem ID, para não permitir buscar por ID)
+// ID e Ativo não são exibidos: ID interno; Ativo já é filtro na tela
+const CAMPOS_FUNCIONARIO_SELECIONAVEIS = CAMPOS_FUNCIONARIO.filter(
+  (c) => c.key !== "funcionario_id" && c.key !== "funcionario_ativo"
+);
+
+export async function getCamposFuncionarios(req, res) {
+  requirePermissao(req, "sistema.emitir_relatorios");
+  return res.status(200).json(CAMPOS_FUNCIONARIO_SELECIONAVEIS);
+}
+
+export async function exportarFuncionarios(req, res) {
+  const usuario = requirePermissao(req, "sistema.emitir_relatorios");
+  const { empresa_id, filtros = {}, campos } = req.body;
+  if (!empresa_id) throw ApiError.badRequest("Necessário empresa_id.");
+  if (!Array.isArray(campos) || campos.length === 0) throw ApiError.badRequest("Necessário informar ao menos um campo em 'campos'.");
+  const empresasPermitidas = await getEmpresasPermitidasParaPermissao(usuario, "sistema.emitir_relatorios");
+  if (empresasPermitidas !== null && !empresasPermitidas.includes(parseInt(empresa_id))) {
+    throw ApiError.forbidden("Você não tem permissão para emitir relatórios desta empresa.");
+  }
+  const validKeys = new Set(CAMPOS_FUNCIONARIO.map((c) => c.key));
+  const camposSelecionados = campos.filter(
+    (k) => validKeys.has(k) && k !== "funcionario_id" && k !== "funcionario_ativo"
+  );
+  if (camposSelecionados.length === 0) throw ApiError.badRequest("Nenhum campo válido selecionado.");
+  const where = { funcionario_empresa_id: empresa_id };
+  if (filtros.ativos === true || filtros.ativos === 1) {
+    where.funcionario_ativo = 1;
+  } else if (filtros.ativos === false || filtros.ativos === 0) {
+    where.funcionario_ativo = 0;
+  }
+  // se ativos não informado ou "todos", não filtra por ativo (todos os funcionários)
+  const pontoOnline = filtros.ponto_online;
+  if (pontoOnline === "sim" || pontoOnline === true || pontoOnline === 1) {
+    where.funcionario_batida_fora_empresa = 1;
+  } else if (pontoOnline === "nao" || pontoOnline === "não" || pontoOnline === false || pontoOnline === 0) {
+    where.funcionario_batida_fora_empresa = 0;
+  }
+  if (filtros.sexo) where.funcionario_sexo = filtros.sexo;
+  if (filtros.setor_id) where.funcionario_setor_id = filtros.setor_id;
+  if (filtros.cargo_id) where.funcionario_cargo_id = filtros.cargo_id;
+  if (filtros.nivel_id) where.funcionario_nivel_id = filtros.nivel_id;
+  if (filtros.mes_aniversario != null) {
+    const mes = parseInt(filtros.mes_aniversario, 10);
+    if (mes >= 1 && mes <= 12) {
+      where[Op.and] = where[Op.and] || [];
+      where[Op.and].push(sequelize.where(sequelize.fn("MONTH", sequelize.col("funcionario_data_nascimento")), mes));
+    }
+  }
+  const funcionarios = await Funcionario.findAll({
+    where,
+    include: [
+      { model: Setor, as: "setor", attributes: ["setor_nome"] },
+      { model: Nivel, as: "nivel", attributes: ["nivel_nome", "nivel_salario"] },
+      { model: Cargo, as: "cargo", attributes: ["cargo_nome"] },
+    ],
+    order: [["funcionario_nome", "ASC"]],
+  });
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Funcionários");
+  const headers = camposSelecionados.map((k) => CAMPOS_FUNCIONARIO.find((c) => c.key === k).label);
+  sheet.columns = camposSelecionados.map((k, i) => ({ header: headers[i], key: k, width: 18 }));
+  sheet.getRow(1).font = { bold: true };
+  funcionarios.forEach((f) => {
+    const row = {};
+    const flat = {
+      ...f.get({ plain: true }),
+      setor_nome: f.setor?.setor_nome ?? "",
+      cargo_nome: f.cargo?.cargo_nome ?? "",
+      nivel_nome: f.nivel?.nivel_nome ?? "",
+      nivel_salario: f.nivel?.nivel_salario ?? "",
+    };
+    camposSelecionados.forEach((k) => {
+      let v = flat[k];
+      if (CAMPOS_TINYINT_FUNCIONARIO.includes(k)) {
+        if (v === 1 || v === "1") v = "Sim";
+        else if (v === 0 || v === "0") v = "Não";
+        else v = v != null ? String(v) : "";
+      }
+      if (k === "funcionario_sexo" && typeof v === "string" && v) {
+        v = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+      }
+      if (v instanceof Date || (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(String(v).trim()))) {
+        v = formatarDataExport(v);
+      }
+      if (v === null || v === undefined) v = "";
+      row[k] = v;
+    });
+    sheet.addRow(row);
+  });
+
+  const lastRow = 1 + funcionarios.length;
+  const lastCol = camposSelecionados.length;
+
+  // Cabeçalho: fundo e negrito
+  for (let c = 1; c <= lastCol; c++) {
+    const cell = sheet.getCell(1, c);
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
+  }
+  // Tabela Excel
+  // Salário: formato Real
+  const idxSalario = camposSelecionados.indexOf("nivel_salario");
+  if (idxSalario !== -1) {
+    const colNum = idxSalario + 1;
+    sheet.getColumn(colNum).numFmt = '"R$"#,##0.00';
+  }
+  // Sim/Não: verde / vermelho
+  for (const key of CAMPOS_TINYINT_FUNCIONARIO) {
+    const idx = camposSelecionados.indexOf(key);
+    if (idx === -1) continue;
+    const colNum = idx + 1;
+    for (let r = 2; r <= lastRow; r++) {
+      const cell = sheet.getCell(r, colNum);
+      if (cell.value === "Sim") {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF00B050" } };
+        cell.font = { color: { argb: "FFFFFFFF" } };
+      } else if (cell.value === "Não") {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF0000" } };
+        cell.font = { color: { argb: "FFFFFFFF" } };
+      }
+    }
+  }
+
+  const empresa = await Empresa.findByPk(empresa_id, { attributes: ["empresa_nome"] });
+  const nomeEmpresa = (empresa?.empresa_nome || "empresa").replace(/[^a-zA-Z0-9\s_-]/g, "").trim().replace(/\s+/g, "_") || "empresa";
+  const nomeArquivo = `funcionarios_${nomeEmpresa}.xlsx`;
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivo}"; filename*=UTF-8''${encodeURIComponent(nomeArquivo)}`);
+  await workbook.xlsx.write(res);
+  res.end();
 }
