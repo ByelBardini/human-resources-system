@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, CalendarPlus, Type, Building2, Calendar, Repeat, Trash2, Check } from "lucide-react";
+import { motion } from "framer-motion";
 import { criarFeriado, atualizarFeriado, excluirFeriado } from "../../services/api/feriadoService.js";
 import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
@@ -133,33 +134,49 @@ function ModalFeriado({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       onClick={() => setModalAberto(false)}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      <div
-        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 p-6 text-white shadow-2xl"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl text-white overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">
-            {modoEdicao ? "Editar Feriado" : "Novo Feriado"}
-          </h2>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-3">
+            <CalendarPlus size={20} className="text-emerald-400" />
+            <div>
+              <h2 className="text-lg font-semibold">
+                {modoEdicao ? "Editar Feriado" : "Novo Feriado"}
+              </h2>
+              <p className="text-xs text-white/50">
+                {modoEdicao ? "Altere os dados do feriado" : "Cadastre um novo feriado"}
+              </p>
+            </div>
+          </div>
           <button
             onClick={() => setModalAberto(false)}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            className="h-9 w-9 inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
             aria-label="Fechar"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="space-y-4">
+        {/* Content */}
+        <div className="px-6 py-5 space-y-5">
+          {/* Nome */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
+            <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+              <Type size={14} className="text-white/50" />
               Nome do Feriado
             </label>
             <input
@@ -167,85 +184,122 @@ function ModalFeriado({
               value={nome}
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Dia da Independência"
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                         outline-none focus:bg-white/15 focus:ring-1 focus:ring-blue-500/50 transition-all [color-scheme:dark]"
             />
           </div>
 
+          {/* Empresas */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
+            <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+              <Building2 size={14} className="text-white/50" />
               Empresas
             </label>
-            <div className="max-h-40 overflow-y-auto rounded-lg bg-white/5 border border-white/10 p-3 space-y-2">
+            <div className="max-h-48 overflow-y-auto rounded-xl bg-white/5 border border-white/10 p-2 space-y-1 custom-scrollbar">
               {empresas.length === 0 ? (
-                <p className="text-white/60 text-sm">Carregando empresas...</p>
+                <p className="text-white/50 text-sm py-3 text-center">Carregando empresas...</p>
               ) : (
-                empresas.map((empresa) => (
-                  <label
-                    key={empresa.empresa_id}
-                    className="flex items-center gap-2 hover:bg-white/5 rounded px-2 py-1"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={empresasSelecionadas.includes(empresa.empresa_id.toString())}
-                      onChange={() => toggleEmpresa(empresa.empresa_id)}
-                      disabled={modoEdicao}
-                      className="rounded bg-white/5 border-white/15 w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm text-white/80">{empresa.empresa_nome}</span>
-                  </label>
-                ))
+                empresas.map((empresa) => {
+                  const isChecked = empresasSelecionadas.includes(empresa.empresa_id.toString());
+                  return (
+                    <label
+                      key={empresa.empresa_id}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 cursor-pointer transition-colors
+                        ${isChecked ? 'bg-emerald-500/10' : 'hover:bg-white/5'}
+                        ${modoEdicao ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    >
+                      <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all
+                        ${isChecked 
+                          ? 'bg-emerald-500 border-emerald-500' 
+                          : 'bg-white/5 border-white/20'}`}
+                      >
+                        {isChecked && <Check size={14} className="text-white" />}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleEmpresa(empresa.empresa_id)}
+                        disabled={modoEdicao}
+                        className="sr-only"
+                      />
+                      <span className="text-sm text-white/80">{empresa.empresa_nome}</span>
+                    </label>
+                  );
+                })
               )}
             </div>
             {!modoEdicao && empresasSelecionadas.length === 0 && (
-              <p className="text-xs text-yellow-400/80 mt-1">Selecione pelo menos uma empresa</p>
+              <p className="text-xs text-white/50 mt-2 flex items-center gap-1">
+                Selecione pelo menos uma empresa
+              </p>
             )}
           </div>
 
+          {/* Data */}
           <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">
+            <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+              <Calendar size={14} className="text-white/50" />
               Data
             </label>
             <input
               type="date"
               value={data}
               onChange={(e) => setData(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90 
+                         outline-none focus:bg-white/15 focus:ring-1 focus:ring-blue-500/50 transition-all [color-scheme:dark]"
             />
           </div>
 
-          <div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={repetirAno}
-                onChange={(e) => setRepetirAno(e.target.checked)}
-                className="rounded bg-white/5 border-white/15 w-4 h-4"
+          {/* Repetir todo ano - Toggle */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+            <div className="flex items-center gap-3">
+              <Repeat size={18} className="text-white/50" />
+              <div>
+                <span className="text-sm text-white/90 font-medium">Repetir todo ano</span>
+                <p className="text-xs text-white/50 mt-0.5">
+                  Mesmo dia/mês nos próximos anos
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRepetirAno(!repetirAno)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                ${repetirAno ? 'bg-emerald-500' : 'bg-white/20'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                ${repetirAno ? 'translate-x-6' : 'translate-x-1'}`} 
               />
-              <span className="text-sm text-white/80">Repetir todo ano</span>
-            </label>
-            <p className="text-xs text-white/60 ml-6 mt-1">
-              O feriado será criado para o mesmo dia/mês nos próximos anos
-            </p>
+            </button>
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex gap-3">
           {modoEdicao && (
             <button
               onClick={deletarFeriado}
-              className="flex-1 px-4 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-300 hover:bg-red-500/25 transition"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
             >
+              <Trash2 size={16} />
               Excluir
             </button>
           )}
+          <div className="flex-1" />
+          <button
+            onClick={() => setModalAberto(false)}
+            className="px-4 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Cancelar
+          </button>
           <button
             onClick={salvarFeriado}
-            className="flex-1 px-4 py-2 rounded-lg bg-green-500/15 border border-green-400/30 text-green-300 hover:bg-green-500/25 transition"
+            className="px-5 py-2.5 rounded-lg text-sm text-white bg-white/15 hover:bg-white/20 border border-white/10 transition-colors"
           >
             {modoEdicao ? "Salvar" : "Cadastrar"}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
