@@ -39,7 +39,7 @@ function Empresa() {
   }
 
   return (
-    <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">
+    <div className="relative h-screen w-screen flex flex-col p-6 overflow-hidden">
       <Background />
 
       {/* Modal editar descrição */}
@@ -107,15 +107,15 @@ function Empresa() {
 
       {/* Conteúdo principal */}
       <main
-        className={`flex-1 w-full pt-24 flex justify-center transition-all ${
-          opcaoSelecionada === "home" ? "items-start" : "items-start"
+        className={`flex-1 w-full pt-24 pb-6 flex justify-center transition-all ${
+          opcaoSelecionada === "home" ? "items-start" : "items-stretch"
         }`}
       >
         <div
-          className={`w-full transition-all ${
+          className={`transition-all ${
             opcaoSelecionada === "home"
               ? "w-full h-[500px] overflow-visible"
-              : "max-w-[98%] xl:max-w-[98%] 2xl:max-w-[99%] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl overflow-y-auto"
+              : "w-full h-full max-w-[98%] xl:max-w-[98%] 2xl:max-w-[99%] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl overflow-hidden"
           } px-6 py-6`}
         >
           <MenuTela
