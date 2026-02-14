@@ -5,7 +5,7 @@ function HeaderProjecao() {
       <tr>
         <th
           rowSpan={3}
-          className="min-w-[200px] text-left px-5 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
+          className="min-w-[200px] text-center px-5 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
         >
           FUNÇÃO
         </th>
