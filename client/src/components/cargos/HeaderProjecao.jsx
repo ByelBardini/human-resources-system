@@ -1,13 +1,70 @@
-function HeaderProjecao() {
+import { useState, useRef, useEffect } from "react";
+import { Search, X } from "lucide-react";
+
+function HeaderProjecao({ busca, setBusca }) {
+  const [editando, setEditando] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editando && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editando]);
+
+  function handleClick() {
+    setEditando(true);
+  }
+
+  function handleBlur() {
+    if (!busca) {
+      setEditando(false);
+    }
+  }
+
+  function limparBusca() {
+    setBusca("");
+    setEditando(false);
+  }
+
   return (
     <thead className="text-white/90 bg-white/[0.03]">
       {/* Linha principal - Categorias */}
       <tr>
         <th
           rowSpan={3}
-          className="min-w-[200px] text-center px-5 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
+          className="w-[260px] min-w-[260px] max-w-[260px] px-4 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
         >
-          FUNÇÃO
+          {editando || busca ? (
+            <div className="flex items-center gap-2">
+              <Search size={14} className="text-white/40 shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                onBlur={handleBlur}
+                placeholder="Buscar..."
+                className="w-full bg-transparent text-sm text-white placeholder-white/40 outline-none"
+              />
+              {busca && (
+                <button
+                  type="button"
+                  onClick={limparBusca}
+                  className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-white transition-colors shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleClick}
+              className="w-full text-center hover:text-white/70 transition-colors cursor-pointer"
+            >
+              FUNÇÃO
+            </button>
+          )}
         </th>
 
         <th

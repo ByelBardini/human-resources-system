@@ -11,6 +11,8 @@ function TabelaCargos({
   selecionaCampo,
   clicaDeleta,
   cargosFiltro,
+  busca,
+  setBusca,
 }) {
   const [tabelaVazia, setTabelaVazia] = useState(false);
   const [cargosAtualizado, setCargosAtualizado] = useState([{ niveis: [] }]);
@@ -35,7 +37,7 @@ function TabelaCargos({
 
   return (
     <table className="min-w-[1100px] w-full text-sm border-collapse">
-      <HeaderProjecao />
+      <HeaderProjecao busca={busca} setBusca={setBusca} />
 
       {!tabelaVazia ? (
         <tbody className="text-white/90">
@@ -52,17 +54,17 @@ function TabelaCargos({
               onClick={() => selecionaCampo(cargo.cargo_id, "")}
             >
               {/* Cargo */}
-              <td className="px-4 py-3 align-middle min-w-[220px] border-r border-white/10">
+              <td className="px-4 py-3 align-middle w-[260px] min-w-[260px] max-w-[260px] border-r border-white/10">
                 <div className="flex gap-2 items-center">
                   {selecionado.linha == cargo.cargo_id && (
-                    <div className="w-[32px] flex flex-col gap-2">
+                    <div className="w-[32px] shrink-0 flex flex-col gap-2">
                       <IconeBotao
                         tipo="deletar"
                         onClick={() => clicaDeleta(cargo.cargo_id)}
                       />
                     </div>
                   )}
-                  <span className="text-sm text-white/90 font-medium">
+                  <span className="text-sm text-white/90 font-medium truncate" title={cargo.cargo_nome}>
                     {cargo.cargo_nome}
                   </span>
                 </div>

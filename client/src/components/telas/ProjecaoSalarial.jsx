@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
-import FiltroCargos from "../cargos/FiltroCargos.jsx";
 
 export default function ProjecaoSalarial({
   setAdicionando,
@@ -19,9 +18,16 @@ export default function ProjecaoSalarial({
 }) {
   const { mostrarAviso, limparAviso } = useAviso();
   const [cargos, setCargos] = useState([{ niveis: [] }]);
-  const [cargosFiltro, setCargosFiltro] = useState([]);
+  const [busca, setBusca] = useState("");
 
   const [selecionado, setSelecionado] = useState({ linha: null, campo: null });
+
+  // Filtrar cargos baseado na busca
+  const cargosFiltrados = busca.trim()
+    ? cargos.filter((cargo) =>
+        cargo.cargo_nome?.toLowerCase().includes(busca.toLowerCase().trim())
+      )
+    : cargos;
 
   // Paginação
   const tabelaContainerRef = useRef(null);
@@ -51,7 +57,7 @@ export default function ProjecaoSalarial({
     return () => resizeObserver.disconnect();
   }, [calcularItensPorPagina]);
 
-  const listaParaPaginar = cargosFiltro.length > 0 ? cargosFiltro : cargos;
+  const listaParaPaginar = cargosFiltrados;
   const totalPaginas = Math.ceil(listaParaPaginar.length / itensPorPagina);
 
   const cargosPaginados = listaParaPaginar.slice(
@@ -61,7 +67,7 @@ export default function ProjecaoSalarial({
 
   useEffect(() => {
     setPaginaAtual(1);
-  }, [cargosFiltro, cargos]);
+  }, [busca, cargos]);
 
   const irParaPaginaAnterior = () => {
     setPaginaAtual((prev) => Math.max(1, prev - 1));
@@ -145,18 +151,6 @@ export default function ProjecaoSalarial({
 
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-0">
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <FiltroCargos
-          cargos={cargos}
-          setCargosFiltro={setCargosFiltro}
-          cargosFiltro={cargosFiltro}
-        />
-        {cargosFiltro.length > 0 && (
-          <span className="text-sm text-white/50">
-            {cargosFiltro.length} resultado(s)
-          </span>
-        )}
-      </div>
       <div
         ref={tabelaContainerRef}
         className={`relative w-full min-h-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl ${listaParaPaginar.length > itensPorPagina ? 'flex-1' : ''}`}
@@ -167,6 +161,8 @@ export default function ProjecaoSalarial({
           selecionado={selecionado}
           selecionaCampo={selecionaCampo}
           clicaDeleta={clicaDeleta}
+          busca={busca}
+          setBusca={setBusca}
         />
       </div>
 
