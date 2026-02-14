@@ -204,7 +204,7 @@ function ModalCriaUsuario({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
       <div
-        className="relative w-full max-w-md max-h-[90vh] rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 text-white shadow-2xl flex flex-col overflow-hidden my-auto"
+        className="relative w-full max-w-md max-h-[90vh] rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/80 to-slate-900/60 text-white shadow-2xl flex flex-col my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 pb-0 flex-shrink-0">

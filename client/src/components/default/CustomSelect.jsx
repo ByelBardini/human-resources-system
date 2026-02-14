@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 /**
  * Select customizado com dropdown estilizado.
@@ -8,7 +9,9 @@ import { motion, AnimatePresence } from "framer-motion";
  */
 export default function CustomSelect({ value, onChange, children, disabled, className = "", dropUp = false }) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef(null);
+  const buttonRef = useRef(null);
 
   const options = [];
   React.Children.forEach(children, (child) => {
@@ -31,6 +34,26 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Calcular posição do dropdown quando abrir
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownHeight = 224; // max-h-56 = 14rem = 224px
+      
+      // Decide se abre pra cima ou pra baixo baseado no espaço disponível
+      const shouldDropUp = dropUp || (spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+      
+      setPosition({
+        top: shouldDropUp ? rect.top - 6 : rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+        dropUp: shouldDropUp
+      });
+    }
+  }, [open, dropUp]);
+
   function handleSelect(optionValue) {
     onChange({ target: { value: optionValue } });
     setOpen(false);
@@ -39,6 +62,7 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setOpen((o) => !o)}
@@ -60,16 +84,23 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
         />
       </button>
 
-      <AnimatePresence>
-        {open && (
+      {open && createPortal(
+        <AnimatePresence>
           <motion.div
-            initial={{ opacity: 0, y: dropUp ? 4 : -4, scale: 0.98 }}
+            initial={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: dropUp ? 4 : -4, scale: 0.98 }}
+            exit={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`absolute z-50 w-full min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
+            style={{
+              position: 'fixed',
+              top: position.dropUp ? 'auto' : position.top,
+              bottom: position.dropUp ? window.innerHeight - position.top : 'auto',
+              left: position.left,
+              width: position.width,
+            }}
+            className={`z-[9999] min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
                        rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-xl
-                       shadow-xl shadow-black/30 py-1 ${dropUp ? 'bottom-full mb-1.5' : 'mt-1.5'}`}
+                       shadow-xl shadow-black/30 py-1`}
           >
             {options.map((opt, idx) => {
               const isSelected = String(opt.value) === String(value);
@@ -92,8 +123,9 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
               );
             })}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
