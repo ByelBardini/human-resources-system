@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
-import { X } from "lucide-react";
+import { motion } from "framer-motion";
+import { X, TrendingUp, Percent, AlertTriangle } from "lucide-react";
 import { aumentoCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 
@@ -54,71 +55,92 @@ function ModalAumentoGeral({
       role="dialog"
       aria-modal="true"
     >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      />
 
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-xl rounded-2xl border border-white/10
-                 bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl
-                 shadow-2xl text-white overflow-hidden"
+        className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10
+                 bg-slate-900/95 backdrop-blur-xl shadow-2xl text-white overflow-hidden"
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
-          <h2 className="text-lg font-semibold">Adicionar um Aumento Geral</h2>
-          <button
-            type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/10 hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-            title="Fechar"
-            onClick={() => setAumentoGeral(false)}
-          >
-            <span className="text-xl leading-none">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-white/10">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Aumento Geral</h2>
+                <p className="text-xs text-white/50 mt-0.5">Aplicar reajuste em todas as funções</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors focus:outline-none"
+              onClick={() => setAumentoGeral(false)}
+            >
               <X size={18} />
-            </span>
-          </button>
+            </button>
+          </div>
         </div>
 
-        <div className="px-6 py-5 space-y-5">
-          <p className="text-sm text-white/70">
-            Insira apenas a porcentagem do aumento, ele será aplicado a todas as
-            funções, e os salários dos níveis será recalculado
-          </p>
+        {/* Content */}
+        <div className="px-6 py-6 space-y-6">
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-white/5 border border-white/10">
+            <Percent size={16} className="text-white/50 mt-0.5 shrink-0" />
+            <p className="text-sm text-white/60">
+              Insira a porcentagem do aumento. Ele será aplicado a todas as funções e os salários serão recalculados.
+            </p>
+          </div>
 
           <div>
-            <label className="block text-sm text-white/70 mb-1">
-              Valor do aumento (em porcentagem)
+            <label className="flex items-center gap-2 text-sm text-white/70 mb-2">
+              <Percent size={14} />
+              Valor do aumento (%)
             </label>
             <input
               type="text"
               placeholder="Ex: 6,5"
               value={porcentagem}
               onChange={(e) => setPorcentagem(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white/90
-                       placeholder-white/40 outline-none focus:bg-white/15 [color-scheme:dark]"
+              className="w-full px-4 py-3.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm
+                       placeholder-white/30 outline-none focus:border-white/20 focus:bg-white/[0.07] transition-colors"
             />
           </div>
 
-          <p className="text-sm text-rose-300 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
-            <strong className="font-semibold">Atenção!</strong> O aumento
-            inserido aqui é irreversível.
-          </p>
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <AlertTriangle size={16} className="text-amber-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-amber-200/80">
+              <strong className="font-medium">Atenção:</strong> Esta ação é irreversível.
+            </p>
+          </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
+        {/* Footer */}
+        <div className="px-6 py-5 border-t border-white/10 flex justify-end gap-3">
           <button
             type="button"
             onClick={() => setAumentoGeral(false)}
-            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="px-4 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none"
           >
             Cancelar
           </button>
           <button
             onClick={clicaAdiciona}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="px-5 py-2.5 rounded-lg text-sm text-white bg-white/15 hover:bg-white/20 border border-white/10 transition-colors focus:outline-none"
           >
-            Inserir Aumento
+            Aplicar Aumento
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
