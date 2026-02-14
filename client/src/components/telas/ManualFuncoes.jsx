@@ -22,8 +22,8 @@ function ManualFuncoes({
   const tabelaContainerRef = useRef(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [itensPorPagina, setItensPorPagina] = useState(10);
-  const ALTURA_LINHA = 45;
-  const ALTURA_CABECALHO = 48;
+  const ALTURA_LINHA = 53; // py-3.5 (14px * 2) + conteúdo (~25px)
+  const ALTURA_CABECALHO = 53; // header da tabela
 
   const { mostrarAviso, limparAviso } = useAviso();
 
@@ -115,36 +115,40 @@ function ManualFuncoes({
 
       <div 
         ref={tabelaContainerRef} 
-        className={`mt-5 flex flex-col overflow-hidden ${listaParaPaginar.length > itensPorPagina ? 'flex-1' : ''}`}
+        className="mt-5 flex-1 min-h-0 flex flex-col overflow-hidden"
       >
-        <TabelaDescricao
-          descricoes={descricoesPaginadas}
-          setDesc={setDesc}
-          setModificaDesc={setModificaDesc}
-        />
-      </div>
-
-      {totalPaginas > 1 && (
-        <div className="mt-4 flex-shrink-0 flex justify-center items-center gap-4">
-          <button
-            onClick={irParaPaginaAnterior}
-            disabled={paginaAtual === 1}
-            className="p-2 rounded-lg bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm text-white/70">
-            {paginaAtual} / {totalPaginas}
-          </span>
-          <button
-            onClick={irParaProximaPagina}
-            disabled={paginaAtual === totalPaginas}
-            className="p-2 rounded-lg bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronRight size={18} />
-          </button>
+        <div className="flex-shrink-0">
+          <TabelaDescricao
+            descricoes={descricoesPaginadas}
+            setDesc={setDesc}
+            setModificaDesc={setModificaDesc}
+          />
         </div>
-      )}
+
+        <div className="flex-1" />
+
+        {totalPaginas > 1 && (
+          <div className="flex-shrink-0 py-4 flex justify-center items-center gap-4">
+            <button
+              onClick={irParaPaginaAnterior}
+              disabled={paginaAtual === 1}
+              className="p-2 rounded-lg bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="text-sm text-white/70">
+              {paginaAtual} / {totalPaginas}
+            </span>
+            <button
+              onClick={irParaProximaPagina}
+              disabled={paginaAtual === totalPaginas}
+              className="p-2 rounded-lg bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, Briefcase } from "lucide-react";
 
 function FiltroCargo({
   descricoes,
@@ -71,63 +71,66 @@ function FiltroCargo({
     };
   }, [open]);
 
+  const qtdSelecionados = descricaoFiltro.length;
+
   return (
     <div className="relative inline-block">
       <button
         ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex gap-3 p-2 items-center rounded-lg border border-white/10 transition-colors text-xl bg-white/5 text-white hover:bg-white/10"
+        className={`flex gap-2 px-3 py-2 items-center rounded-lg border transition-all text-sm
+          ${open || qtdSelecionados > 0
+            ? "bg-white/10 border-white/20 text-white"
+            : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+          }`}
         aria-haspopup="menu"
         aria-expanded={open}
-        title="Mais opções"
       >
-        Função <ChevronDown />
+        <Briefcase size={14} className="text-white/50" />
+        <span>Função</span>
+        {qtdSelecionados > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 text-xs bg-white/20 rounded-md">{qtdSelecionados}</span>
+        )}
+        <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open &&
         createPortal(
           <div
             ref={popRef}
-            className="fixed"
+            className="fixed z-[200]"
             style={{ top: pos.top, left: pos.left }}
           >
-            <span className="absolute -top-1 left-6 w-2 h-2 rotate-45 bg-slate-900 border-l border-t border-white/20" />
             <div
               role="menu"
-              className="w-64 max-h-100 overflow-y-auto overflow-x-hidden
-                         rounded-xl border border-white/20 bg-slate-900
-                         backdrop-blur-md shadow-2xl p-2 text-white"
+              className="w-56 max-h-72 overflow-y-auto overflow-x-hidden
+                         rounded-xl border border-white/15 bg-slate-900/95
+                         backdrop-blur-xl shadow-2xl py-1.5 text-white"
             >
-              <ul className="space-y-1">
-                {descricoes.map((descricao) => {
-                  const selecionado = descricaoFiltro.some(
-                    (d) => d.descricao_id === descricao.descricao_id
-                  );
-                  return (
-                    <li key={descricao.descricao_id}>
-                      <button
-                        type="button"
-                        onClick={() => clica(descricao)}
-                        className={`w-full px-3 py-2 rounded-lg text-left flex items-center gap-2 transition
-                          ${
-                            selecionado
-                              ? "bg-slate-700/90 border-white/20 text-white"
-                              : "bg-slate-800/90 border-white/10 text-white/90 hover:bg-slate-700/90 hover:border-white/20"
-                          } 
-                          border focus:outline-none focus:ring-2 focus:ring-white/20`}
-                      >
-                        {selecionado && (
-                          <Check size={16} className="shrink-0" />
-                        )}
-                        <span className="block truncate">
-                          {descricao.cargo.cargo_nome}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              {descricoes.map((descricao) => {
+                const selecionado = descricaoFiltro.some(
+                  (d) => d.descricao_id === descricao.descricao_id
+                );
+                return (
+                  <button
+                    key={descricao.descricao_id}
+                    type="button"
+                    onClick={() => clica(descricao)}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2 transition-colors text-sm
+                      ${selecionado
+                        ? "bg-white/10 text-white"
+                        : "text-white/80 hover:bg-white/5"
+                      }`}
+                  >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors
+                      ${selecionado ? "bg-white/20 border-white/30" : "border-white/20"}`}>
+                      {selecionado && <Check size={12} />}
+                    </div>
+                    <span className="truncate">{descricao.cargo.cargo_nome}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>,
           document.body

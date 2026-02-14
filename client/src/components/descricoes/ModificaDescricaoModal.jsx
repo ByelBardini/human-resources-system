@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { X } from "lucide-react";
+import { X, FileText, Building2, Briefcase, GraduationCap, BookOpen, Users, Wrench, Clock, ClipboardList } from "lucide-react";
 import { memo, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { getSetores } from "../../services/api/setorService.js";
 import { putDescricao } from "../../services/api/descricaoService.js";
 import CustomSelect from "../default/CustomSelect.jsx";
@@ -105,15 +106,24 @@ function ModificaDescricaoModal({
       onClick={() => setModificaDesc(false)}
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.2 }}
         className="relative z-10 w-full max-w-4xl rounded-2xl border border-white/10 
-                      bg-gradient-to-b from-white/10 to-white/5 backdrop-blur-xl shadow-2xl overflow-hidden"
+                      bg-white/5 backdrop-blur-xl shadow-2xl overflow-hidden text-white"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-transparent">
-          <h2 className="text-white text-lg font-semibold">
-            Modificar Descrição
-          </h2>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-3">
+            <FileText size={20} className="text-blue-400" />
+            <div>
+              <h2 className="text-lg font-semibold">Modificar Descrição</h2>
+              <p className="text-xs text-white/50">Edite os detalhes da descrição de cargo</p>
+            </div>
+          </div>
           <button
             onClick={() => setModificaDesc(false)}
             type="button"
@@ -124,10 +134,15 @@ function ModificaDescricaoModal({
           </button>
         </div>
 
-        <div className="px-6 py-5 max-h-[75vh] overflow-auto bg-transparent">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+        {/* Content */}
+        <div className="px-6 py-5 max-h-[65vh] overflow-y-auto custom-scrollbar">
+          {/* Setor e Função */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
             <div>
-              <label className="block text-sm text-white/70 mb-1">Setor</label>
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <Building2 size={14} className="text-white/50" />
+                Setor
+              </label>
               <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
                 <option hidden value="">Selecione…</option>
                 {setores.map((s) => (
@@ -137,124 +152,133 @@ function ModificaDescricaoModal({
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
-                Função{" "}
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <Briefcase size={14} className="text-white/50" />
+                Função
               </label>
               <input
                 value={descricao.cargo.cargo_nome}
                 type="text"
                 placeholder="Nome da função"
                 disabled
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none opacity-80 cursor-not-allowed"
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/70 placeholder-white/40 
+                           outline-none cursor-not-allowed"
               />
             </div>
           </div>
 
-          <div className="space-y-5">
+          {/* Grid 2 colunas para os campos */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-white/70 mb-1">
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <GraduationCap size={14} className="text-white/50" />
                 Escolaridade
               </label>
               <textarea
                 value={escolaridade}
                 onChange={(e) => setEscolaridade(e.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="Ex.: Ensino médio completo..."
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-28 md:min-h-32 whitespace-pre-wrap break-words leading-relaxed"
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <BookOpen size={14} className="text-white/50" />
                 Treinamento
               </label>
               <textarea
                 value={treinamento}
                 onChange={(e) => setTreinamento(e.target.value)}
-                rows={4}
-                placeholder="Ex.: Participação no treinamento de integração oferecido pela empresa..."
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-28 md:min-h-32 whitespace-pre-wrap break-words leading-relaxed"
+                rows={3}
+                placeholder="Ex.: Treinamento de integração..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <Users size={14} className="text-white/50" />
                 Competências Comportamentais
               </label>
               <textarea
                 value={comportamento}
                 onChange={(e) => setComportamento(e.target.value)}
-                rows={5}
-                placeholder="Ex.: Comunicação, trabalho em equipe, proatividade, organização..."
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-32 md:min-h-36 whitespace-pre-wrap break-words leading-relaxed"
+                rows={3}
+                placeholder="Ex.: Comunicação, trabalho em equipe..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <Wrench size={14} className="text-white/50" />
                 Competências Técnicas
               </label>
               <textarea
                 value={tecnico}
                 onChange={(e) => setTecnico(e.target.value)}
-                rows={5}
-                placeholder="Ex.: Pacote Office, técnicas de atendimento ao cliente... "
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-32 md:min-h-36 whitespace-pre-wrap break-words leading-relaxed"
+                rows={3}
+                placeholder="Ex.: Pacote Office, atendimento..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <Clock size={14} className="text-white/50" />
                 Experiência
               </label>
               <textarea
                 value={experiencia}
                 onChange={(e) => setExperiencia(e.target.value)}
-                rows={4}
-                placeholder="Ex.: 2–3 anos na função, vivência com atendimento ao cliente..."
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-28 md:min-h-32 whitespace-pre-wrap break-words leading-relaxed"
+                rows={3}
+                placeholder="Ex.: 2–3 anos na função..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-white/70 mb-1">
-                Principais responsabilidades
+              <label className="block text-sm text-white/70 mb-1.5 flex items-center gap-2">
+                <ClipboardList size={14} className="text-white/50" />
+                Principais Responsabilidades
               </label>
               <textarea
                 value={responsabilidades}
                 onChange={(e) => setResponsabilidades(e.target.value)}
-                rows={6}
-                placeholder="Ex.: Conduzir reuniões semanais, gerar relatórios, acompanhar indicadores, garantir cumprimento de metas..."
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/40 
-                           outline-none focus:bg-white/15 resize-y min-h-36 md:min-h-44 whitespace-pre-wrap break-words leading-relaxed"
+                rows={3}
+                placeholder="Ex.: Conduzir reuniões, gerar relatórios..."
+                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/10 text-white/90 placeholder-white/40 
+                           outline-none focus:bg-white/15 focus:ring-1 focus:ring-white/20 resize-none transition-all"
               />
             </div>
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-white/10 bg-transparent flex justify-end gap-3">
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex justify-end gap-3">
           <button
             onClick={() => setModificaDesc(false)}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={clicaSalvar}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/20 border border-white/10 text-white hover:bg-white/30 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            className="px-4 py-2 rounded-lg bg-white/15 border border-white/10 text-white hover:bg-white/20 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
           >
             Salvar alterações
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

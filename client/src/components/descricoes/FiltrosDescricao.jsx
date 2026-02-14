@@ -20,6 +20,12 @@ function FiltrosDescricao({
     const cargosSel = new Set(cargoFiltro.map(getCargoNome).filter(Boolean));
     const setoresSel = new Set(setorFiltro.map(getSetorNome).filter(Boolean));
 
+    // Se não há filtros ativos, retorna array vazio
+    if (cargosSel.size === 0 && setoresSel.size === 0) {
+      setDescricoesFiltradas([]);
+      return;
+    }
+
     const filtradas = descricoes.filter((d) => {
       const cargoOk = cargosSel.size === 0 || cargosSel.has(getCargoNome(d));
       const setorOk = setoresSel.size === 0 || setoresSel.has(getSetorNome(d));
@@ -33,9 +39,11 @@ function FiltrosDescricao({
     definirFiltros();
   }, [setorFiltro, cargoFiltro]);
 
+  const filtrosAtivos = setorFiltro.length + cargoFiltro.length;
+
   return (
-    <div className="w-full rounded-lg border border-white/10 transition-colors text-xl bg-white/5 backdrop-blur-xl p-2">
-      <div className="w-full flex gap-3 justify-center">
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <FiltroSetor
           descricoes={descricoes}
           descricaoFiltro={setorFiltro}
@@ -47,6 +55,17 @@ function FiltrosDescricao({
           setDescricaoFiltro={setCargoFiltro}
         />
       </div>
+      {filtrosAtivos > 0 && (
+        <button
+          onClick={() => {
+            setSetorFiltro([]);
+            setCargoFiltro([]);
+          }}
+          className="text-xs text-white/50 hover:text-white/70 transition-colors"
+        >
+          Limpar filtros ({filtrosAtivos})
+        </button>
+      )}
     </div>
   );
 }
