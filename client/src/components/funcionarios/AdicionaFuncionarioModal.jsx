@@ -152,7 +152,7 @@ function AdicionaFuncionarioModal({
       return;
     }
     if (cpfValido === false) {
-      mostrarAviso("erro", "CPF inválido!");
+      mostrarAviso("erro", "CPF inválido!", true);
       return;
     }
     if (nascimentoValido === false) {
