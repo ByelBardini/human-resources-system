@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState, useRef, useCallback } from "react";
-import { SearchX, ChevronLeft, ChevronRight } from "lucide-react";
+import { SearchX, ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import TabelaFuncionarios from "../funcionarios/TabelaFuncionarios.jsx";
 import FiltrosFuncionarios from "../funcionarios/FiltroFuncionarios.jsx";
 
@@ -13,6 +13,7 @@ function Funcionarios({
 }) {
   const [funcionarios, setFuncionarios] = useState([]);
   const [funcionariosFiltrados, setFuncionariosFiltrados] = useState([]);
+  const [nomeFiltro, setNomeFiltro] = useState("");
   const [sexoFiltro, setSexoFiltro] = useState([]);
   const [cargoFiltro, setCargoFiltro] = useState([]);
   const [setorFiltro, setSetorFiltro] = useState([]);
@@ -20,6 +21,7 @@ function Funcionarios({
   const [mesAniversarioFiltro, setMesAniversarioFiltro] = useState([]);
   const [totalSalario, setTotalSalario] = useState(0);
   const [filtroAtivo, setFiltroAtivo] = useState(0);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   const [inativos, setInativos] = useState(true);
 
@@ -131,6 +133,8 @@ function Funcionarios({
         <div className="w-full flex gap-3 justify-center">
           <FiltrosFuncionarios
             funcionarios={funcionarios}
+            nomeFiltro={nomeFiltro}
+            setNomeFiltro={setNomeFiltro}
             sexoFiltro={sexoFiltro}
             setSexoFiltro={setSexoFiltro}
             setorFiltro={setorFiltro}
@@ -145,6 +149,8 @@ function Funcionarios({
             filtroAtivo={filtroAtivo}
             setFiltroAtivo={setFiltroAtivo}
             inativos={inativos}
+            mostrarFiltros={mostrarFiltros}
+            setMostrarFiltros={setMostrarFiltros}
           />
         </div>
         <div className="mt-3 flex justify-center">
