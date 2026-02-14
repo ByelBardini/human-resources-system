@@ -1,79 +1,109 @@
-function HeaderProjecao() {
+function HeaderProjecao({ filtroCargos }) {
   return (
-    <thead className="text-white/90">
-      <tr className="sticky top-0 z-10">
+    <thead className="text-white/90 bg-white/[0.03]">
+      {/* Linha principal - Categorias */}
+      <tr>
         <th
-          rowSpan={2}
-          className="min-w-[190px] bg-gradient-to-b from-white/15 to-white/5 text-left px-4 py-3 font-semibold tracking-wide border-b border-white/10"
+          rowSpan={3}
+          className="min-w-[200px] text-left px-5 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
         >
-          <div className="flex place-content-between items-center w-[200px]">
-            FUNÇÃO
+          <div className="flex items-center justify-between gap-2">
+            <span>FUNÇÃO</span>
+            {filtroCargos}
           </div>
         </th>
 
         <th
           colSpan={4}
-          className="bg-gradient-to-b from-sky-400/20 to-white/5 px-4 py-3 font-semibold text-center border-b border-white/10"
+          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r border-white/10 text-sky-400"
         >
-          JUNIOR
+          JÚNIOR
         </th>
         <th
           colSpan={3}
-          className="bg-gradient-to-b from-indigo-400/20 to-white/5 px-4 py-3 font-semibold text-center border-b border-white/10"
+          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r border-white/10 text-purple-400"
         >
           PLENO
         </th>
         <th
           colSpan={3}
-          className="bg-gradient-to-b from-fuchsia-400/20 to-white/5 px-4 py-3 font-semibold text-center border-b border-white/10"
+          className="px-4 py-3 font-semibold text-sm tracking-wide text-center text-orange-400"
         >
-          SENIOR
+          SÊNIOR
         </th>
       </tr>
 
-      <tr className="sticky top-[44px] z-10 bg-white/5">
-        <th className="px-3 py-2 text-center border-b border-white/10">
+      {/* Linha secundária - Faixas */}
+      <tr className="bg-white/[0.02]">
+        {/* Júnior */}
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           INICIAL
         </th>
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           FAIXA II
         </th>
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA III
         </th>
 
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        {/* Pleno */}
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           FAIXA II
         </th>
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA III
         </th>
 
-        <th className="px-3 py-2 text-center border-b border-white/10">
+        {/* Sênior */}
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center border-white/10">FAIXA II</th>
-        <th className="px-3 py-2 text-center border-white/10">FAIXA III</th>
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+          FAIXA II
+        </th>
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70">
+          FAIXA III
+        </th>
       </tr>
 
-      <tr className="sticky top-[80px] z-10 bg-white/3 text-[11px] text-white/70">
-        <th className="px-4 py-1 text-left border-b border-white/10"> </th>
-        <th className="px-3 py-1 text-center border-b border-white/10"> </th>
-        <th className="px-3 py-1 text-center border-b border-white/10">5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">6,5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">6,5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">6,5%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">7%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">7%</th>
-        <th className="px-3 py-1 text-center border-b border-white/10">7%</th>
+      {/* Linha de porcentagens */}
+      <tr className="border-b border-white/10">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/40 border-r border-white/5">
+          —
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
+          +5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +6,5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +6,5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
+          +6,5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +7%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+          +7%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50">
+          +7%
+        </th>
       </tr>
     </thead>
   );

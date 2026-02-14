@@ -3,19 +3,20 @@ function CampoSalario({
   cargoId,
   campoSelecionado,
   selecionaCampo,
+  isLastJunior,
+  isLastPleno,
 }) {
+  const isSelected = campoSelecionado == cargoNiveis?.nivel_id;
+  const borderRight = isLastJunior || isLastPleno ? "border-r border-white/10" : "";
+  
   return (
-    <td className="px-2 py-2 min-w-[110px]">
-      <input
-        value={`R$ ${cargoNiveis?.nivel_salario.toLocaleString('pt-br', {minimumFractionDigits: 2}) || ""}`}
-        readOnly
-        className={
-          campoSelecionado == cargoNiveis?.nivel_id
-            ? "cursor-default w-full bg-transparent focus:bg-white/30 outline-none px-2 py-2 rounded-lg border border-white/30"
-            : "cursor-default w-full bg-transparent focus:bg-white/10 outline-none px-2 py-2 rounded-lg border border-white/10"
-        }
-        onClick={() => selecionaCampo(cargoId, cargoNiveis?.nivel_id)}
-      />
+    <td
+      className={`px-3 py-3 min-w-[105px] text-center cursor-default ${borderRight} ${isSelected ? "bg-white/10" : ""}`}
+      onClick={() => selecionaCampo(cargoId, cargoNiveis?.nivel_id)}
+    >
+      <span className="text-sm tabular-nums text-white/90">
+        R$ {cargoNiveis?.nivel_salario.toLocaleString('pt-br', {minimumFractionDigits: 2}) || "0,00"}
+      </span>
     </td>
   );
 }

@@ -96,35 +96,34 @@ export default function ProjecaoSalarial({
 
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-0">
-      <div className="relative w-full h-full min-h-0 overflow-auto rounded-xl border border-white/10 bg-white/5/50 backdrop-blur-xl shadow-xl">
+      <div className="relative w-full h-full min-h-0 overflow-auto rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
         <TabelaCargos
           cargos={cargos}
           cargosFiltro={cargosFiltro}
           selecionado={selecionado}
           selecionaCampo={selecionaCampo}
           clicaDeleta={clicaDeleta}
+          filtroCargos={
+            <FiltroCargos
+              cargos={cargos}
+              setCargosFiltro={setCargosFiltro}
+              cargosFiltro={cargosFiltro}
+            />
+          }
         />
       </div>
 
-      <div className="absolute top-6 left-46 z-50">
-        <FiltroCargos
-          cargos={cargos}
-          setCargosFiltro={setCargosFiltro}
-          cargosFiltro={cargosFiltro}
-        />
-      </div>
-
-      <div className="flex justify-center gap-6">
+      <div className="flex justify-center gap-3">
         <button
           onClick={() => setAdicionando(true)}
-          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+          className="px-4 py-2 rounded-lg text-sm text-white/90 hover:text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors focus:outline-none"
         >
           Adicionar Função
         </button>
 
         <button
           onClick={() => setAumentoGeral(true)}
-          className="px-4 py-2 rounded-lg bg-emerald-400/10 hover:bg-emerald-400/20 border border-emerald-400/10 text-emerald-400 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+          className="px-4 py-2 rounded-lg text-sm text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-colors focus:outline-none"
         >
           Aumento Geral
         </button>

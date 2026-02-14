@@ -6,13 +6,13 @@ function Background() {
     <div className="absolute inset-0 z-0">
       <div className="absolute inset-0 bg-gradient-to-br from-black via-blue-950 to-blue-700" />
 
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden opacity-40">
         <motion.div
           className="absolute left-[10%] bottom-[20%] w-80 h-80 rounded-full bg-red-500 blur-3xl"
           animate={{
             x: [0, 40, -20, 0],
             y: [0, -30, 20, 0],
-            opacity: [0.4, 0.7, 0.4],
+            opacity: [0.3, 0.5, 0.3],
             scale: [1, 1.15, 1],
           }}
           transition={{
@@ -26,7 +26,7 @@ function Background() {
           animate={{
             x: [0, -50, 30, 0],
             y: [0, 25, -35, 0],
-            opacity: [0.5, 0.8, 0.5],
+            opacity: [0.3, 0.5, 0.3],
             scale: [1, 1.1, 1],
           }}
           transition={{
@@ -41,7 +41,7 @@ function Background() {
           animate={{
             x: [0, 60, -40, 0],
             y: [0, 40, -20, 0],
-            opacity: [0.3, 0.6, 0.3],
+            opacity: [0.2, 0.4, 0.2],
             scale: [1, 1.2, 1],
           }}
           transition={{
