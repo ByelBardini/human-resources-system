@@ -98,14 +98,19 @@ function TabelaDescricao({
               <tr
                 key={descricao.descricao_id}
                 className={`
-                  border-b border-white/5 cursor-pointer transition-all duration-150
+                  border-b border-white/5 cursor-pointer transition-all duration-150 select-none
                   ${clicado === descricao.descricao_id
                     ? "bg-white/10"
                     : "hover:bg-white/[0.04]"
                   }
                 `}
-                onClick={() => selecionaCampo(descricao.descricao_id)}
-                onDoubleClick={() => abreModificacao(descricao)}
+                onClick={() => {
+                  if (clicado === descricao.descricao_id) {
+                    abreModificacao(descricao);
+                  } else {
+                    selecionaCampo(descricao.descricao_id);
+                  }
+                }}
               >
                 <CelulaComTooltip>{descricao.setor?.setor_nome}</CelulaComTooltip>
                 <CelulaComTooltip className="font-medium text-white/95">{descricao.cargo?.cargo_nome}</CelulaComTooltip>
