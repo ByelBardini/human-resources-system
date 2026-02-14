@@ -266,14 +266,14 @@ function ModificaDescricaoModal({
           <button
             onClick={() => setModificaDesc(false)}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
+            className="px-4 py-2.5 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none"
           >
             Cancelar
           </button>
           <button
             onClick={clicaSalvar}
             type="button"
-            className="px-4 py-2 rounded-lg bg-white/15 border border-white/10 text-white hover:bg-white/20 shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 transition-colors"
+            className="px-5 py-2.5 rounded-lg text-sm text-white bg-white/15 hover:bg-white/20 border border-white/10 transition-colors focus:outline-none"
           >
             Salvar alterações
           </button>
