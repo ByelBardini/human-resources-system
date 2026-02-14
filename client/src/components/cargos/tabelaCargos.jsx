@@ -11,7 +11,6 @@ function TabelaCargos({
   selecionaCampo,
   clicaDeleta,
   cargosFiltro,
-  filtroCargos,
 }) {
   const [tabelaVazia, setTabelaVazia] = useState(false);
   const [cargosAtualizado, setCargosAtualizado] = useState([{ niveis: [] }]);
@@ -36,7 +35,7 @@ function TabelaCargos({
 
   return (
     <table className="min-w-[1100px] w-full text-sm border-collapse">
-      <HeaderProjecao filtroCargos={filtroCargos} />
+      <HeaderProjecao />
 
       {!tabelaVazia ? (
         <tbody className="text-white/90">

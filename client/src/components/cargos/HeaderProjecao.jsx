@@ -1,4 +1,4 @@
-function HeaderProjecao({ filtroCargos }) {
+function HeaderProjecao() {
   return (
     <thead className="text-white/90 bg-white/[0.03]">
       {/* Linha principal - Categorias */}
@@ -7,10 +7,7 @@ function HeaderProjecao({ filtroCargos }) {
           rowSpan={3}
           className="min-w-[200px] text-left px-5 py-3 font-semibold text-sm tracking-wide border-r border-white/10"
         >
-          <div className="flex items-center justify-between gap-2">
-            <span>FUNÇÃO</span>
-            {filtroCargos}
-          </div>
+          FUNÇÃO
         </th>
 
         <th
