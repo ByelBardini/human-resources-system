@@ -69,13 +69,13 @@ function HeaderProjecao({ busca, setBusca }) {
 
         <th
           colSpan={4}
-          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r border-white/10 text-sky-400"
+          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r-2 border-white/20 text-sky-400"
         >
           JÚNIOR
         </th>
         <th
           colSpan={3}
-          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r border-white/10 text-purple-400"
+          className="px-4 py-3 font-semibold text-sm tracking-wide text-center border-r-2 border-white/20 text-purple-400"
         >
           PLENO
         </th>
@@ -90,35 +90,35 @@ function HeaderProjecao({ busca, setBusca }) {
       {/* Linha secundária - Faixas */}
       <tr className="bg-white/[0.02]">
         {/* Júnior */}
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           INICIAL
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA II
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r-2 border-white/25">
           FAIXA III
         </th>
 
         {/* Pleno */}
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA II
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r-2 border-white/25">
           FAIXA III
         </th>
 
         {/* Sênior */}
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA I
         </th>
-        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/5">
+        <th className="px-3 py-2 text-center text-xs font-medium text-white/70 border-r border-white/10">
           FAIXA II
         </th>
         <th className="px-3 py-2 text-center text-xs font-medium text-white/70">
@@ -128,31 +128,31 @@ function HeaderProjecao({ busca, setBusca }) {
 
       {/* Linha de porcentagens */}
       <tr className="border-b border-white/10">
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/40 border-r border-white/5">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/40 border-r border-white/10">
           —
         </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
-          +5%
-        </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +5%
         </th>
         <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +5%
         </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
-          +6,5%
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r-2 border-white/25">
+          +5%
         </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +6,5%
         </th>
         <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +6,5%
         </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r-2 border-white/25">
+          +6,5%
+        </th>
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +7%
         </th>
-        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/5">
+        <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50 border-r border-white/10">
           +7%
         </th>
         <th className="px-3 py-1.5 text-center text-[11px] font-normal text-white/50">
