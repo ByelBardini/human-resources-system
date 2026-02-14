@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
  * Select customizado com dropdown estilizado.
  * API compatível com select nativo: value, onChange, children (option), disabled.
  */
-export default function CustomSelect({ value, onChange, children, disabled, className = "" }) {
+export default function CustomSelect({ value, onChange, children, disabled, className = "", dropUp = false }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -63,13 +63,13 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            initial={{ opacity: 0, y: dropUp ? 4 : -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            exit={{ opacity: 0, y: dropUp ? 4 : -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute z-50 mt-1.5 w-full min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
+            className={`absolute z-50 w-full min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
                        rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-xl
-                       shadow-xl shadow-black/30 py-1"
+                       shadow-xl shadow-black/30 py-1 ${dropUp ? 'bottom-full mb-1.5' : 'mt-1.5'}`}
           >
             {options.map((opt, idx) => {
               const isSelected = String(opt.value) === String(value);

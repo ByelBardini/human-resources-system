@@ -231,7 +231,7 @@ function AdicionaFuncionarioModal({
       <div className="relative z-10 w-full h-full flex items-center justify-center p-6">
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-5xl rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-2xl shadow-2xl shadow-black/50 overflow-hidden animate-in zoom-in-95 duration-300"
+          className="w-full max-w-5xl rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-2xl shadow-2xl shadow-black/50 animate-in zoom-in-95 duration-300"
         >
           {/* Header */}
           <div className="relative px-6 py-4 border-b border-white/10 bg-gradient-to-r from-blue-600/20 via-purple-600/10 to-transparent">
@@ -281,140 +281,156 @@ function AdicionaFuncionarioModal({
               </div>
 
               {/* Coluna direita - Campos */}
-              <div className="flex-1 grid grid-cols-2 gap-x-5 gap-y-4">
-                {/* Nome */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <User size={14} /> Nome Completo
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Digite o nome completo"
-                    onChange={(e) => setNome(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all"
-                  />
+              <div className="flex-1">
+                {/* Divisor - Dados Pessoais */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-white/10" />
+                  <span className="text-xs text-white/40 uppercase tracking-widest font-medium">Dados Pessoais</span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent via-white/20 to-white/10" />
                 </div>
 
-                {/* CPF */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <CreditCard size={14} /> CPF
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    maxLength={14}
-                    value={cpf}
-                    onChange={validaFormataCPF}
-                    placeholder="000.000.000-00"
-                    className={`w-full px-4 py-2.5 rounded-xl bg-white/5 border ${
-                      cpfValido === false ? "border-red-500/50" : cpfValido === true ? "border-green-500/50" : "border-white/10"
-                    } text-white placeholder-white/30 outline-none focus:bg-white/10 transition-all`}
-                  />
+                <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+                  {/* Linha 1: Nome | Sexo */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <User size={14} /> Nome Completo
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Digite o nome completo"
+                      onChange={(e) => setNome(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Users size={14} /> Sexo
+                    </label>
+                    <CustomSelect value={sexo} onChange={(e) => setSexo(e.target.value)}>
+                      <option hidden value="">Selecione...</option>
+                      <option value="masculino">Masculino</option>
+                      <option value="feminino">Feminino</option>
+                    </CustomSelect>
+                  </div>
+
+                  {/* Linha 2: CPF | Telefone */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <CreditCard size={14} /> CPF
+                    </label>
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      maxLength={14}
+                      value={cpf}
+                      onChange={validaFormataCPF}
+                      placeholder="000.000.000-00"
+                      className={`w-full px-4 py-2.5 rounded-xl bg-white/5 border ${
+                        cpfValido === false ? "border-red-500/50" : cpfValido === true ? "border-green-500/50" : "border-white/10"
+                      } text-white placeholder-white/30 outline-none focus:bg-white/10 transition-all`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Phone size={14} /> Telefone
+                    </label>
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      maxLength={15}
+                      value={telefone}
+                      onChange={formatarTelefone}
+                      placeholder="(00) 00000-0000"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all"
+                    />
+                  </div>
+
+                  {/* Linha 3: Nascimento | (vazio) */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Calendar size={14} /> Nascimento
+                    </label>
+                    <input
+                      type="date"
+                      value={nascimento}
+                      min={"1900-01-01"}
+                      max={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => dataNascimento(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all [color-scheme:dark]"
+                    />
+                  </div>
+
+                  <div>{/* Espaço vazio */}</div>
                 </div>
 
-                {/* Setor */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Briefcase size={14} /> Setor
-                  </label>
-                  <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
-                    <option hidden value="">Selecione...</option>
-                    {setores.map((s) => (
-                      <option key={s.setor_id} value={s.setor_id}>{s.setor_nome}</option>
-                    ))}
-                  </CustomSelect>
+                {/* Divisor - Dados Profissionais */}
+                <div className="flex items-center gap-3 mt-5 mb-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-white/10" />
+                  <span className="text-xs text-white/40 uppercase tracking-widest font-medium">Dados Profissionais</span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent via-white/20 to-white/10" />
                 </div>
 
-                {/* Função */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Briefcase size={14} /> Função
-                  </label>
-                  <CustomSelect value={cargo} onChange={(e) => setCargo(e.target.value)}>
-                    <option hidden value="">Selecione...</option>
-                    {cargos.map((c) => (
-                      <option key={c.cargo_id} value={c.cargo_id}>{c.cargo_nome}</option>
-                    ))}
-                  </CustomSelect>
-                </div>
+                <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+                  {/* Linha 4: Setor | Nível */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Briefcase size={14} /> Setor
+                    </label>
+                    <CustomSelect value={setor} onChange={(e) => setSetor(e.target.value)}>
+                      <option hidden value="">Selecione...</option>
+                      {setores.map((s) => (
+                        <option key={s.setor_id} value={s.setor_id}>{s.setor_nome}</option>
+                      ))}
+                    </CustomSelect>
+                  </div>
 
-                {/* Nível */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Users size={14} /> Nível
-                  </label>
-                  <CustomSelect value={nivel} onChange={(e) => setNivel(e.target.value)}>
-                    <option hidden value="">Selecione...</option>
-                    <option value="Inicial">Inicial</option>
-                    <option value="Júnior I">Júnior I</option>
-                    <option value="Júnior II">Júnior II</option>
-                    <option value="Júnior III">Júnior III</option>
-                    <option value="Pleno I">Pleno I</option>
-                    <option value="Pleno II">Pleno II</option>
-                    <option value="Pleno III">Pleno III</option>
-                    <option value="Sênior I">Sênior I</option>
-                    <option value="Sênior II">Sênior II</option>
-                    <option value="Sênior III">Sênior III</option>
-                  </CustomSelect>
-                </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Users size={14} /> Nível
+                    </label>
+                    <CustomSelect value={nivel} onChange={(e) => setNivel(e.target.value)}>
+                      <option hidden value="">Selecione...</option>
+                      <option value="Inicial">Inicial</option>
+                      <option value="Júnior I">Júnior I</option>
+                      <option value="Júnior II">Júnior II</option>
+                      <option value="Júnior III">Júnior III</option>
+                      <option value="Pleno I">Pleno I</option>
+                      <option value="Pleno II">Pleno II</option>
+                      <option value="Pleno III">Pleno III</option>
+                      <option value="Sênior I">Sênior I</option>
+                      <option value="Sênior II">Sênior II</option>
+                      <option value="Sênior III">Sênior III</option>
+                    </CustomSelect>
+                  </div>
 
-                {/* Telefone */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Phone size={14} /> Telefone
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    maxLength={15}
-                    value={telefone}
-                    onChange={formatarTelefone}
-                    placeholder="(00) 00000-0000"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/30 outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all"
-                  />
-                </div>
+                  {/* Linha 5: Função | Admissão */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Briefcase size={14} /> Função
+                    </label>
+                    <CustomSelect value={cargo} onChange={(e) => setCargo(e.target.value)}>
+                      <option hidden value="">Selecione...</option>
+                      {cargos.map((c) => (
+                        <option key={c.cargo_id} value={c.cargo_id}>{c.cargo_nome}</option>
+                      ))}
+                    </CustomSelect>
+                  </div>
 
-                {/* Sexo */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Users size={14} /> Sexo
-                  </label>
-                  <CustomSelect value={sexo} onChange={(e) => setSexo(e.target.value)}>
-                    <option hidden value="">Selecione...</option>
-                    <option value="masculino">Masculino</option>
-                    <option value="feminino">Feminino</option>
-                  </CustomSelect>
-                </div>
-
-                {/* Data Nascimento */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Calendar size={14} /> Nascimento
-                  </label>
-                  <input
-                    type="date"
-                    value={nascimento}
-                    min={"1900-01-01"}
-                    max={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => dataNascimento(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all [color-scheme:dark]"
-                  />
-                </div>
-
-                {/* Data Admissão */}
-                <div>
-                  <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
-                    <Calendar size={14} /> Admissão
-                  </label>
-                  <input
-                    type="date"
-                    value={admissao}
-                    min={"1900-01-01"}
-                    max={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => dataAdmissao(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all [color-scheme:dark]"
-                  />
+                  <div>
+                    <label className="flex items-center gap-2 text-sm text-white/60 mb-1.5 font-medium">
+                      <Calendar size={14} /> Admissão
+                    </label>
+                    <input
+                      type="date"
+                      value={admissao}
+                      min={"1900-01-01"}
+                      max={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => dataAdmissao(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:bg-white/10 focus:border-blue-500/50 transition-all [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -422,34 +438,49 @@ function AdicionaFuncionarioModal({
           </div>
 
           {/* Footer com opções */}
-          <div className="px-6 py-4 border-t border-white/10 bg-white/5">
-            <div className="flex items-center gap-4">
-              {/* Opções à esquerda */}
-              <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/8 transition-all">
-                <input
-                  type="checkbox"
-                  checked={criarUsuario}
-                  onChange={(e) => {
-                    setCriarUsuario(e.target.checked);
-                    if (!e.target.checked) { setPerfilJornadaId(""); setLoginUsuario(""); }
-                  }}
-                  className="w-4 h-4 rounded bg-white/10 border-2 border-white/20 text-blue-500"
-                />
-                <span className="text-sm text-white/70">Cadastrar usuário</span>
+          <div className="px-6 py-4 border-t border-white/10 bg-white/5 overflow-visible">
+            <div className="flex items-center gap-5">
+              {/* Toggle Cadastrar usuário */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={criarUsuario}
+                    onChange={(e) => {
+                      setCriarUsuario(e.target.checked);
+                      if (!e.target.checked) { 
+                        setPerfilJornadaId(""); 
+                        setLoginUsuario(""); 
+                        setBatidaForaEmpresa(false);
+                      }
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-white/10 rounded-full peer peer-checked:bg-blue-500 transition-colors duration-300" />
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-5" />
+                </div>
+                <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">Cadastrar usuário</span>
               </label>
 
-              <label className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/8 transition-all">
-                <input
-                  type="checkbox"
-                  checked={batidaForaEmpresa}
-                  onChange={(e) => setBatidaForaEmpresa(e.target.checked)}
-                  className="w-4 h-4 rounded bg-white/10 border-2 border-white/20 text-blue-500"
-                />
-                <span className="text-sm text-white/70">Ponto fora da empresa</span>
+              {/* Toggle Ponto fora */}
+              <label className={`flex items-center gap-3 group ${criarUsuario ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={batidaForaEmpresa}
+                    onChange={(e) => criarUsuario && setBatidaForaEmpresa(e.target.checked)}
+                    disabled={!criarUsuario}
+                    className="sr-only peer"
+                  />
+                  <div className={`w-11 h-6 rounded-full transition-colors duration-300 ${criarUsuario ? 'bg-white/10 peer-checked:bg-emerald-500' : 'bg-white/5'}`} />
+                  <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-5" />
+                </div>
+                <span className={`text-sm transition-colors ${criarUsuario ? 'text-white/70 group-hover:text-white/90' : 'text-white/40'}`}>Ponto fora da empresa</span>
               </label>
 
               {criarUsuario && (
                 <>
+                  <div className="h-6 w-px bg-white/10" />
                   <input
                     type="text"
                     value={loginUsuario}
@@ -458,9 +489,9 @@ function AdicionaFuncionarioModal({
                     className="px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-sm text-white placeholder-white/40 outline-none focus:bg-blue-500/15 transition-all w-40"
                   />
                   {perfisJornada.length > 0 && (
-                    <div className="w-44">
-                      <CustomSelect value={perfilJornadaId} onChange={(e) => setPerfilJornadaId(e.target.value)}>
-                        <option hidden value="">Perfil de jornada...</option>
+                    <div className="w-40">
+                      <CustomSelect value={perfilJornadaId} onChange={(e) => setPerfilJornadaId(e.target.value)} dropUp>
+                        <option hidden value="">Jornada</option>
                         {perfisJornada.filter((p) => p.perfil_jornada_ativo === 1).map((perfil) => (
                           <option key={perfil.perfil_jornada_id} value={perfil.perfil_jornada_id}>{perfil.perfil_jornada_nome}</option>
                         ))}
