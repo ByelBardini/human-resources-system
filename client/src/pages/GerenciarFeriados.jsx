@@ -142,7 +142,7 @@ function GerenciarFeriados() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => abrirModalEditar(feriado)}
-                    className="px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-400/30 text-blue-300 hover:bg-blue-500/25 transition text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                    className="px-3 py-1.5 rounded-lg bg-blue-500/30 border border-blue-400/50 text-blue-200 hover:bg-blue-500/40 transition text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
                   >
                     Editar
                   </button>

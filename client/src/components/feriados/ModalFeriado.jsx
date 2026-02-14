@@ -294,7 +294,7 @@ function ModalFeriado({
           </button>
           <button
             onClick={salvarFeriado}
-            className="px-5 py-2.5 rounded-lg text-sm text-white bg-white/15 hover:bg-white/20 border border-white/10 transition-colors"
+            className="px-5 py-2.5 rounded-lg text-sm text-white bg-white/25 hover:bg-white/35 border border-white/20 transition-colors"
           >
             {modoEdicao ? "Salvar" : "Cadastrar"}
           </button>
