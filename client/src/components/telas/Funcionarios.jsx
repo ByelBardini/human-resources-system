@@ -171,7 +171,7 @@ function Funcionarios({
       </div>
       <div
         ref={tabelaContainerRef}
-        className="flex align-middle mt-5 min-w-[1100px] relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl flex-1 min-h-0"
+        className={`flex flex-col mt-5 min-w-[1100px] relative w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl ${listaParaPaginar.length > itensPorPagina ? 'flex-1 min-h-0' : ''}`}
       >
         {filtroAtivo && funcionariosFiltrados.length === 0 ? (
           <div className="flex justify-center p-2 h-full w-full">
