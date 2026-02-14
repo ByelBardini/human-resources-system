@@ -1,17 +1,15 @@
 function CampoSalario({
   cargoNiveis,
   cargoId,
-  campoSelecionado,
   selecionaCampo,
   isLastJunior,
   isLastPleno,
 }) {
-  const isSelected = campoSelecionado == cargoNiveis?.nivel_id;
-  const borderRight = isLastJunior || isLastPleno ? "border-r border-white/10" : "";
+  const borderCategory = isLastJunior || isLastPleno ? "border-r-2 border-white/25" : "border-r border-white/10";
   
   return (
     <td
-      className={`px-3 py-3 min-w-[105px] text-center cursor-default ${borderRight} ${isSelected ? "bg-white/10" : ""}`}
+      className={`px-3 py-3 min-w-[105px] text-center ${borderCategory}`}
       onClick={() => selecionaCampo(cargoId, cargoNiveis?.nivel_id)}
     >
       <span className="text-sm tabular-nums text-white/90">

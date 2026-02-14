@@ -125,11 +125,14 @@ export default function ProjecaoSalarial({
   }
 
   function selecionaCampo(cargoId, campoId) {
-    setSelecionado((prev) =>
-      prev.linha === cargoId && prev.campo === campoId
-        ? { linha: null, campo: null }
-        : { linha: cargoId, campo: campoId }
-    );
+    setSelecionado((prev) => {
+      // Se clicar exatamente na mesma linha e campo, desseleciona
+      if (prev.linha === cargoId && prev.campo === campoId) {
+        return { linha: null, campo: null };
+      }
+      // Senão, seleciona a nova linha/campo
+      return { linha: cargoId, campo: campoId };
+    });
   }
 
   async function buscaCargos() {
