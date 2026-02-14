@@ -1,18 +1,12 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { SearchX } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 function TabelaDescricao({
   descricoes,
   setDesc,
   setModificaDesc,
-  descricoesFiltradas,
-  setorFiltro,
-  cargoFiltro,
 }) {
-  const [tabelaVazia, setTabelaVazia] = useState(false);
   const [clicado, setClicado] = useState("");
-  const [listaDescricoes, setListaDescricoes] = useState([]);
 
   function selecionaCampo(id) {
     setClicado(clicado === id ? 0 : id);
@@ -33,28 +27,7 @@ function TabelaDescricao({
     setModificaDesc(true);
   }
 
-  function setarFiltro() {
-    if (descricoesFiltradas.length > 0) {
-      setListaDescricoes(descricoesFiltradas);
-      setTabelaVazia(false);
-      return;
-    }
-    if (
-      setorFiltro.length > 0 ||
-      cargoFiltro.length > 0 ||
-      descricoes.length === 0
-    ) {
-      setListaDescricoes([descricoesFiltradas]);
-      setTabelaVazia(true);
-      return;
-    }
-    setListaDescricoes(descricoes);
-    setTabelaVazia(false);
-  }
-
-  useEffect(() => {
-    setarFiltro();
-  }, [descricoes, descricoesFiltradas]);
+  const tabelaVazia = !descricoes || descricoes.length === 0;
 
   return (
     <div className="mt-5 relative w-full overflow-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl">
@@ -79,7 +52,7 @@ function TabelaDescricao({
         </thead>
         {!tabelaVazia ? (
           <tbody className="divide-y divide-white/10">
-            {listaDescricoes.map((descricao) => (
+            {descricoes.map((descricao) => (
               <tr
                 key={descricao.descricao_id}
                 className={
