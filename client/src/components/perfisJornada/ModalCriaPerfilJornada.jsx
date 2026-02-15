@@ -49,7 +49,7 @@ function ModalCriaPerfilJornada({
       setCadastrado(true);
       setCria(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {

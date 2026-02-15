@@ -138,15 +138,15 @@ function AdicionaFuncionarioModal({
   async function cadastraFuncionario() {
     const id = localStorage.getItem("empresa_id");
     if (
-      setor == "" ||
-      cargo == "" ||
-      nivel == "" ||
-      nome == "" ||
-      cpf == "" ||
-      telefone == "" ||
-      sexo == "" ||
-      nascimento == "" ||
-      admissao == ""
+      setor === "" ||
+      cargo === "" ||
+      nivel === "" ||
+      nome === "" ||
+      cpf === "" ||
+      telefone === "" ||
+      sexo === "" ||
+      nascimento === "" ||
+      admissao === ""
     ) {
       mostrarAviso("erro", "Todos os dados são necessários!", true);
       return;

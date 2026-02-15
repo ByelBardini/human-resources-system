@@ -84,7 +84,7 @@ function TabelaFuncionarios({
   }
 
   function selecionaCampo(id) {
-    if (clicado == id) {
+    if (clicado === id) {
       setClicado(0);
     } else {
       setClicado(id);
@@ -164,7 +164,7 @@ function TabelaFuncionarios({
         : await getFuncionariosInativos(id);
       setFuncionarios(funcionarios);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         console.log(err);
         mostrarAviso(
           "erro",
@@ -277,7 +277,7 @@ function TabelaFuncionarios({
             key={funcionario.funcionario_id}
             onClick={() => selecionaCampo(funcionario.funcionario_id)}
             className={
-              clicado == funcionario.funcionario_id
+              clicado === funcionario.funcionario_id
                 ? "bg-white/8 hover:bg-white/12 transition-colors"
                 : "hover:bg-white/3 transition-colors"
             }
@@ -286,7 +286,7 @@ function TabelaFuncionarios({
               {funcionario.funcionario_nome || ""}
             </td>
             <td className="px-4 py-2 w-[185px] justify-items-center">
-              {funcionario.funcionario_sexo == "masculino" ? (
+              {funcionario.funcionario_sexo === "masculino" ? (
                 <Mars className="text-blue-600" />
               ) : (
                 <Venus className="text-pink-600" />

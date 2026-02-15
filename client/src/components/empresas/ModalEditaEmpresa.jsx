@@ -85,7 +85,7 @@ function ModalEditaEmpresa({
       modificou(true);
       setEdita(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.error(err.message, err);
@@ -108,8 +108,8 @@ function ModalEditaEmpresa({
       await inativarEmpresa(empresaSelecionada.empresa_id);
 
       mostrarAviso(
-        empresaSelecionada.empresa_ativo == 1 ? "aviso" : "sucesso",
-        empresaSelecionada.empresa_ativo == 1
+        empresaSelecionada.empresa_ativo === 1 ? "aviso" : "sucesso",
+        empresaSelecionada.empresa_ativo === 1
           ? "Empresa inativada com sucesso!"
           : "Empresa ativada com sucesso!",
         true
@@ -117,7 +117,7 @@ function ModalEditaEmpresa({
       modificou(true);
       setEdita(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.error(err);
@@ -259,13 +259,13 @@ function ModalEditaEmpresa({
             <button
               onClick={inativar}
               className={`flex-1 px-4 py-2 rounded-lg border transition ${
-                empresaSelecionada?.empresa_ativo == 1
+                empresaSelecionada?.empresa_ativo === 1
                   ? "bg-red-500/15 border-red-400/30 text-red-300 hover:bg-red-500/25"
                   : "bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25"
               } flex items-center justify-center gap-2`}
             >
               <Power size={18} />
-              {empresaSelecionada?.empresa_ativo == 1 ? "Inativar" : "Ativar"}
+              {empresaSelecionada?.empresa_ativo === 1 ? "Inativar" : "Ativar"}
             </button>
             <button
               onClick={() => setEdita(false)}

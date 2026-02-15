@@ -60,7 +60,7 @@ function Home() {
       setEmpresas(empresasComImagens);
       setCarregando(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
@@ -76,7 +76,7 @@ function Home() {
 
   useEffect(() => {
     buscarEmpresas();
-    setTrocaSenha(localStorage.getItem("usuario_troca_senha") == 1);
+    setTrocaSenha(localStorage.getItem("usuario_troca_senha") === "1");
     document.title = "Home - Atlas";
   }, []);
 

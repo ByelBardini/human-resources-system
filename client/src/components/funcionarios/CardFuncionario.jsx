@@ -93,7 +93,7 @@ export default function CardFuncionario({
           <div className="top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5 backdrop-blur-xl relative">
             <h2 className="text-lg font-semibold tracking-wide">FUNCIONÁRIO</h2>
             <div className="flex items-center gap-2">
-              {funcionario.funcionario_ativo == 1 && (
+              {funcionario.funcionario_ativo === 1 && (
                 <button
                   type="button"
                   className="px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
@@ -113,7 +113,7 @@ export default function CardFuncionario({
                 <X size={18} />
               </button>
             </div>
-            {funcionario.funcionario_ativo == 1 && (
+            {funcionario.funcionario_ativo === 1 && (
               <button
                 type="button"
                 title="Editar"
@@ -199,7 +199,7 @@ export default function CardFuncionario({
                 <Field
                   label="Sexo"
                   value={
-                    funcionario.funcionario_sexo == "masculino"
+                    funcionario.funcionario_sexo === "masculino"
                       ? "Masculino"
                       : "Feminino"
                   }

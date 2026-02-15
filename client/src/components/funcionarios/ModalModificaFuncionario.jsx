@@ -81,7 +81,7 @@ function ModalModificaFuncionario({
         setModifica(false);
       }, 500);
     } catch (err) {
-      if (err.status == 400) {
+      if (err.status === 400) {
         console.error(err);
         setCarregando(false);
         mostrarAviso("erro", "Prencher todos os dados", true);

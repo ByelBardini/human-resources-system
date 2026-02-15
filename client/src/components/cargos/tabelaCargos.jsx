@@ -46,7 +46,7 @@ function TabelaCargos({
               key={cargo.cargo_id}
               className={`
                 border-b border-white/5 transition-colors cursor-pointer
-                ${selecionado.linha == cargo.cargo_id
+                ${selecionado.linha === cargo.cargo_id
                   ? "bg-white/10"
                   : "hover:bg-white/5"
                 }
@@ -55,7 +55,7 @@ function TabelaCargos({
             >
               {/* Cargo */}
               <td className="px-4 py-3 align-middle w-[260px] min-w-[260px] max-w-[260px] border-r border-white/10 relative">
-                {selecionado.linha == cargo.cargo_id && (
+                {selecionado.linha === cargo.cargo_id && (
                   <div className="absolute left-2 top-1/2 -translate-y-1/2">
                     <IconeBotao
                       tipo="deletar"
@@ -67,7 +67,7 @@ function TabelaCargos({
                   </div>
                 )}
                 <span 
-                  className={`text-sm text-white/90 font-medium truncate block transition-all ${selecionado.linha == cargo.cargo_id ? 'pl-8' : ''}`} 
+                  className={`text-sm text-white/90 font-medium truncate block transition-all ${selecionado.linha === cargo.cargo_id ? 'pl-8' : ''}`} 
                   title={cargo.cargo_nome}
                 >
                   {cargo.cargo_nome}

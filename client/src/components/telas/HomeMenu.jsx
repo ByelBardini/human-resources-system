@@ -20,7 +20,7 @@ function HomeMenu({ setCarregando, navigate }) {
       setImagem(imagem);
       console.log(imagem);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.log(err.message);

@@ -33,7 +33,7 @@ function bufferToMinutes(buffer) {
 
 // Total em minutos → string "HH:MM" ou "-HH:MM"
 function formatTotal(totalMinutes) {
-  if (totalMinutes == null || Number.isNaN(totalMinutes)) return "00:00";
+  if (totalMinutes === null || Number.isNaN(totalMinutes)) return "00:00";
   const abs = Math.abs(totalMinutes);
   const h = Math.floor(abs / 60);
   const m = Math.round(abs % 60);

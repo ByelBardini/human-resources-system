@@ -25,7 +25,7 @@ function ModalInativa({
   async function inativar() {
     const id = localStorage.getItem("funcionario_id");
 
-    if (data == "" || preco == "R$ 0,00") {
+    if (data === "" || preco === "R$ 0,00") {
       mostrarAviso(
         "erro",
         "Você precisa informar a data e o preço de desligamento!",

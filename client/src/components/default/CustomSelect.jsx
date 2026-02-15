@@ -84,45 +84,47 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
         />
       </button>
 
-      {open && createPortal(
+      {createPortal(
         <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            style={{
-              position: 'fixed',
-              top: position.dropUp ? 'auto' : position.top,
-              bottom: position.dropUp ? window.innerHeight - position.top : 'auto',
-              left: position.left,
-              width: position.width,
-            }}
-            className={`z-[9999] min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
-                       rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-xl
-                       shadow-xl shadow-black/30 py-1`}
-          >
-            {options.map((opt, idx) => {
-              const isSelected = String(opt.value) === String(value);
-              return (
-                <button
-                  key={opt.value ?? idx}
-                  type="button"
-                  onClick={() => handleSelect(opt.value)}
-                  className={`
-                    w-full px-4 py-2.5 text-left text-sm
-                    transition-colors duration-100
-                    ${isSelected
-                      ? "bg-white/15 text-white font-medium"
-                      : "text-white/90 hover:bg-white/10 hover:text-white"
-                    }
-                  `}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </motion.div>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              style={{
+                position: 'fixed',
+                top: position.dropUp ? 'auto' : position.top,
+                bottom: position.dropUp ? window.innerHeight - position.top : 'auto',
+                left: position.left,
+                width: position.width,
+              }}
+              className={`z-[9999] min-w-[140px] max-h-56 overflow-y-auto custom-select-dropdown
+                         rounded-xl border border-white/20 bg-slate-900/95 backdrop-blur-xl
+                         shadow-xl shadow-black/30 py-1`}
+            >
+              {options.map((opt, idx) => {
+                const isSelected = String(opt.value) === String(value);
+                return (
+                  <button
+                    key={opt.value ?? idx}
+                    type="button"
+                    onClick={() => handleSelect(opt.value)}
+                    className={`
+                      w-full px-4 py-2.5 text-left text-sm
+                      transition-colors duration-100
+                      ${isSelected
+                        ? "bg-white/15 text-white font-medium"
+                        : "text-white/90 hover:bg-white/10 hover:text-white"
+                      }
+                    `}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )}

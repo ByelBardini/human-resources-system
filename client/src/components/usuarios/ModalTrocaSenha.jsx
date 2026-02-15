@@ -23,7 +23,7 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
 
       setTrocaSenha(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         console.log(err);
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");

@@ -33,7 +33,7 @@ function ManualFuncoes({
       const descricoes = await getDescricoes(id);
       setDescricoes(descricoes);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         console.error(err.message, err);
         mostrarAviso(
           "erro",

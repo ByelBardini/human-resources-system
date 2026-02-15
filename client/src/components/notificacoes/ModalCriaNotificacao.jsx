@@ -45,7 +45,7 @@ function ModalCriaNotificacao({
   async function enviarNotificacoes() {
     setConfirmacao(false);
     const id = localStorage.getItem("funcionario_id");
-    if (tipo == "" || data == "") {
+    if (tipo === "" || data === "") {
       mostrarAviso("erro", "Data e tipo são obrigatórios!", true);
       return;
     }
@@ -279,7 +279,7 @@ function ModalCriaNotificacao({
               </span>
             </label>
           )}
-          {tipo == "advertencia" && (
+          {tipo === "advertencia" && (
             <label className="flex items-center gap-3 select-none">
               <input
                 type="checkbox"

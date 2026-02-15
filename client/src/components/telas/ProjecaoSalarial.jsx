@@ -98,7 +98,7 @@ export default function ProjecaoSalarial({
         buscaCargos();
       }, 500);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         console.error(err.message, err);
@@ -106,7 +106,7 @@ export default function ProjecaoSalarial({
           limparAviso();
           navigate("/", { replace: true });
         }, 1000);
-      } else if (err.status == 409) {
+      } else if (err.status === 409) {
         setCarregando(false);
         setConfirmacao(false);
         console.error(err.message, err);

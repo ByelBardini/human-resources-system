@@ -149,7 +149,7 @@ function ModalCargoUsuario({
       setAtualizado(true);
       setModalAberto(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();

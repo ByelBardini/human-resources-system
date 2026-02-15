@@ -15,7 +15,7 @@ function ModalUsuario({
   const { mostrarAviso, limparAviso } = useAviso();
   async function inativarUsuario() {
     const id = localStorage.getItem("usuario_id");
-    if (id == usuarioSelecionado.usuario_id) {
+    if (id === usuarioSelecionado.usuario_id.toString()) {
       mostrarAviso("erro", "Você não pode inativar seu própio usuário!");
       return;
     }
@@ -24,8 +24,8 @@ function ModalUsuario({
       await inativaUsuarioService(usuarioSelecionado.usuario_id);
 
       mostrarAviso(
-        usuarioSelecionado.usuario_ativo == 1 ? "aviso" : "sucesso",
-        usuarioSelecionado.usuario_ativo == 1
+        usuarioSelecionado.usuario_ativo === 1 ? "aviso" : "sucesso",
+        usuarioSelecionado.usuario_ativo === 1
           ? "Usuário inativado com sucesso!"
           : "Usuário ativo com sucesso!",
         true
@@ -33,7 +33,7 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         console.error(err);
         setCarregando(false);
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
@@ -63,7 +63,7 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         setCarregando(false);
         mostrarAviso(
           "erro",
@@ -153,18 +153,18 @@ function ModalUsuario({
               onClick={inativarUsuario}
               className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition
                 ${
-                  usuarioSelecionado.usuario_ativo == 1
+                  usuarioSelecionado.usuario_ativo === 1
                     ? "bg-red-500/15 border-red-400/30 text-red-300 hover:bg-red-500/25"
                     : "bg-green-500/15 border-green-400/30 text-green-300 hover:bg-green-500/25"
                 }`}
               title={
-                usuarioSelecionado.usuario_ativo == 1
+                usuarioSelecionado.usuario_ativo === 1
                   ? "Inativar usuário"
                   : "Ativar usuário"
               }
             >
               <Power size={16} />
-              {usuarioSelecionado.usuario_ativo == 1
+              {usuarioSelecionado.usuario_ativo === 1
                 ? "Inativar usuário"
                 : "Ativar usuário"}
             </button>

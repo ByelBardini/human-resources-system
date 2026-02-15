@@ -32,7 +32,7 @@ function Ponto() {
       const data = await getPontoHoje();
       setPontoData(data);
     } catch (err) {
-      if (err.status == 401 || err.status == 403) {
+      if (err.status === 401 || err.status === 403) {
         mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
         setTimeout(() => {
           limparAviso();
@@ -126,7 +126,7 @@ function Ponto() {
   }
 
   useEffect(() => {
-    setTrocaSenha(localStorage.getItem("usuario_troca_senha") == 1);
+    setTrocaSenha(localStorage.getItem("usuario_troca_senha") === "1");
     document.title = "Ponto - Atlas";
   }, []);
 

@@ -23,7 +23,7 @@ function ModalAumentoGeral({
 
   async function confirmaAdicionar() {
     setConfirmacao(false);
-    if (porcentagem == "") {
+    if (porcentagem === "") {
       mostrarAviso("erro", "O valor da porcentagem é necessário", true)
       return;
     }
