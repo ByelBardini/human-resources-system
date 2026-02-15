@@ -18,7 +18,7 @@ function EmitirRelatorios() {
       navigate("/home", { replace: true });
       return;
     }
-    document.title = "Emitir relatórios - Sistema RH";
+    document.title = "Emitir relatórios - Atlas";
   }, [temPermissao, mostrarAviso, navigate]);
 
   if (!temPermissao("sistema.emitir_relatorios")) {

@@ -94,7 +94,7 @@ function CargosUsuarios() {
   useEffect(() => {
     buscaCargos();
     buscaPermissoes();
-    document.title = "Cargos de Usuários - Sistema RH";
+    document.title = "Cargos de Usuários - Atlas";
   }, [atualizado]);
 
   return (

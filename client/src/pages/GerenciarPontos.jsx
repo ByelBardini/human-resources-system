@@ -603,7 +603,7 @@ function GerenciarPontos() {
 
     buscarEmpresas();
     buscarPendentes();
-    document.title = "Gerenciar Pontos - Sistema RH";
+    document.title = "Gerenciar Pontos - Atlas";
   }, []);
 
   useEffect(() => {

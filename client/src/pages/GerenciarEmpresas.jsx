@@ -67,7 +67,7 @@ function GerenciarEmpresas() {
     }
     
     buscaEmpresas();
-    document.title = "Gerenciar Empresas - Sistema RH";
+    document.title = "Gerenciar Empresas - Atlas";
   }, [atualizado]);
 
   return (

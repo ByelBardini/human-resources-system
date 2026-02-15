@@ -77,7 +77,7 @@ function Home() {
   useEffect(() => {
     buscarEmpresas();
     setTrocaSenha(localStorage.getItem("usuario_troca_senha") == 1);
-    document.title = "Home - Sistema RH";
+    document.title = "Home - Atlas";
   }, []);
 
   const podeGerenciarPontos =
@@ -220,7 +220,7 @@ function Home() {
           )}
 
           <p className="text-[10px] text-white/30 mt-5 text-center">
-            Sistema RH · Infinity
+            Atlas
           </p>
         </div>
       </div>

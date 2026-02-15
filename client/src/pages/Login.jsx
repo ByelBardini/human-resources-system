@@ -18,7 +18,7 @@ function Login() {
   const [senha, setSenha] = useState("");
 
   useEffect(() => {
-    document.title = "Login - Sistema RH";
+    document.title = "Login - Atlas";
   }, []);
 
   useEffect(() => {
@@ -180,7 +180,7 @@ function Login() {
             Entrar
           </h1>
           <p className="text-sm text-white/70 text-center mb-6">
-            Acesse o sistema de RH
+            Acesse o Atlas
           </p>
 
           <form
