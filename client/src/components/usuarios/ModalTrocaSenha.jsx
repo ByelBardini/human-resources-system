@@ -3,6 +3,7 @@ import { Save, Eye, EyeOff } from "lucide-react";
 import { trocaSenha } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
   const [senha, setSenha] = useState("");
@@ -27,10 +28,10 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.log(err);
+        logger.log(err);
       } else {
         mostrarAviso("erro", err.message, true);
-        console.error(err);
+        logger.error(err);
       }
     } finally {
       setCarregando(false);

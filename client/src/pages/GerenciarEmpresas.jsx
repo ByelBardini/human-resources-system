@@ -11,6 +11,7 @@ import CampoEmpresaGerenciamento from "../components/empresas/CampoEmpresaGerenc
 import ModalEditaEmpresa from "../components/empresas/ModalEditaEmpresa.jsx";
 import ModalCriaEmpresa from "../components/empresas/ModalCriaEmpresa.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
+import logger from "../utils/logger.js";
 
 function GerenciarEmpresas() {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ function GerenciarEmpresas() {
       } else {
         mostrarAviso("erro", "Erro ao buscar empresas:", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

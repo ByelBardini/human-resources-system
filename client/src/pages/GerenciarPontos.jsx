@@ -45,6 +45,7 @@ import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { formatarHorasParaHHMM, formatarHorasComSinal } from "../utils/formatarHoras.js";
+import logger from "../utils/logger.js";
 
 function GerenciarPontos() {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -148,7 +149,7 @@ function GerenciarPontos() {
       URL.revokeObjectURL(a.href);
     } catch (err) {
       mostrarAviso("erro", "Erro ao baixar o anexo", true);
-      console.error(err);
+      logger.error(err);
     }
   }
 

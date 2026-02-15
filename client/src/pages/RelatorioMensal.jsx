@@ -31,6 +31,7 @@ import {
   formatarDataComDiaSemana 
 } from "../utils/formatters.js";
 import { storage } from "../hooks/useStorage.js";
+import logger from "../utils/logger.js";
 
 function RelatorioMensal() {
   const { mostrarAviso } = useAviso();
@@ -101,7 +102,7 @@ function RelatorioMensal() {
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -138,7 +139,7 @@ function RelatorioMensal() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     }
   }
 
@@ -186,7 +187,7 @@ function RelatorioMensal() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     }
   }
 

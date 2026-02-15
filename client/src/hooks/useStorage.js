@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import logger from "../utils/logger.js";
 
 /**
  * Chaves do localStorage usadas no sistema.
@@ -114,7 +115,7 @@ export function useLocalStorage(key, initialValue) {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Erro ao ler localStorage[${key}]:`, error);
+      logger.error(`Erro ao ler localStorage[${key}]:`, error);
       return initialValue;
     }
   });
@@ -125,7 +126,7 @@ export function useLocalStorage(key, initialValue) {
       setStoredValue(valueToStore);
       localStorage.setItem(key, JSON.stringify(valueToStore));
     } catch (error) {
-      console.error(`Erro ao salvar localStorage[${key}]:`, error);
+      logger.error(`Erro ao salvar localStorage[${key}]:`, error);
     }
   }, [key, storedValue]);
 

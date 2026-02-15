@@ -4,6 +4,7 @@ import { X, TrendingUp, Percent, AlertTriangle } from "lucide-react";
 import { aumentoCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { storage } from "../../hooks/useStorage.js";
+import logger from "../../utils/logger.js";
 
 function ModalAumentoGeral({
   setConfirmacao,
@@ -44,7 +45,7 @@ function ModalAumentoGeral({
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
       return;
     }
   }

@@ -9,6 +9,7 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import ModalCriaPerfilJornada from "../components/perfisJornada/ModalCriaPerfilJornada.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
+import logger from "../utils/logger.js";
 
 function PerfisJornada() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ function PerfisJornada() {
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

@@ -17,6 +17,7 @@ import {
   formatarData as formatarDataCurta 
 } from "../utils/formatters.js";
 import { storage } from "../hooks/useStorage.js";
+import logger from "../utils/logger.js";
 
 function Ponto() {
   const { mostrarAviso } = useAviso();
@@ -46,7 +47,7 @@ function Ponto() {
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -79,7 +80,7 @@ function Ponto() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     }
   }
 

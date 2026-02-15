@@ -9,6 +9,7 @@ import {
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
 import CustomSelect from "../default/CustomSelect.jsx";
+import logger from "../../utils/logger.js";
 
 function ModalFerias({
   ferias,
@@ -32,7 +33,7 @@ function ModalFerias({
         const usuariosData = await getUsuariosFerias();
         setUsuarios(usuariosData || []);
       } catch (err) {
-        console.error("Erro ao buscar usuários:", err);
+        logger.error("Erro ao buscar usuários:", err);
       }
     }
     buscarUsuarios();
@@ -100,7 +101,7 @@ function ModalFerias({
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar férias", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -123,7 +124,7 @@ function ModalFerias({
       } else {
         mostrarAviso("erro", err.message || "Erro ao cancelar férias", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

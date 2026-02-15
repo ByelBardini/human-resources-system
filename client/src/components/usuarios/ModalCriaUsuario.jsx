@@ -8,6 +8,7 @@ import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaServ
 import { getEmpresas } from "../../services/api/empresasService";
 import CustomSelect from "../default/CustomSelect.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalCriaUsuario({
   setCria,
@@ -103,11 +104,11 @@ function ModalCriaUsuario({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err.message, err);
+      logger.error(err.message, err);
     } finally {
       setCarregando(false);
     }
@@ -132,7 +133,7 @@ function ModalCriaUsuario({
         const cargosData = await getCargosUsuarios();
         setCargos(cargosData.filter(c => c.cargo_usuario_ativo === 1));
       } catch (err) {
-        console.error("Erro ao buscar cargos:", err);
+        logger.error("Erro ao buscar cargos:", err);
       }
     }
     buscarCargos();
@@ -152,7 +153,7 @@ function ModalCriaUsuario({
           setPerfisJornada(perfisData.perfis || []);
           setEmpresas(empresasData || []);
         } catch (err) {
-          console.error("Erro ao buscar dados:", err);
+          logger.error("Erro ao buscar dados:", err);
         }
       } else {
         setPerfisJornada([]);
@@ -180,7 +181,7 @@ function ModalCriaUsuario({
           setFuncionariosSemUsuario(funcionariosData || []);
           setFuncionarioId(""); // Reset funcionário selecionado
         } catch (err) {
-          console.error("Erro ao buscar funcionários sem usuário:", err);
+          logger.error("Erro ao buscar funcionários sem usuário:", err);
           setFuncionariosSemUsuario([]);
         }
       } else {

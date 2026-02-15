@@ -9,6 +9,8 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import ModalFerias from "../components/ferias/ModalFerias.jsx";
+import logger from "../utils/logger.js";
+import { formatarData } from "../utils/formatters.js";
 
 function GerenciarFerias() {
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ function GerenciarFerias() {
       } else {
         mostrarAviso("erro", err.message || "Erro ao buscar férias", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -65,12 +67,6 @@ function GerenciarFerias() {
     buscarFerias();
     document.title = "Gerenciar Férias - Atlas";
   }, [atualizado]);
-
-  function formatarData(data) {
-    if (!data) return "";
-    const date = new Date(data + "T00:00:00");
-    return date.toLocaleDateString("pt-BR");
-  }
 
   function obterNomeUsuario(item) {
     return (

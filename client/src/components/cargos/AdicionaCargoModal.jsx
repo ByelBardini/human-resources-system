@@ -5,6 +5,7 @@ import { useAviso } from "../../context/AvisoContext.jsx";
 import { X, Briefcase, DollarSign, Sparkles } from "lucide-react";
 import { formatarRealDinamico, realParaNumero } from "../../utils/formatters.js";
 import { storage } from "../../hooks/useStorage.js";
+import logger from "../../utils/logger.js";
 
 function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
   const { mostrarAviso, limparAviso } = useAviso();
@@ -32,7 +33,7 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
       return;
     }
   }

@@ -5,6 +5,7 @@ import { formatToCPFOrCNPJ } from "brazilian-values";
 import { putEmpresa, inativarEmpresa, getEmpresaImagem } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalEditaEmpresa({
   empresaSelecionada,
@@ -89,11 +90,11 @@ function ModalEditaEmpresa({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err.message, err);
+      logger.error(err.message, err);
     } finally {
       setCarregando(false);
     }
@@ -116,10 +117,10 @@ function ModalEditaEmpresa({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.error(err);
+        logger.error(err);
       } else {
         mostrarAviso("erro", err.message, true);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       }
     } finally {
       setCarregando(false);

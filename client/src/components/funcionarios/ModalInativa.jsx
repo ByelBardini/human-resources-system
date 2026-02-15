@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { X } from "lucide-react";
 import { inativarFuncionario } from "../../services/api/funcionarioService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 
 function ModalInativa({
   setInativando,
@@ -46,7 +47,7 @@ function ModalInativa({
       }, 500);
     } catch (err) {
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

@@ -9,6 +9,7 @@ import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import ModalCargoUsuario from "../components/cargosUsuarios/ModalCargoUsuario.jsx";
+import logger from "../utils/logger.js";
 
 function CargosUsuarios() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ function CargosUsuarios() {
       } else {
         mostrarAviso("erro", "Erro ao buscar cargos:", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -47,7 +48,7 @@ function CargosUsuarios() {
       const categoriasData = await getPermissoesAgrupadas();
       setCategoriasPermissoes(categoriasData);
     } catch (err) {
-      console.error("Erro ao buscar permissões:", err);
+      logger.error("Erro ao buscar permissões:", err);
     }
   }
 
@@ -67,7 +68,7 @@ function CargosUsuarios() {
       } else {
         mostrarAviso("erro", err.message || "Erro ao inativar cargo", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

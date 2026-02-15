@@ -6,6 +6,7 @@ import { useAuthError } from "../../hooks/useAuthError.js";
 import { getDescricoes } from "../../services/api/descricaoService.js";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import logger from "../../utils/logger.js";
 
 function ManualFuncoes({
   setDesc,
@@ -37,9 +38,9 @@ function ManualFuncoes({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError();
-        console.error(err.message, err);
+        logger.error(err.message, err);
       } else {
-        console.error(err);
+        logger.error(err);
       }
     }
   }

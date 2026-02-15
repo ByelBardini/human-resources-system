@@ -4,6 +4,7 @@ import { X, ImageOff, Pen } from "lucide-react";
 import { getFuncionarioFull } from "../../services/api/funcionarioService.js";
 import { getNotificacoes } from "../../services/api/notificacoesServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 import Notificacoes from "../notificacoes/Notificacoes.jsx";
 
 export default function CardFuncionario({
@@ -51,7 +52,7 @@ export default function CardFuncionario({
       setNotificacoes(notificacoes);
     } catch (err) {
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
     }
   }
 

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 import { useState } from "react";
 import {
   getFuncionarios,
@@ -168,9 +169,9 @@ function TabelaFuncionarios({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError();
-        console.log(err);
+        logger.log(err);
       } else {
-        console.error("Erro ao buscar cargos:", err);
+        logger.error("Erro ao buscar cargos:", err);
       }
     }
   }

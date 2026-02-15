@@ -1,5 +1,6 @@
 import { handleApiError } from "./handleApiError.js";
 import { api } from "../api.js";
+import logger from "../../utils/logger.js";
 
 export async function registrarBatida(fotoFile) {
   try {
@@ -298,7 +299,7 @@ export async function exportarPontoExcel(funcionarioId, mes, ano) {
         try {
           filename = decodeURIComponent(filenameMatch[1]);
         } catch (e) {
-          console.error("Erro ao decodificar UTF-8:", e);
+          logger.error("Erro ao decodificar UTF-8:", e);
           filename = filenameMatch[1];
         }
       } else {
@@ -361,7 +362,7 @@ export async function exportarTodosPontosZip(mes, ano) {
         try {
           filename = decodeURIComponent(filenameMatch[1]);
         } catch (e) {
-          console.error("Erro ao decodificar UTF-8:", e);
+          logger.error("Erro ao decodificar UTF-8:", e);
           filename = filenameMatch[1];
         }
       } else {

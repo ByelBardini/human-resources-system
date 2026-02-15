@@ -7,6 +7,7 @@ import {
 import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 // Permissões que suportam filtro por empresa
 const PERMISSOES_COM_EMPRESA = [
@@ -40,7 +41,7 @@ function ModalCargoUsuario({
         const data = await getEmpresas();
         setEmpresas(data || []);
       } catch (err) {
-        console.error("Erro ao carregar empresas:", err);
+        logger.error("Erro ao carregar empresas:", err);
       }
     }
     carregarEmpresas();
@@ -156,7 +157,7 @@ function ModalCargoUsuario({
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar cargo", true);
       }
-      console.error(err.message, err);
+      logger.error(err.message, err);
     } finally {
       setCarregando(false);
     }

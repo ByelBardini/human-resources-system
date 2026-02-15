@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { criarPerfilJornada } from "../../services/api/perfilJornadaService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalCriaPerfilJornada({
   setCria,
@@ -56,7 +57,7 @@ function ModalCriaPerfilJornada({
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err.message, err);
+      logger.error(err.message, err);
     } finally {
       setCarregando(false);
     }

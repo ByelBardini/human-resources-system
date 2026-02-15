@@ -7,6 +7,7 @@ import {
   getCargoSetor,
   putFuncionario,
 } from "../../services/api/funcionarioService.js";
+import logger from "../../utils/logger.js";
 
 function ModalModificaFuncionario({
   setModifica,
@@ -53,7 +54,7 @@ function ModalModificaFuncionario({
       setCargos(response.cargo);
     } catch (err) {
       mostrarAviso("erro", err.message);
-      console.error(err.message, err);
+      logger.error(err.message, err);
     }
   }
 
@@ -82,12 +83,12 @@ function ModalModificaFuncionario({
       }, 500);
     } catch (err) {
       if (err.status === 400) {
-        console.error(err);
+        logger.error(err);
         setCarregando(false);
         mostrarAviso("erro", "Prencher todos os dados", true);
       } else {
         setCarregando(false);
-        console.error(err.message, err, true);
+        logger.error(err.message, err);
         return;
       }
     }
@@ -100,7 +101,7 @@ function ModalModificaFuncionario({
   }, [fotoPreview]);
 
   useEffect(() => {
-    console.log(localStorage.getItem("imagem"));
+    logger.log(localStorage.getItem("imagem"));
     getCargosSetores();
     setSetor(localStorage.getItem("setor"));
     setCargo(localStorage.getItem("cargo"));

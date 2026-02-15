@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function HomeMenu({ setCarregando, navigate }) {
   const [imagem, setImagem] = useState(null);
@@ -20,14 +21,14 @@ function HomeMenu({ setCarregando, navigate }) {
     try {
       const imagem = await getEmpresaImagem(id);
       setImagem(imagem);
-      console.log(imagem);
+      logger.log(imagem);
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.log(err.message);
+        logger.log(err.message);
       } else {
         mostrarAviso("erro", err.message, true);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       }
     } finally {
       setCarregando(false);

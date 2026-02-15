@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Filter } from "lucide-react";
 import { getNotificacoesMes } from "../../services/api/notificacoesServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 
 function FiltroNotificacoes({
   dataInicial,
@@ -23,7 +24,7 @@ function FiltroNotificacoes({
       setFiltroAtivo(true);
     } catch (err) {
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
     }
   }
 

@@ -9,6 +9,8 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import ModalFeriado from "../components/feriados/ModalFeriado.jsx";
+import logger from "../utils/logger.js";
+import { formatarData } from "../utils/formatters.js";
 
 function GerenciarFeriados() {
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ function GerenciarFeriados() {
       } else {
         mostrarAviso("erro", "Erro ao buscar feriados:", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -65,12 +67,6 @@ function GerenciarFeriados() {
     buscaFeriados();
     document.title = "Gerenciar Feriados - Atlas";
   }, [atualizado]);
-
-  function formatarData(data) {
-    if (!data) return "";
-    const date = new Date(data + "T00:00:00");
-    return date.toLocaleDateString("pt-BR");
-  }
 
   return (
     <div className="relative min-h-screen w-screen flex justify-center items-center p-6 overflow-hidden">

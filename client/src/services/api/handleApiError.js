@@ -1,5 +1,7 @@
+import logger from "../../utils/logger.js";
+
 export function handleApiError(err, defaultMessage) {
-  console.error(defaultMessage, err);
+  logger.error(defaultMessage, err);
 
   return {
     message: err?.response?.data?.error || err?.message || defaultMessage,

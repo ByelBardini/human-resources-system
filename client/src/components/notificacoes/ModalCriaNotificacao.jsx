@@ -3,6 +3,7 @@ import { X, UploadCloud, AlertTriangle } from "lucide-react";
 import { postNotificacao } from "../../services/api/notificacoesServices.js";
 import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 
 function ModalCriaNotificacao({
   setNotificacao,
@@ -71,7 +72,7 @@ function ModalCriaNotificacao({
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err)
+      logger.error(err.message, err)
     }
   }
 

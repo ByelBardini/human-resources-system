@@ -6,6 +6,7 @@ import { getSetores } from "../../services/api/setorService.js";
 import { putDescricao } from "../../services/api/descricaoService.js";
 import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 
 function ModificaDescricaoModal({
   setModificaDesc,
@@ -45,7 +46,7 @@ function ModificaDescricaoModal({
       setSetores(setores);
     } catch (err) {
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     }
   }
 
@@ -80,7 +81,7 @@ function ModificaDescricaoModal({
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
       return;
     }
   }

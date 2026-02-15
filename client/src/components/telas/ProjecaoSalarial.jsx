@@ -5,6 +5,7 @@ import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
+import logger from "../../utils/logger.js";
 
 export default function ProjecaoSalarial({
   setAdicionando,
@@ -102,11 +103,11 @@ export default function ProjecaoSalarial({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       } else if (err.status === 409) {
         setCarregando(false);
         setConfirmacao(false);
-        console.error(err.message, err);
+        logger.error(err.message, err);
         mostrarAviso(
           "erro",
           "Impossível excluir um cargo que já possua funcionários vinculados",
@@ -116,7 +117,7 @@ export default function ProjecaoSalarial({
         setCarregando(false);
         setConfirmacao(false);
         mostrarAviso("erro", err.message, true);
-        console.error(err);
+        logger.error(err);
       }
     }
   }
@@ -140,7 +141,7 @@ export default function ProjecaoSalarial({
       setCargos(cargos);
     } catch (err) {
       mostrarAviso("erro", err.message);
-      console.error(err.message, err);
+      logger.error(err.message, err);
     }
   }
 

@@ -9,6 +9,8 @@ import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
+import logger from "../utils/logger.js";
+import { formatarData } from "../utils/formatters.js";
 
 function Justificativa() {
   const { mostrarAviso } = useAviso();
@@ -113,7 +115,7 @@ function Justificativa() {
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -173,7 +175,7 @@ function Justificativa() {
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err);
+      logger.error(err);
     }
   }
 
@@ -184,16 +186,6 @@ function Justificativa() {
     setTipoJustificativa("");
     setDescricao("");
     setAnexo(null);
-  }
-
-  function formatarData(dataStr) {
-    const data = new Date(dataStr + "T12:00:00");
-    return data.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: "America/Sao_Paulo",
-    });
   }
 
   function getStatusColor(status) {

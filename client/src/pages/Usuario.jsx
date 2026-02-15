@@ -10,6 +10,7 @@ import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
 import { useAuthError } from "../hooks/useAuthError.js";
+import logger from "../utils/logger.js";
 
 function Usuario() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ function Usuario() {
       } else {
         mostrarAviso("erro", "Erro ao buscar usuários:", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

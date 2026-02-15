@@ -9,6 +9,7 @@ import {
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService.js";
 import CustomSelect from "../default/CustomSelect.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import logger from "../../utils/logger.js";
 
 function AdicionaFuncionarioModal({
   setAdicionandoFunc,
@@ -51,7 +52,7 @@ function AdicionaFuncionarioModal({
       setCargos(response.cargo);
     } catch (err) {
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
     }
   }
 
@@ -60,7 +61,7 @@ function AdicionaFuncionarioModal({
       const response = await listarPerfisJornadaPublico();
       setPerfisJornada(response.perfis || []);
     } catch (err) {
-      console.error("Erro ao buscar perfis de jornada:", err);
+      logger.error("Erro ao buscar perfis de jornada:", err);
       setPerfisJornada([]);
     }
   }
@@ -216,7 +217,7 @@ function AdicionaFuncionarioModal({
     } catch (err) {
       setCarregando(false);
       mostrarAviso("erro", err.message, true);
-      console.error(err.message, err);
+      logger.error(err.message, err);
       return;
     }
   }

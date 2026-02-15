@@ -5,6 +5,7 @@ import { criarFeriado, atualizarFeriado, excluirFeriado } from "../../services/a
 import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalFeriado({
   feriado,
@@ -29,7 +30,7 @@ function ModalFeriado({
         const empresasData = await getEmpresas();
         setEmpresas(empresasData || []);
       } catch (err) {
-        console.error("Erro ao buscar empresas:", err);
+        logger.error("Erro ao buscar empresas:", err);
       }
     }
     buscarEmpresas();
@@ -95,7 +96,7 @@ function ModalFeriado({
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar feriado", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }
@@ -118,7 +119,7 @@ function ModalFeriado({
       } else {
         mostrarAviso("erro", err.message || "Erro ao excluir feriado", true);
       }
-      console.error(err);
+      logger.error(err);
     } finally {
       setCarregando(false);
     }

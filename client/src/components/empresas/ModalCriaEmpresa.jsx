@@ -5,6 +5,7 @@ import { formatToCPFOrCNPJ } from "brazilian-values";
 import { postEmpresa } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
+import logger from "../../utils/logger.js";
 
 function ModalCriaEmpresa({
   setCria,
@@ -72,11 +73,11 @@ function ModalCriaEmpresa({
     } catch (err) {
       if (isAuthError(err)) {
         handleAuthError(setCarregando);
-        console.error(err.message, err);
+        logger.error(err.message, err);
       } else {
         mostrarAviso("erro", err.message, true);
       }
-      console.error(err.message, err);
+      logger.error(err.message, err);
     } finally {
       setCarregando(false);
     }
