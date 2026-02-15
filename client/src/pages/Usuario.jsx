@@ -9,6 +9,7 @@ import Background from "../components/default/Background";
 import CampoUsuario from "../components/usuarios/CampoUsuario.jsx";
 import ModalUsuario from "../components/usuarios/ModalVisualizaUsuario.jsx";
 import ModalCriaUsuario from "../components/usuarios/ModalCriaUsuario.jsx";
+import { useAuthError } from "../hooks/useAuthError.js";
 
 function Usuario() {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ function Usuario() {
 
   const [carregando, setCarregando] = useState(false);
 
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const botoesAcao = [
     { to: "/perfis-jornada", icon: Clock, title: "Gerenciar Perfis de Jornada" },
@@ -41,12 +43,8 @@ function Usuario() {
       setUsuariosFuncionarios(funcionarios);
       setAtualizado(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", "Erro ao buscar usuários:", true);
       }

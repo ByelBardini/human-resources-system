@@ -4,6 +4,7 @@ import { getPontoHoje, registrarBatida } from "../services/api/pontoService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAviso } from "../context/AvisoContext.jsx";
+import { useAuthError } from "../hooks/useAuthError.js";
 import { usePermissao } from "../hooks/usePermissao.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
@@ -11,7 +12,8 @@ import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function Ponto() {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const navigate = useNavigate();
   const { temPermissao } = usePermissao();
 
@@ -32,12 +34,8 @@ function Ponto() {
       const data = await getPontoHoje();
       setPontoData(data);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message, true);
       }

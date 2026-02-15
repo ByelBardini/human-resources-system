@@ -7,6 +7,7 @@ import {
   getUsuariosFerias,
 } from "../../services/api/feriasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 import CustomSelect from "../default/CustomSelect.jsx";
 
 function ModalFerias({
@@ -17,7 +18,8 @@ function ModalFerias({
   setAtualizado,
   navigate,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const [usuarios, setUsuarios] = useState([]);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState("");
@@ -93,13 +95,8 @@ function ModalFerias({
       setAtualizado(true);
       setModalAberto(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar férias", true);
       }
@@ -121,13 +118,8 @@ function ModalFerias({
       setAtualizado(true);
       setModalAberto(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message || "Erro ao cancelar férias", true);
       }

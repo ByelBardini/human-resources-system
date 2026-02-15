@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { formatToCPFOrCNPJ } from "brazilian-values";
 import { postEmpresa } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function ModalCriaEmpresa({
   setCria,
@@ -14,7 +15,8 @@ function ModalCriaEmpresa({
 }) {
   const navigateHook = useNavigate();
   const navigate = navigateProp || navigateHook;
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const [nome, setNome] = useState("");
   const [cnpj, setCnpj] = useState("");
@@ -68,14 +70,9 @@ function ModalCriaEmpresa({
       setCadastrado(true);
       setCria(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.error(err.message, err);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
       }

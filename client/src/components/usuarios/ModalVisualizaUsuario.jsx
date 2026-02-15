@@ -4,6 +4,7 @@ import {
   resetaSenha,
 } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function ModalUsuario({
   usuarioSelecionado,
@@ -12,7 +13,8 @@ function ModalUsuario({
   modificou,
   navigate,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   async function inativarUsuario() {
     const id = localStorage.getItem("usuario_id");
     if (id === usuarioSelecionado.usuario_id.toString()) {
@@ -33,14 +35,9 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.error(err);
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
         console.error(err.message, err);
@@ -63,18 +60,9 @@ function ModalUsuario({
       modificou(true);
       setVisualiza(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!",
-          true
-        );
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.log(err.message, err);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
         limparAviso();

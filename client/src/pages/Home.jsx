@@ -17,9 +17,11 @@ import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
+import { useAuthError } from "../hooks/useAuthError.js";
 
 function Home() {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const navigate = useNavigate();
 
@@ -60,13 +62,8 @@ function Home() {
       setEmpresas(empresasComImagens);
       setCarregando(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         setCarregando(false);
         mostrarAviso("erro", err.message, true);

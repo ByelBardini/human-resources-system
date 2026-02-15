@@ -6,6 +6,7 @@ import {
 } from "../../services/api/cargoUsuarioServices.js";
 import { getEmpresas } from "../../services/api/empresasService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 // Permissões que suportam filtro por empresa
 const PERMISSOES_COM_EMPRESA = [
@@ -22,7 +23,8 @@ function ModalCargoUsuario({
   setAtualizado,
   navigate,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -149,12 +151,8 @@ function ModalCargoUsuario({
       setAtualizado(true);
       setModalAberto(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message || "Erro ao salvar cargo", true);
       }

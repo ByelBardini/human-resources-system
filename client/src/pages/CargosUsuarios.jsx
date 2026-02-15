@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getCargosUsuarios, deleteCargoUsuario } from "../services/api/cargoUsuarioServices.js";
 import { getPermissoesAgrupadas } from "../services/api/permissaoServices.js";
 import { useAviso } from "../context/AvisoContext.jsx";
+import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import ModalCargoUsuario from "../components/cargosUsuarios/ModalCargoUsuario.jsx";
@@ -20,7 +21,8 @@ function CargosUsuarios() {
   const [atualizado, setAtualizado] = useState(false);
   const [carregando, setCarregando] = useState(false);
 
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   async function buscaCargos() {
     setCarregando(true);
@@ -29,12 +31,8 @@ function CargosUsuarios() {
       setCargos(cargosData);
       setAtualizado(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", "Erro ao buscar cargos:", true);
       }
@@ -64,12 +62,8 @@ function CargosUsuarios() {
       mostrarAviso("sucesso", "Cargo inativado com sucesso!", true);
       setAtualizado(true);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message || "Erro ao inativar cargo", true);
       }

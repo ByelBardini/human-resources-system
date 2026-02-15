@@ -5,12 +5,14 @@ import { getRelatorioMensal } from "../services/api/relatorioService.js";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAviso } from "../context/AvisoContext.jsx";
+import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
 
 function Justificativa() {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const navigate = useNavigate();
 
   const [carregando, setCarregando] = useState(false);
@@ -106,12 +108,8 @@ function Justificativa() {
       setDiasDivergentes(diasPendentes);
       setJustificativas(todasJustificativas);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message, true);
       }

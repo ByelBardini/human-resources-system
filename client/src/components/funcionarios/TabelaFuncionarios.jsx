@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 import { useState } from "react";
 import {
   getFuncionarios,
@@ -24,7 +25,8 @@ function TabelaFuncionarios({
   inativos,
   navigate,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const [clicado, setClicado] = useState("");
   const [nomeSort, setNomeSort] = useState(false);
   const [salarioSort, setSalarioSort] = useState(false);
@@ -164,17 +166,9 @@ function TabelaFuncionarios({
         : await getFuncionariosInativos(id);
       setFuncionarios(funcionarios);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
+      if (isAuthError(err)) {
+        handleAuthError();
         console.log(err);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!",
-          true
-        );
-        setTimeout(() => {
-        limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         console.error("Erro ao buscar cargos:", err);
       }

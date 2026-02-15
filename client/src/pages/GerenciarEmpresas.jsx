@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getTodasEmpresas, getEmpresaImagem } from "../services/api/empresasService.js";
 import { useAviso } from "../context/AvisoContext.jsx";
+import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background";
 import CampoEmpresaGerenciamento from "../components/empresas/CampoEmpresaGerenciamento.jsx";
@@ -23,7 +24,8 @@ function GerenciarEmpresas() {
 
   const [carregando, setCarregando] = useState(false);
 
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const { temPermissao } = usePermissao();
 
   async function buscaEmpresas() {
@@ -44,12 +46,8 @@ function GerenciarEmpresas() {
       setEmpresas(empresasComImagens);
       setAtualizado(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", "Erro ao buscar empresas:", true);
       }

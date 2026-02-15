@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Download, FileSpreadsheet, ChartLine, Users, Building2, Check } from "lucide-react";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 import { getEmpresaImagem } from "../../services/api/empresasService.js";
 import {
   getEmpresasRelatorios,
@@ -26,7 +27,8 @@ const CAMPOS_DESLIGAMENTO = [
 const CAMPOS_SALARIO = ["nivel_salario"];
 
 function EmitirRelatorios({ navigate }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const [empresas, setEmpresas] = useState([]);
   const [empresaId, setEmpresaId] = useState("");
   const [cargos, setCargos] = useState([]);
@@ -70,12 +72,8 @@ function EmitirRelatorios({ navigate }) {
         setEmpresaId(String(list[0].empresa_id));
       }
     } catch (err) {
-      if (err?.status === 401 || err?.status === 403) {
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!", true);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError();
       } else {
         mostrarAviso("erro", err?.message || "Erro ao carregar empresas", true);
       }

@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 import TabelaCargos from "../cargos/tabelaCargos.jsx";
 
 export default function ProjecaoSalarial({
@@ -16,7 +17,8 @@ export default function ProjecaoSalarial({
   setModificado,
   modificado,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
   const [cargos, setCargos] = useState([{ niveis: [] }]);
   const [busca, setBusca] = useState("");
 
@@ -98,14 +100,9 @@ export default function ProjecaoSalarial({
         buscaCargos();
       }, 500);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.error(err.message, err);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else if (err.status === 409) {
         setCarregando(false);
         setConfirmacao(false);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Save, Eye, EyeOff } from "lucide-react";
 import { trocaSenha } from "../../services/api/usuariosServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
   const [senha, setSenha] = useState("");
@@ -9,7 +10,8 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
   const [show1, setShow1] = useState(false);
   const [show2, setShow2] = useState(false);
 
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const valido = senha.length >= 4 && senha === confirma;
 
@@ -23,17 +25,11 @@ function ModalTrocaSenha({ setTrocaSenha, setCarregando, navigate }) {
 
       setTrocaSenha(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.log(err);
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
-        limparAviso();
         console.error(err);
       }
     } finally {

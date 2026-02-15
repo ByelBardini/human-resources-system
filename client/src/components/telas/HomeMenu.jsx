@@ -4,11 +4,13 @@ import { getEmpresaImagem } from "../../services/api/empresasService.js";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function HomeMenu({ setCarregando, navigate }) {
   const [imagem, setImagem] = useState(null);
   const [cor, setCor] = useState("black");
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   async function buscarImagemEmpresa() {
     setCarregando(true);
@@ -20,14 +22,9 @@ function HomeMenu({ setCarregando, navigate }) {
       setImagem(imagem);
       console.log(imagem);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.log(err.message);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
         console.error(err.message, err);

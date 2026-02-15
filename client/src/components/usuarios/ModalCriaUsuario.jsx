@@ -7,6 +7,7 @@ import { getCargosUsuarios } from "../../services/api/cargoUsuarioServices";
 import { listarPerfisJornadaPublico } from "../../services/api/perfilJornadaService";
 import { getEmpresas } from "../../services/api/empresasService";
 import CustomSelect from "../default/CustomSelect.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function ModalCriaUsuario({
   setCria,
@@ -17,7 +18,8 @@ function ModalCriaUsuario({
 }) {
   const navigateHook = useNavigate();
   const navigate = navigateProp || navigateHook;
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const [nome, setNome] = useState("");
   const [login, setLogin] = useState("");
@@ -99,14 +101,9 @@ function ModalCriaUsuario({
       setCadastrado(true);
       setCria(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
         console.error(err.message, err);
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         mostrarAviso("erro", err.message, true);
       }

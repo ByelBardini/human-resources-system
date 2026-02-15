@@ -2,6 +2,7 @@
 import FiltrosDescricao from "../descricoes/FiltrosDescricao.jsx";
 import TabelaDescricao from "../descricoes/TabelaDescricao.jsx";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 import { getDescricoes } from "../../services/api/descricaoService.js";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -25,7 +26,8 @@ function ManualFuncoes({
   const ALTURA_LINHA = 53; // py-3.5 (14px * 2) + conteúdo (~25px)
   const ALTURA_CABECALHO = 53; // header da tabela
 
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   async function puxarDescricoes() {
     const id = localStorage.getItem("empresa_id");
@@ -33,17 +35,9 @@ function ManualFuncoes({
       const descricoes = await getDescricoes(id);
       setDescricoes(descricoes);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
+      if (isAuthError(err)) {
+        handleAuthError();
         console.error(err.message, err);
-        mostrarAviso(
-          "erro",
-          "Sessão inválida! Realize o Login novamente!",
-          true
-        );
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
       } else {
         console.error(err);
       }

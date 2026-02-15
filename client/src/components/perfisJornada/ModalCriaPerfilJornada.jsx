@@ -2,6 +2,7 @@ import { X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { criarPerfilJornada } from "../../services/api/perfilJornadaService.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { useAuthError } from "../../hooks/useAuthError.js";
 
 function ModalCriaPerfilJornada({
   setCria,
@@ -10,7 +11,8 @@ function ModalCriaPerfilJornada({
   cadastrado,
   navigate,
 }) {
-  const { mostrarAviso, limparAviso } = useAviso();
+  const { mostrarAviso } = useAviso();
+  const { handleAuthError, isAuthError } = useAuthError();
 
   const [nome, setNome] = useState("");
   const [segunda, setSegunda] = useState("");
@@ -49,13 +51,8 @@ function ModalCriaPerfilJornada({
       setCadastrado(true);
       setCria(false);
     } catch (err) {
-      if (err.status === 401 || err.status === 403) {
-        setCarregando(false);
-        mostrarAviso("erro", "Sessão inválida! Realize o Login novamente!");
-        setTimeout(() => {
-          limparAviso();
-          navigate("/", { replace: true });
-        }, 1000);
+      if (isAuthError(err)) {
+        handleAuthError(setCarregando);
       } else {
         mostrarAviso("erro", err.message, true);
       }
