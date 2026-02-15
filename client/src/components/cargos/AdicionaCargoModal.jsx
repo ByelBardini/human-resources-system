@@ -3,19 +3,13 @@ import { motion } from "framer-motion";
 import { postCargos } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { X, Briefcase, DollarSign, Sparkles } from "lucide-react";
+import { formatarRealDinamico, realParaNumero } from "../../utils/formatters.js";
+import { storage } from "../../hooks/useStorage.js";
 
 function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
   const { mostrarAviso, limparAviso } = useAviso();
   const [nomeCargo, setNomeCargo] = useState("");
   const [salarioInicial, setSalarioInicial] = useState("R$ 0,00");
-
-  function formatarRealDinamico(valor) {
-    valor = valor.replace(/\D/g, "");
-    if (!valor) return "R$ 0,00";
-    valor = (parseInt(valor, 10) / 100).toFixed(2);
-    valor = valor.replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return `R$ ${valor}`;
-  }
 
   async function criarCargo() {
     if (nomeCargo.trim() === "" || salarioInicial === "R$ 0,00") {
@@ -24,8 +18,8 @@ function AdicionaCargoModal({ setAdicionando, setCarregando, setModificado }) {
     }
     setCarregando(true);
     try {
-      const salInicial = parseInt(salarioInicial.replace(/\D/g, ""), 10) / 100;
-      const id_empresa = localStorage.getItem("empresa_id");
+      const salInicial = realParaNumero(salarioInicial);
+      const id_empresa = storage.getEmpresaId();
       await postCargos(id_empresa, nomeCargo, salInicial);
       setCarregando(false);
       setModificado(true);

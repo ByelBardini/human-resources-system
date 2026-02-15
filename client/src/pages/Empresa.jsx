@@ -8,6 +8,7 @@ import MenuTela from "../components/menu/MenuTela.jsx";
 import ModaisCargos from "../components/cargos/ModaisCargos.jsx";
 import ModaisFuncionarios from "../components/funcionarios/ModaisFuncionarios.jsx";
 import ModificaDescricaoModal from "../components/descricoes/ModificaDescricaoModal.jsx";
+import { storage } from "../hooks/useStorage.js";
 
 function Empresa() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ function Empresa() {
   const [textoConfirmacao, setTextoConfirmacao] = useState("");
   const [onSimConfirmacao, setOnSimConfirmacao] = useState("");
 
-  const aba_inicial = localStorage.getItem("aba_inicial") || "home";
+  const aba_inicial = storage.getAbaInicial() || "home";
   const [opcaoSelecionada, setOpcaoSelecionada] = useState(aba_inicial);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ function Empresa() {
   }, []);
 
   function voltar() {
-    localStorage.setItem("aba_inicial", null);
+    storage.setAbaInicial(null);
     navigate("/home", { replace: true });
   }
 

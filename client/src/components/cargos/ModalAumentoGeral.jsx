@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { X, TrendingUp, Percent, AlertTriangle } from "lucide-react";
 import { aumentoCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
+import { storage } from "../../hooks/useStorage.js";
 
 function ModalAumentoGeral({
   setConfirmacao,
@@ -30,7 +31,7 @@ function ModalAumentoGeral({
 
     setCarregando(true);
     try {
-      const id_empresa = localStorage.getItem("empresa_id");
+      const id_empresa = storage.getEmpresaId();
       await aumentoCargo(id_empresa, porcentagem);
       setCarregando(false);
       mostrarAviso("sucesso", "Aumento aplicado com sucesso!", true)

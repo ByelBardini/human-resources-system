@@ -23,6 +23,14 @@ import { useAuthError } from "../hooks/useAuthError.js";
 import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { formatarHorasParaHHMM, formatarHorasComSinal } from "../utils/formatarHoras.js";
+import { 
+  formatarDataCurta, 
+  formatarHora, 
+  formatarBancoHoras as formatarBancoHorasUtil,
+  obterDiaSemanaAbrev,
+  formatarDataComDiaSemana 
+} from "../utils/formatters.js";
+import { storage } from "../hooks/useStorage.js";
 
 function RelatorioMensal() {
   const { mostrarAviso } = useAviso();
@@ -190,52 +198,10 @@ function RelatorioMensal() {
     setDiaSelecionado(null);
   }
 
-  function formatarData(dataStr) {
-    const data = new Date(dataStr + "T12:00:00");
-    return data.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-
-  function obterDiaSemanaAbrev(dataStr) {
-    const data = new Date(dataStr + "T12:00:00");
-    const diaSemana = data.getDay();
-    const dias = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
-    return dias[diaSemana];
-  }
-
-  function formatarDataCompleta(dataStr) {
-    const data = new Date(dataStr + "T12:00:00");
-    return data.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-
-  function formatarHora(dataHora) {
-    const data = new Date(dataHora);
-    return data.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-
-  function formatarSaldo(saldo) {
-    return formatarHorasComSinal(saldo);
-  }
-
-  function formatarBancoHoras(horas) {
-    const horasAbs = Math.abs(horas);
-    const horasInteiras = Math.floor(horasAbs);
-    const minutos = Math.round((horasAbs - horasInteiras) * 60);
-    const sinal = horas >= 0 ? "+" : "-";
-    return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
-  }
+  // Usa funções importadas de formatters.js
+  const formatarData = formatarDataCurta;
+  const formatarSaldo = formatarHorasComSinal;
+  const formatarBancoHoras = formatarBancoHorasUtil;
 
   // Verificar se pode navegar para o mês anterior (não pode ir antes da data de criação)
   function podeMesAnterior() {

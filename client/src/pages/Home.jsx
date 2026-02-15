@@ -18,6 +18,7 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import { usePermissao } from "../hooks/usePermissao.js";
 import { useAuthError } from "../hooks/useAuthError.js";
+import { storage, clearAllStorage } from "../hooks/useStorage.js";
 
 function Home() {
   const { mostrarAviso } = useAviso();
@@ -33,15 +34,13 @@ function Home() {
   const [empresas, setEmpresas] = useState([]);
 
   function deslogar() {
-    localStorage.clear();
+    clearAllStorage();
     navigate("/", { replace: true });
   }
 
   function selecionarEmpresa(empresa) {
-    localStorage.setItem("empresa_id", empresa.empresa_id);
-    localStorage.setItem("empresa_nome", empresa.empresa_nome);
-    localStorage.setItem("empresa_cor", empresa.empresa_cor);
-    localStorage.setItem("aba_inicial", "home");
+    storage.setEmpresa(empresa);
+    storage.setAbaInicial("home");
     navigate("/empresa", { replace: true });
   }
 
@@ -73,7 +72,7 @@ function Home() {
 
   useEffect(() => {
     buscarEmpresas();
-    setTrocaSenha(localStorage.getItem("usuario_troca_senha") === "1");
+    setTrocaSenha(storage.deveTrocarSenha());
     document.title = "Home - Atlas";
   }, []);
 
@@ -137,7 +136,7 @@ function Home() {
             </div>
             <div>
               <p className="text-xs text-white/60 font-medium tracking-wide uppercase">
-                {localStorage.getItem("usuario_nome") || "Usuário"}
+                {storage.getUsuarioNome() || "Usuário"}
               </p>
               <h1 className="text-base font-medium text-white/95 tracking-tight">
                 Selecione a empresa
@@ -187,9 +186,9 @@ function Home() {
             <p className="text-sm text-white/40 text-center py-4">Nenhuma empresa disponível</p>
           )}
 
-          {(podeGerenciarPontos || localStorage.getItem("pode_bater_ponto") === "true") && (
+          {(podeGerenciarPontos || storage.podeBaterPonto()) && (
             <div className="mt-5 pt-5 border-t border-white/10 space-y-3">
-              {localStorage.getItem("pode_bater_ponto") === "true" && (
+              {storage.podeBaterPonto() && (
                 <button
                   onClick={() => navigate("/ponto")}
                   className="w-full flex items-center justify-between gap-2 py-2.5 px-4 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400/95 border border-blue-500/30 transition-colors font-medium tracking-tight text-sm group"

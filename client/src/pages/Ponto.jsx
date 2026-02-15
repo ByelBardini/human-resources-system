@@ -10,6 +10,13 @@ import Loading from "../components/default/Loading.jsx";
 import Background from "../components/default/Background.jsx";
 import ModalTrocaSenha from "../components/usuarios/ModalTrocaSenha.jsx";
 import { formatarHorasParaHHMM } from "../utils/formatarHoras.js";
+import { 
+  formatarHora, 
+  formatarBancoHoras, 
+  formatarDataCompleta as formatarData,
+  formatarData as formatarDataCurta 
+} from "../utils/formatters.js";
+import { storage } from "../hooks/useStorage.js";
 
 function Ponto() {
   const { mostrarAviso } = useAviso();
@@ -89,42 +96,10 @@ function Ponto() {
     setFotoPreview(url);
   }
 
-  function formatarData(dataStr) {
-    const data = new Date(dataStr + "T12:00:00");
-    return data.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-
-  function formatarDataCurta(dataStr) {
-    if (!dataStr) return "";
-    const data = new Date(dataStr + "T00:00:00");
-    return data.toLocaleDateString("pt-BR");
-  }
-
-  function formatarHora(dataHora) {
-    const data = new Date(dataHora);
-    return data.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "America/Sao_Paulo",
-    });
-  }
-
-  function formatarBancoHoras(horas) {
-    const horasAbs = Math.abs(horas);
-    const horasInteiras = Math.floor(horasAbs);
-    const minutos = Math.round((horasAbs - horasInteiras) * 60);
-    const sinal = horas >= 0 ? "+" : "-";
-    return `${sinal}${horasInteiras}h${minutos.toString().padStart(2, "0")}min`;
-  }
+  // Funções de formatação importadas de formatters.js
 
   useEffect(() => {
-    setTrocaSenha(localStorage.getItem("usuario_troca_senha") === "1");
+    setTrocaSenha(storage.deveTrocarSenha());
     document.title = "Ponto - Atlas";
   }, []);
 
