@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 function CampoSalario({
   cargoNiveis,
   cargoId,
@@ -18,4 +20,4 @@ function CampoSalario({
     </td>
   );
 }
-export default CampoSalario;
+export default memo(CampoSalario);

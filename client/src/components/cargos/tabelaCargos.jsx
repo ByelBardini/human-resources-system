@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { SearchX } from "lucide-react";
 import HeaderProjecao from "./HeaderProjecao.jsx";
 import CampoSalario from "./CampoSalario.jsx";
@@ -104,4 +104,4 @@ function TabelaCargos({
   );
 }
 
-export default TabelaCargos;
+export default memo(TabelaCargos);

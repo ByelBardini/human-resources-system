@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { Search, X } from "lucide-react";
 
 function HeaderProjecao({ busca, setBusca }) {
@@ -163,4 +163,4 @@ function HeaderProjecao({ busca, setBusca }) {
   );
 }
 
-export default HeaderProjecao;
+export default memo(HeaderProjecao);

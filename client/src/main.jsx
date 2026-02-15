@@ -1,31 +1,48 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 
-import Login from "./pages/Login.jsx";
-import Home from "./pages/Home.jsx";
-import Empresa from "./pages/Empresa.jsx";
-import Usuario from "./pages/Usuario.jsx";
-import CargosUsuarios from "./pages/CargosUsuarios.jsx";
-import Ponto from "./pages/Ponto.jsx";
-import Justificativa from "./pages/Justificativa.jsx";
-import RelatorioMensal from "./pages/RelatorioMensal.jsx";
-import PerfisJornada from "./pages/PerfisJornada.jsx";
-import GerenciarPontos from "./pages/GerenciarPontos.jsx";
-import GerenciarEmpresas from "./pages/GerenciarEmpresas.jsx";
-import GerenciarFeriados from "./pages/GerenciarFeriados.jsx";
-import GerenciarFerias from "./pages/GerenciarFerias.jsx";
-import EmitirRelatorios from "./pages/EmitirRelatorios.jsx";
-import CalculadoraHoras from "./pages/CalculadoraHoras.jsx";
 import { AvisoProvider } from "./context/AvisoContext.jsx";
-
 import "./style.css";
+
+// Componente de loading para o Suspense
+function PageLoader() {
+  return (
+    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
+        <p className="text-white/60 text-sm font-medium">Carregando...</p>
+      </div>
+    </div>
+  );
+}
+
+// Login carrega imediatamente (página inicial)
+import Login from "./pages/Login.jsx";
+
+// Lazy loading das outras páginas (carregam sob demanda)
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Empresa = lazy(() => import("./pages/Empresa.jsx"));
+const Usuario = lazy(() => import("./pages/Usuario.jsx"));
+const CargosUsuarios = lazy(() => import("./pages/CargosUsuarios.jsx"));
+const Ponto = lazy(() => import("./pages/Ponto.jsx"));
+const Justificativa = lazy(() => import("./pages/Justificativa.jsx"));
+const RelatorioMensal = lazy(() => import("./pages/RelatorioMensal.jsx"));
+const PerfisJornada = lazy(() => import("./pages/PerfisJornada.jsx"));
+const GerenciarPontos = lazy(() => import("./pages/GerenciarPontos.jsx"));
+const GerenciarEmpresas = lazy(() => import("./pages/GerenciarEmpresas.jsx"));
+const GerenciarFeriados = lazy(() => import("./pages/GerenciarFeriados.jsx"));
+const GerenciarFerias = lazy(() => import("./pages/GerenciarFerias.jsx"));
+const EmitirRelatorios = lazy(() => import("./pages/EmitirRelatorios.jsx"));
+const CalculadoraHoras = lazy(() => import("./pages/CalculadoraHoras.jsx"));
 
 // Layout wrapper que fornece o contexto do Aviso para todas as rotas
 function RootLayout() {
   return (
     <AvisoProvider>
-      <Outlet />
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
     </AvisoProvider>
   );
 }

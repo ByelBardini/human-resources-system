@@ -2,7 +2,7 @@
 import { useAviso } from "../../context/AvisoContext.jsx";
 import { useAuthError } from "../../hooks/useAuthError.js";
 import logger from "../../utils/logger.js";
-import { useState } from "react";
+import { useState, memo } from "react";
 import {
   getFuncionarios,
   getFuncionariosInativos,
@@ -344,4 +344,4 @@ function TabelaFuncionarios({
   );
 }
 
-export default TabelaFuncionarios;
+export default memo(TabelaFuncionarios);

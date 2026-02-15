@@ -1,5 +1,5 @@
 import { SearchX, Building2, Briefcase, GraduationCap, BookOpen, Users, Wrench, Clock, ClipboardList } from "lucide-react";
-import { useState } from "react";
+import { useState, memo } from "react";
 
 function TabelaDescricao({
   descricoes,
@@ -140,4 +140,4 @@ function TabelaDescricao({
   );
 }
 
-export default TabelaDescricao;
+export default memo(TabelaDescricao);
