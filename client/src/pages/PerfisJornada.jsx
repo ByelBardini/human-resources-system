@@ -43,7 +43,7 @@ function PerfisJornada() {
 
   useEffect(() => {
     buscaPerfis();
-    document.title = "Perfis de Jornada - Sistema RH";
+    document.title = "Perfis de Jornada - Atlas";
   }, [atualizado]);
 
 

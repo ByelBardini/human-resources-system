@@ -127,7 +127,7 @@ function Ponto() {
 
   useEffect(() => {
     setTrocaSenha(localStorage.getItem("usuario_troca_senha") == 1);
-    document.title = "Ponto - Sistema RH";
+    document.title = "Ponto - Atlas";
   }, []);
 
   useEffect(() => {

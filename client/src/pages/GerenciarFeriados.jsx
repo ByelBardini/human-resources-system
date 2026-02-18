@@ -65,7 +65,7 @@ function GerenciarFeriados() {
     }
 
     buscaFeriados();
-    document.title = "Gerenciar Feriados - Sistema RH";
+    document.title = "Gerenciar Feriados - Atlas";
   }, [atualizado]);
 
   function formatarData(data) {

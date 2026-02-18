@@ -58,7 +58,7 @@ function Usuario() {
 
   useEffect(() => {
     buscaUsuarios();
-    document.title = "Usuários - Sistema RH";
+    document.title = "Usuários - Atlas";
   }, [atualizado]);
 
   return (

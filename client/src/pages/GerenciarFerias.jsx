@@ -65,7 +65,7 @@ function GerenciarFerias() {
     }
 
     buscarFerias();
-    document.title = "Gerenciar Férias - Sistema RH";
+    document.title = "Gerenciar Férias - Atlas";
   }, [atualizado]);
 
   function formatarData(data) {

@@ -30,7 +30,7 @@ function Empresa() {
   const [opcaoSelecionada, setOpcaoSelecionada] = useState(aba_inicial);
 
   useEffect(() => {
-    document.title = `Empresa - Sistema RH`;
+    document.title = `Empresa - Atlas`;
   }, []);
 
   function voltar() {

@@ -226,7 +226,7 @@ function Justificativa() {
 
   useEffect(() => {
     buscarDados();
-    document.title = "Justificativas - Sistema RH";
+    document.title = "Justificativas - Atlas";
   }, []);
 
   return (

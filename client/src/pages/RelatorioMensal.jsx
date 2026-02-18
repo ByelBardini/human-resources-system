@@ -322,7 +322,7 @@ function RelatorioMensal() {
 
   useEffect(() => {
     buscarRelatorio();
-    document.title = "Histórico do Ponto - Sistema RH";
+    document.title = "Histórico do Ponto - Atlas";
   }, [mes, ano]);
 
   return (
