@@ -35,7 +35,6 @@ app.use(
   })
 );
 
-app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/", authRoutes);
 app.use("/", usuarioRoutes);
