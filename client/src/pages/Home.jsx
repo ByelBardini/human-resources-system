@@ -216,7 +216,7 @@ function Home() {
           )}
 
           <p className="text-[10px] text-white/30 mt-5 text-center">
-            Atlas
+            Atlas · Infinity
           </p>
         </div>
       </div>

@@ -12,6 +12,7 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   const options = [];
   React.Children.forEach(children, (child) => {
@@ -26,7 +27,9 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const inContainer = containerRef.current?.contains(e.target);
+      const inDropdown = dropdownRef.current?.contains(e.target);
+      if (!inContainer && !inDropdown) {
         setOpen(false);
       }
     }
@@ -88,6 +91,7 @@ export default function CustomSelect({ value, onChange, children, disabled, clas
         <AnimatePresence>
           {open && (
             <motion.div
+              ref={dropdownRef}
               initial={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: position.dropUp ? 4 : -4, scale: 0.98 }}

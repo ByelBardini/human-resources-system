@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCargos, deleteCargo } from "../../services/api/cargoServices.js";
 import { useAviso } from "../../context/AvisoContext.jsx";
@@ -32,40 +32,16 @@ export default function ProjecaoSalarial({
       )
     : cargos;
 
-  // Paginação
-  const tabelaContainerRef = useRef(null);
+  // Paginação fixa (evita loop ResizeObserver → setState → re-render → ResizeObserver)
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [itensPorPagina, setItensPorPagina] = useState(10);
-  const ALTURA_LINHA = 48;
-  const ALTURA_CABECALHO = 100;
-
-  const calcularItensPorPagina = useCallback(() => {
-    if (tabelaContainerRef.current) {
-      const alturaDisponivel = tabelaContainerRef.current.clientHeight - ALTURA_CABECALHO;
-      const itensCalculados = Math.floor(alturaDisponivel / ALTURA_LINHA);
-      setItensPorPagina(Math.max(1, itensCalculados));
-    }
-  }, []);
-
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      calcularItensPorPagina();
-    });
-
-    if (tabelaContainerRef.current) {
-      resizeObserver.observe(tabelaContainerRef.current);
-      calcularItensPorPagina();
-    }
-
-    return () => resizeObserver.disconnect();
-  }, [calcularItensPorPagina]);
+  const ITENS_POR_PAGINA = 10;
 
   const listaParaPaginar = cargosFiltrados;
-  const totalPaginas = Math.ceil(listaParaPaginar.length / itensPorPagina);
+  const totalPaginas = Math.ceil(listaParaPaginar.length / ITENS_POR_PAGINA);
 
   const cargosPaginados = listaParaPaginar.slice(
-    (paginaAtual - 1) * itensPorPagina,
-    paginaAtual * itensPorPagina
+    (paginaAtual - 1) * ITENS_POR_PAGINA,
+    paginaAtual * ITENS_POR_PAGINA
   );
 
   useEffect(() => {
@@ -153,8 +129,7 @@ export default function ProjecaoSalarial({
   return (
     <div className="w-full h-full flex flex-col gap-4 min-h-0">
       <div
-        ref={tabelaContainerRef}
-        className={`relative w-full min-h-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl ${listaParaPaginar.length > itensPorPagina ? 'flex-1' : ''}`}
+        className="relative w-full min-h-0 overflow-auto rounded-xl border border-white/10 bg-white/5 shadow-xl flex-1"
       >
         <TabelaCargos
           cargos={cargosPaginados}

@@ -148,6 +148,16 @@ function Login() {
         transition={{ duration: 0.4 }}
         className="relative z-10 w-full max-w-md flex flex-col items-center"
       >
+        {/* Nome do sistema */}
+        <motion.h2
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="text-3xl font-bold text-white tracking-tight mb-2"
+        >
+          Atlas
+        </motion.h2>
+
         {/* Logo com animação mantida */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}

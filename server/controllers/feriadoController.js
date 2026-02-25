@@ -1,6 +1,6 @@
 import { Feriado, Empresa, Usuario } from "../models/index.js";
 import { ApiError } from "../middlewares/ApiError.js";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 
 function getUsuarioId(req) {
   return req?.user?.usuario_id ?? null;
@@ -336,7 +336,7 @@ export async function atualizarFeriado(req, res) {
   return res.status(200).json({ feriado: feriadoAtualizado });
 }
 
-// Excluir feriado (soft delete)
+// Excluir feriado (soft delete) - exclui todo o grupo (todos os anos/empresas do mesmo feriado)
 export async function excluirFeriado(req, res) {
   requirePermissao(req, "sistema.gerenciar_feriados");
 
@@ -351,10 +351,42 @@ export async function excluirFeriado(req, res) {
     throw ApiError.notFound("Feriado não encontrado");
   }
 
-  // Soft delete: desativar ao invés de excluir
-  await feriado.update({
-    feriado_ativo: 0,
-  });
+  // Construir where para encontrar todos os registros do mesmo grupo
+  // (mesmo nome + mesma data ou mesmo mês-dia quando repetir_ano)
+  const whereBase = {
+    feriado_tipo: "empresa",
+    feriado_nome: feriado.feriado_nome,
+    feriado_repetir_ano: feriado.feriado_repetir_ano,
+    feriado_ativo: 1,
+  };
 
-  return res.status(200).json({ message: "Feriado excluído com sucesso" });
+  let whereClause;
+  if (feriado.feriado_repetir_ano === 1) {
+    const [ano, mes, dia] = feriado.feriado_data.split("-");
+    const mesDia = `${mes}-${dia}`;
+    whereClause = {
+      ...whereBase,
+      [Op.and]: [
+        Sequelize.where(
+          Sequelize.fn("DATE_FORMAT", Sequelize.col("feriado_data"), "%m-%d"),
+          mesDia
+        ),
+      ],
+    };
+  } else {
+    whereClause = {
+      ...whereBase,
+      feriado_data: feriado.feriado_data,
+    };
+  }
+
+  const [quantidade] = await Feriado.update(
+    { feriado_ativo: 0 },
+    { where: whereClause }
+  );
+
+  return res.status(200).json({
+    message: "Feriado excluído com sucesso",
+    registrosExcluidos: quantidade,
+  });
 }

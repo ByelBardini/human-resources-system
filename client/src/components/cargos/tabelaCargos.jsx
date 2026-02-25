@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState, memo } from "react";
+import { memo } from "react";
 import { SearchX } from "lucide-react";
 import HeaderProjecao from "./HeaderProjecao.jsx";
 import CampoSalario from "./CampoSalario.jsx";
@@ -14,26 +14,8 @@ function TabelaCargos({
   busca,
   setBusca,
 }) {
-  const [tabelaVazia, setTabelaVazia] = useState(false);
-  const [cargosAtualizado, setCargosAtualizado] = useState([{ niveis: [] }]);
-
-  function puxaDadosPesquisa() {
-    if (cargosFiltro.length < 1) {
-      if (cargos.length < 1) {
-        setTabelaVazia(true);
-      } else {
-        setCargosAtualizado(cargos);
-        setTabelaVazia(false);
-      }
-    } else {
-      setCargosAtualizado(cargosFiltro);
-      setTabelaVazia(false);
-    }
-  }
-
-  useEffect(() => {
-    puxaDadosPesquisa();
-  }, [cargos, cargosFiltro]);
+  const cargosExibir = cargosFiltro?.length > 0 ? cargosFiltro : cargos;
+  const tabelaVazia = cargosExibir.length < 1;
 
   return (
     <table className="min-w-[1100px] w-full text-sm border-collapse">
@@ -41,7 +23,7 @@ function TabelaCargos({
 
       {!tabelaVazia ? (
         <tbody className="text-white/90">
-          {cargosAtualizado.map((cargo) => (
+          {cargosExibir.map((cargo) => (
             <tr
               key={cargo.cargo_id}
               className={`
